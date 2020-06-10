@@ -7,8 +7,10 @@
 
 
 # project meta-data
-ampcor.major := 1
-ampcor.minor := 0
+ampcor.major := $(repo.major)
+ampcor.minor := $(repo.minor)
+ampcor.micro := $(repo.micro)
+ampcor.revision := $(repo.revision)
 
 # ampcor consists of a python package
 ampcor.packages := ampcor.pkg
