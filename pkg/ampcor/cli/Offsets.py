@@ -77,11 +77,18 @@ class Offsets(ampcor.cli.command, family="ampcor.cli.offsets"):
             channel.line(f"        shape: {self.target.shape}")
             channel.line(f"        size: {self.target.size()} bytes")
 
+        # unpack my arguments
+        reference = self.reference
+        target = self.target
+        correlator = self.correlator
+
         # show the correlator configuration
-        self.correlator.show(channel=channel)
-        # ask it to make a plan
-        plan = self.correlator.makePlan(reference=self.reference, target=self.target)
-        # and show the plan details
+        correlator.show(channel=channel)
+        # ask the correlator for the coarse map
+        coarse = correlator.coarse.map(reference=reference)
+        # make a plan
+        plan = correlator.makePlan(regmap=coarse, rasters=(reference, target))
+        # and show me the plan details
         plan.show(channel=channel)
 
         # flush
