@@ -40,7 +40,7 @@ class About(ampcor.cli.command, family='ampcor.cli.about'):
         Print the application home directory
         """
         # show me
-        plexus.info.log("{}".format(plexus.home))
+        plexus.info.log("{}".format(ampcor.home))
         # all done
         return
 
@@ -51,7 +51,7 @@ class About(ampcor.cli.command, family='ampcor.cli.about'):
         Print the application installation directory
         """
         # show me
-        plexus.info.log("{}".format(plexus.prefix))
+        plexus.info.log("{}".format(ampcor.prefix))
         # all done
         return
 
@@ -62,7 +62,7 @@ class About(ampcor.cli.command, family='ampcor.cli.about'):
         Print the application configuration directory
         """
         # show me
-        plexus.info.log("{}".format(plexus.defaults))
+        plexus.info.log("{}".format(ampcor.defaults))
         # all done
         return
 
