@@ -106,7 +106,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         # convert {index} into an offset
         offset = self.tile.offset(index)
         # grab the data and return it
-        return libampcor.slc_getitem(self.raster, index)
+        return libampcor.slc_getitem(self.raster, offset)
 
 
     # implementation details
