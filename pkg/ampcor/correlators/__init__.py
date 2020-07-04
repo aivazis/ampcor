@@ -28,7 +28,7 @@ def mga():
     return MGA
 
 
-# strategies for placing tiles on the reference and target rasters
+# strategies for placing tiles on the reference and secondary rasters
 @foundry(implements=offsets, tip="a grid based generators of a coarse offset map")
 def grid():
     # get the action
@@ -50,7 +50,7 @@ def uniform():
     return UniformGrid
 
 
-# generators of points on the target raster
+# generators of points on the secondary raster
 @foundry(implements=offsets, tip="a functor that applies a constant shift")
 def constant():
     # get the action

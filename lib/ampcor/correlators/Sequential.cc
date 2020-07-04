@@ -26,7 +26,7 @@ adjust()
     pyre::journal::info_t tlog("ampcor.sequential");
 
     // compute the size of the search margin
-    auto margin = _tgtShape - _refShape + index_type::fill(1);
+    auto margin = _secShape - _refShape + index_type::fill(1);
     // and figure out how many cells this is
     auto ccells = std::accumulate(margin.begin(), margin.end(), 1, std::multiplies<size_type>());
     // allocate memory for the correlation results
@@ -39,15 +39,15 @@ adjust()
         timer.reset().start();
 
         // place a grid for the reference tile over our arena
-        gview_type ref { {_refShape}, _buffer + pid*(_refCells + _tgtCells) };
-        // place a grid for the target search window over our arena
-        gview_type tgt { {_tgtShape}, _buffer + pid*(_refCells + _tgtCells) + _refCells };
+        gview_type ref { {_refShape}, _buffer + pid*(_refCells + _secCells) };
+        // place a grid for the secondary search window over our arena
+        gview_type sec { {_secShape}, _buffer + pid*(_refCells + _secCells) + _refCells };
 
         // place a grid over the results area
         gview_type cor { {margin}, _correlation + pid*ccells };
 
-        // build a sum area table for the target grid
-        sat_type sat(tgt.layout());
+        // build a sum area table for the secondary grid
+        sat_type sat(sec.layout());
 
         // make a view over the reference tile
         auto rView = ref.view();
@@ -56,26 +56,26 @@ adjust()
 
         // for each spot in the correlation matrix
         for (auto anchor : cor.layout()) {
-            // form a slice of the target search window that has the same shape as the
+            // form a slice of the secondary search window that has the same shape as the
             // reference tile but is anchored at {anchor}
-            auto slice = tgt.layout().slice(anchor, anchor+_refShape);
+            auto slice = sec.layout().slice(anchor, anchor+_refShape);
             // compute the average amplitude within this slice
             auto tAvg = sat.sum(slice) / _refCells;
 
             // initialize the numerator
             cell_type num = 0.0;
-            // initialize the variance of the target tile
+            // initialize the variance of the secondary tile
             cell_type tVar = 0.0;
 
             // use the reference tile as the source of index counters
             for (auto idx : ref.layout()) {
                 // get the value from the reference tile
                 auto rValue = ref[idx];
-                // get the value from the target tile and subtract the average amplitude
-                auto tValue = tgt[anchor+idx] - tAvg;
+                // get the value from the secondary tile and subtract the average amplitude
+                auto tValue = sec[anchor+idx] - tAvg;
                 // update the numerator
                 num += rValue * tValue;
-                // update the target variance
+                // update the secondary variance
                 tVar += tValue * tValue;
             }
 
@@ -112,17 +112,17 @@ ampcor::correlators::Sequential::
 }
 
 ampcor::correlators::Sequential::
-Sequential(size_type pairs, const shape_type & refShape, const shape_type & tgtShape) :
+Sequential(size_type pairs, const shape_type & refShape, const shape_type & secShape) :
     _pairs(pairs),
     _refShape(refShape),
-    _tgtShape(tgtShape),
+    _secShape(secShape),
     _refCells(std::accumulate(refShape.begin(), refShape.end(), 1, std::multiplies<size_type>())),
-    _tgtCells(std::accumulate(tgtShape.begin(), tgtShape.end(), 1, std::multiplies<size_type>())),
-    _buffer { new double [ _pairs*(_refCells+_tgtCells) ] },
+    _secCells(std::accumulate(secShape.begin(), secShape.end(), 1, std::multiplies<size_type>())),
+    _buffer { new double [ _pairs*(_refCells+_secCells) ] },
     _correlation { nullptr }
 {
     // compute the footprint
-    auto footprint = _pairs*(_refCells + _tgtCells);
+    auto footprint = _pairs*(_refCells + _secCells);
 
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential");
@@ -132,7 +132,7 @@ Sequential(size_type pairs, const shape_type & refShape, const shape_type & tgtS
         << "new sequential worker:" << pyre::journal::newline
         << "    pairs: " << _pairs << pyre::journal::newline
         << "    ref shape: " << _refShape << pyre::journal::newline
-        << "    tgt shape: " << _tgtShape << pyre::journal::newline
+        << "    sec shape: " << _secShape << pyre::journal::newline
         << "    footprint: " << footprint << " cells in " << (8.0*footprint/1024/1024) << " Mb"
         << pyre::journal::endl;
 }

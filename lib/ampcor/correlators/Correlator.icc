@@ -34,32 +34,32 @@ correlate() {
     // and compute the number of pixels it contains
     auto size = _refAmplitudeSpread.layout().size();
 
-    // build the sum area table of the target amplitude grid
-    sat_type sat(_tgtAmplitude.layout());
+    // build the sum area table of the secondary amplitude grid
+    sat_type sat(_secAmplitude.layout());
 
     // for each spot in the correlation matrix
     for (auto anchor : _correlation.layout()) {
-        // form a slice of the target image that has the same shape as the reference chip but
+        // form a slice of the secondary image that has the same shape as the reference chip but
         // is anchored at {anchor}
-        auto slice = _tgtAmplitude.layout().slice(anchor, anchor+shape);
-        // compute the average value of the target slice
+        auto slice = _secAmplitude.layout().slice(anchor, anchor+shape);
+        // compute the average value of the secondary slice
         pixel_type average = sat.sum(slice) / size;
 
         // initialize the cross term
         pixel_type cross = 0.0;
-        // initialize the variance of the target tile
+        // initialize the variance of the secondary tile
         pixel_type var = 0.0;
 
         // loop over the reference tile
         for (auto idx : _refAmplitudeSpread.layout()) {
             // get the value from the reference tiles
             auto ref = _refAmplitudeSpread[idx];
-            // get the value from the target tiles and form its spread
-            auto tgt = _tgtAmplitude[anchor+idx] - average;
+            // get the value from the secondary tiles and form its spread
+            auto sec = _secAmplitude[anchor+idx] - average;
             // update the cross term
-            cross += ref * tgt;
+            cross += ref * sec;
             // update the variance
-            var += tgt * tgt;
+            var += sec * sec;
         }
 
         // compute the correlation term
@@ -74,11 +74,11 @@ correlate() {
 // constructor
 template <typename rasterT>
 ampcor::correlators::Correlator<rasterT>::
-Correlator(const view_type & refView, const view_type & tgtView) :
-    _correlation{ tgtView.layout().shape() - refView.layout().shape() + index_type::fill(1ul) },
+Correlator(const view_type & refView, const view_type & secView) :
+    _correlation{ secView.layout().shape() - refView.layout().shape() + index_type::fill(1ul) },
     _refAmplitudeSpread{ refView.layout() },
     _refAmplitudeVariance {},
-    _tgtAmplitude{ tgtView.layout() }
+    _secAmplitude{ secView.layout() }
 {
     // first the reference amplitude grid
     // make a view that covers it
@@ -105,11 +105,11 @@ Correlator(const view_type & refView, const view_type & tgtView) :
     _refAmplitudeVariance =
         std::inner_product(refAmpView.begin(), refAmpView.end(), refAmpView.begin(), 0.0);
 
-    // next the target amplitude grid
+    // next the secondary amplitude grid
     // make a view that covers it
-    typename grid_type::view_type tgtAmplitudeView { _tgtAmplitude.view() };
+    typename grid_type::view_type secAmplitudeView { _secAmplitude.view() };
     // initialize it
-    std::transform( tgtView.begin(), tgtView.end(), tgtAmplitudeView.begin(), magnitude);
+    std::transform( secView.begin(), secView.end(), secAmplitudeView.begin(), magnitude);
 
     // all done
 }

@@ -31,7 +31,7 @@ public:
     // its index type
     using index_type = typename grid_type::index_type;
 
-    // the sum area table of the amplitude of the target raster
+    // the sum area table of the amplitude of the secondary raster
     using sat_type = sumarea_t<grid_type>;
 
     // interface
@@ -39,13 +39,13 @@ public:
     // access to my amplitude grids
     const auto & correlation();
 
-    // compute the correlation matrix of two matching tiles in the reference and target images
+    // compute the correlation matrix of two matching tiles in the reference and secondary images
     const auto & correlate();
 
     // meta-methods
 public:
     inline Correlator(const view_type & refView,
-                      const view_type & tgtView
+                      const view_type & secView
                       );
 
     // implementation details: data
@@ -58,8 +58,8 @@ private:
     // the variance of the amplitude of the reference SLC
     pixel_type _refAmplitudeVariance;  // the variance of the reference amplitude
 
-    // the amplitude of the target SLC:
-    grid_type _tgtAmplitude;
+    // the amplitude of the secondary SLC:
+    grid_type _secAmplitude;
 };
 
 

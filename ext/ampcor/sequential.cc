@@ -41,12 +41,12 @@ alloc(PyObject *, PyObject *args)
     // the number of pairs
     std::size_t pairs;
     std::size_t refLines, refSamples;
-    std::size_t tgtLines, tgtSamples;
+    std::size_t secLines, secSamples;
     // attempt to parse the arguments
     int ok = PyArg_ParseTuple(args,
                               "k(kk)(kk):sequential",
                               &pairs,
-                              &refLines, &refSamples, &tgtLines, &tgtSamples);
+                              &refLines, &refSamples, &secLines, &secSamples);
     // if something went wrong
     if (!ok) {
         // complain
@@ -55,12 +55,12 @@ alloc(PyObject *, PyObject *args)
 
     // build the reference tile shape
     sequential_t::shape_type ref { refSamples, refLines };
-    // and the target tile shape
-    sequential_t::shape_type tgt { tgtSamples, tgtLines };
+    // and the secondary tile shape
+    sequential_t::shape_type sec { secSamples, secLines };
 
 
     // instantiate the worker
-    sequential_t * worker = new sequential_t(pairs, ref, tgt);
+    sequential_t * worker = new sequential_t(pairs, ref, sec);
     // dress it up and return it
     return PyCapsule_New(worker, capsule_t, free);
 }
@@ -136,18 +136,18 @@ addReference(PyObject *, PyObject *args)
 }
 
 
-// read a target tile and save it in the dataspace
+// read a secondary tile and save it in the dataspace
 const char * const
 ampcor::extension::sequential::
-addTarget__name__ = "addTarget";
+addSecondary__name__ = "addSecondary";
 
 const char * const
 ampcor::extension::sequential::
-addTarget__doc__ = "process a target tile";
+addSecondary__doc__ = "process a secondary tile";
 
 PyObject *
 ampcor::extension::sequential::
-addTarget(PyObject *, PyObject *args)
+addSecondary(PyObject *, PyObject *args)
 {
     PyObject * pyWorker;
     PyObject * pySLC;
@@ -156,7 +156,7 @@ addTarget(PyObject *, PyObject *args)
     std::size_t endLine, endSample;
     // attempt to parse the arguments
     int ok = PyArg_ParseTuple(args,
-                              "O!O!k(kk)(kk):addTarget",
+                              "O!O!k(kk)(kk):addSecondary",
                               &PyCapsule_Type, &pyWorker,
                               &PyCapsule_Type, &pySLC,
                               &idx,
@@ -197,8 +197,8 @@ addTarget(PyObject *, PyObject *args)
     // convert it into a slice
     auto slice = slc.layout().slice(begin, end);
 
-    // ask the worker to add to its pile the target tile described by {slice}
-    worker.addTargetTile(slc, idx, slice);
+    // ask the worker to add to its pile the secondary tile described by {slice}
+    worker.addSecondaryTile(slc, idx, slice);
 
     // all done
     Py_INCREF(Py_None);

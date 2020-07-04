@@ -24,8 +24,8 @@ __global__
 void
 _migrate(const pixel_t * coarse,
          std::size_t cellsPerPair, std::size_t cellsPerRefinedPair,
-         std::size_t refCells, std::size_t tgtCells,
-         std::size_t refRefinedCells, std::size_t tgtRefinedCells,
+         std::size_t refCells, std::size_t secCells,
+         std::size_t refRefinedCells, std::size_t secRefinedCells,
          std::size_t rdim, std::size_t tdim, std::size_t edim, std::size_t trdim,
          const int * locations,
          pixel_t * refined);
@@ -36,8 +36,8 @@ void
 ampcor::cuda::kernels::
 migrate(const std::complex<float> * coarse,
         std::size_t pairs,
-        std::size_t refDim, std::size_t tgtDim, std::size_t expDim,
-        std::size_t refRefinedDim, std::size_t tgtRefinedDim,
+        std::size_t refDim, std::size_t secDim, std::size_t expDim,
+        std::size_t refRefinedDim, std::size_t secRefinedDim,
         const int * locations,
         std::complex<float> * refined)
 {
@@ -59,19 +59,19 @@ migrate(const std::complex<float> * coarse,
 
     // shape calculations
     auto refCells = refDim * refDim;
-    auto tgtCells = tgtDim * tgtDim;
+    auto secCells = secDim * secDim;
     auto refRefinedCells = refRefinedDim * refRefinedDim;
-    auto tgtRefinedCells = tgtRefinedDim * tgtRefinedDim;
+    auto secRefinedCells = secRefinedDim * secRefinedDim;
 
     // so i can skip over work others are doing
-    auto cellsPerPair = refCells + tgtCells;
-    auto cellsPerRefinedPair = refRefinedCells + tgtRefinedCells;
+    auto cellsPerPair = refCells + secCells;
+    auto cellsPerRefinedPair = refRefinedCells + secRefinedCells;
 
     // launch
     _migrate <<<B,T>>> (reinterpret_cast<const cuComplex *>(coarse),
                         cellsPerPair, cellsPerRefinedPair,
-                        refCells, tgtCells, refRefinedCells, tgtRefinedCells,
-                        refDim, tgtDim, expDim, tgtRefinedDim,
+                        refCells, secCells, refRefinedCells, secRefinedCells,
+                        refDim, secDim, expDim, secRefinedDim,
                         locations,
                         reinterpret_cast<cuComplex *>(refined));
     // wait for the device to finish
@@ -103,8 +103,8 @@ __global__
 void
 _migrate(const pixel_t * coarse,
          std::size_t cellsPerPair, std::size_t cellsPerRefinedPair,
-         std::size_t refCells, std::size_t tgtCells,
-         std::size_t refRefinedCells, std::size_t tgtRefinedCells,
+         std::size_t refCells, std::size_t secCells,
+         std::size_t refRefinedCells, std::size_t secRefinedCells,
          std::size_t rdim, std::size_t tdim, std::size_t edim, std::size_t trdim,
          const int * locations,
          pixel_t * refined)
@@ -132,9 +132,9 @@ _migrate(const pixel_t * coarse,
     auto row = locations[2*b];
     auto col = locations[2*b + 1];
 
-    // the source: (row, col) of the target tile of pair {b} in the coarse arena
+    // the source: (row, col) of the secondary tile of pair {b} in the coarse arena
     const pixel_t * src = coarse + b*cellsPerPair + refCells + row*tdim + col + t;
-    // the destination: the target tile of pair {b} in the refined arena
+    // the destination: the secondary tile of pair {b} in the refined arena
     pixel_t * dest = refined + b*cellsPerRefinedPair + refRefinedCells + t;
 
     // printf("thread [b=%lu,t=%lu]: loc=(%d,%d)\n", b, t, row, col);
@@ -144,9 +144,9 @@ _migrate(const pixel_t * coarse,
         // move the data
         *dest = *src;
         // update the pointers
-        // source moves by a whole row in the target tile
+        // source moves by a whole row in the secondary tile
         src += tdim;
-        // destination moves by a whole row in the refined target tile
+        // destination moves by a whole row in the refined secondary tile
         dest += trdim;
     }
     // all done

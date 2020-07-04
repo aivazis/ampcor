@@ -18,7 +18,7 @@ ampcor::cuda::correlators::Sequential<raster_t>::
 addReferenceTile(size_type pid, const constview_type & ref)
 {
     // figure out the starting address of this tile in the arena
-    cell_type * support = _arena + pid*(_refCells + _tgtCells);
+    cell_type * support = _arena + pid*(_refCells + _secCells);
     // adapt it into a grid
     tile_type tile(_refLayout, support);
     // move the data
@@ -31,14 +31,14 @@ addReferenceTile(size_type pid, const constview_type & ref)
 template <typename raster_t>
 void
 ampcor::cuda::correlators::Sequential<raster_t>::
-addTargetTile(size_type pid, const constview_type & tgt)
+addSecondaryTile(size_type pid, const constview_type & sec)
 {
     // figure out the starting address of this tile in the arena
-    cell_type * support = _arena + pid*(_refCells + _tgtCells) + _refCells;
+    cell_type * support = _arena + pid*(_refCells + _secCells) + _refCells;
     // adapt it into a grid
-    tile_type tile(_tgtLayout, support);
+    tile_type tile(_secLayout, support);
     // move the data
-    std::copy(tgt.begin(), tgt.end(), tile.view().begin());
+    std::copy(sec.begin(), sec.end(), tile.view().begin());
     // all done
     return;
 }
@@ -54,8 +54,8 @@ adjust() -> const value_type *
 
     // compute the dimension of the reference tiles; assume they are square
     auto refDim = _refLayout.shape()[0];
-    // compute the dimension of the target tiles; assume they are square
-    auto tgtDim = _tgtLayout.shape()[0];
+    // compute the dimension of the secondary tiles; assume they are square
+    auto secDim = _secLayout.shape()[0];
     // compute the dimension of the correlation matrix
     auto corDim = _corLayout.shape()[0];
 
@@ -63,21 +63,21 @@ adjust() -> const value_type *
     // move the tiles to the device
     auto coarseArena = _push();
     // compute their amplitudes
-    auto amplitudes = _detect(coarseArena, refDim, tgtDim);
+    auto amplitudes = _detect(coarseArena, refDim, secDim);
     // adjust the reference tiles to zero mean and compute the variances
-    auto refStatistics = _refStats(amplitudes, refDim, tgtDim);
-    // compute the sum area tables for all possible search window placements within the target tile
-    auto sat = _sat(amplitudes, refDim, tgtDim);
+    auto refStatistics = _refStats(amplitudes, refDim, secDim);
+    // compute the sum area tables for all possible search window placements within the secondary tile
+    auto sat = _sat(amplitudes, refDim, secDim);
     // use the SATs to compute the mean amplitude of all possible window placements
-    auto tgtStatistics = _tgtStats(sat, refDim, tgtDim, corDim);
+    auto secStatistics = _secStats(sat, refDim, secDim, corDim);
     // compute the correlation hyper-surface
-    auto gamma = _correlate(amplitudes, refStatistics, tgtStatistics, refDim, tgtDim, corDim);
+    auto gamma = _correlate(amplitudes, refStatistics, secStatistics, refDim, secDim, corDim);
     // find its maxima
     auto maxcor = _maxcor(gamma, corDim);
 
     // interlude: housekeeping
     cudaFree(gamma);
-    cudaFree(tgtStatistics);
+    cudaFree(secStatistics);
     cudaFree(sat);
     cudaFree(refStatistics);
     cudaFree(amplitudes);
@@ -86,23 +86,23 @@ adjust() -> const value_type *
     // window around the location of maximum correlation
     // compute the dimension of the reference tiles; assume they are square
     auto refRefinedDim = _refRefinedLayout.shape()[0];
-    // compute the dimension of the target tiles; assume they are square
-    auto tgtRefinedDim = _tgtRefinedLayout.shape()[0];
+    // compute the dimension of the secondary tiles; assume they are square
+    auto secRefinedDim = _secRefinedLayout.shape()[0];
     // compute the dimension of the correlation matrix
     auto corRefinedDim = _corRefinedLayout.shape()[0];
     // compute the dimension of the zoomed correlation matrix
     auto corZoomedDim = _corZoomedLayout.shape()[0];
-    // ensure that the expanded target tiles where the correlation is maximum fit within the
+    // ensure that the expanded secondary tiles where the correlation is maximum fit within the
     // search window
-    _nudge(maxcor, refDim, tgtDim);
+    _nudge(maxcor, refDim, secDim);
     // allocate room for the refinement area
     auto refinedArena = _refinedArena();
     // refine the reference tiles
     _refRefine(coarseArena, refinedArena);
     // collect the expanded maxcor tiles and migrate them to our new arena
-    _tgtMigrate(coarseArena, maxcor, refinedArena);
-    // refine the expanded target tiles in place
-    _tgtRefine(refinedArena);
+    _secMigrate(coarseArena, maxcor, refinedArena);
+    // refine the expanded secondary tiles in place
+    _secRefine(refinedArena);
 
     // interlude: housekeeping
     cudaFree(coarseArena);
@@ -110,14 +110,14 @@ adjust() -> const value_type *
     // deramp
     _deramp(refinedArena);
     // compute amplitudes
-    amplitudes = _detect(refinedArena, refRefinedDim, tgtRefinedDim);
+    amplitudes = _detect(refinedArena, refRefinedDim, secRefinedDim);
     // adjust the reference tiles to zero mean and compute the variances
-    refStatistics = _refStats(amplitudes, refRefinedDim, tgtRefinedDim);
-    // compute the sum area tables for all possible search window placements with the target tile
-    sat = _sat(amplitudes, refRefinedDim, tgtRefinedDim);
+    refStatistics = _refStats(amplitudes, refRefinedDim, secRefinedDim);
+    // compute the sum area tables for all possible search window placements with the secondary tile
+    sat = _sat(amplitudes, refRefinedDim, secRefinedDim);
     // compute the correlation  hyper-surface
-    gamma = _correlate(amplitudes, refStatistics, tgtStatistics,
-                       refRefinedDim, tgtRefinedDim, corRefinedDim);
+    gamma = _correlate(amplitudes, refStatistics, secStatistics,
+                       refRefinedDim, secRefinedDim, corRefinedDim);
     // zoom in
     auto zoomed = _zoomcor(gamma);
     // find its maxima
@@ -130,7 +130,7 @@ adjust() -> const value_type *
     cudaFree(maxcorZoomed);
     cudaFree(maxcor);
     cudaFree(gamma);
-    cudaFree(tgtStatistics);
+    cudaFree(secStatistics);
     cudaFree(sat);
     cudaFree(refStatistics);
     cudaFree(amplitudes);
@@ -173,35 +173,35 @@ ampcor::cuda::correlators::Sequential<raster_t>::
 template <typename raster_t>
 ampcor::cuda::correlators::Sequential<raster_t>::
 Sequential(size_type pairs,
-           const layout_type & refLayout, const layout_type & tgtLayout,
+           const layout_type & refLayout, const layout_type & secLayout,
            size_type refineFactor, size_type refineMargin, size_type zoomFactor) :
     _pairs{ pairs },
     _refineFactor{ refineFactor },
     _refineMargin{ refineMargin },
     _zoomFactor{ zoomFactor },
     _refLayout{ refLayout },
-    _tgtLayout{ tgtLayout },
-    _corLayout{ tgtLayout.shape() - refLayout.shape() + index_type::fill(1) },
+    _secLayout{ secLayout },
+    _corLayout{ secLayout.shape() - refLayout.shape() + index_type::fill(1) },
     _refRefinedLayout{ refineFactor * _refLayout.shape() },
-    _tgtRefinedLayout{ refineFactor * (_refLayout.shape() + index_type::fill(2*refineMargin)) },
+    _secRefinedLayout{ refineFactor * (_refLayout.shape() + index_type::fill(2*refineMargin)) },
     _corRefinedLayout{ index_type::fill(2*refineFactor*refineMargin+1) },
     _corZoomedLayout { zoomFactor * _corRefinedLayout.shape() },
     _refCells{ _refLayout.size() },
-    _tgtCells{ _tgtLayout.size() },
+    _secCells{ _secLayout.size() },
     _corCells{ _corLayout.size() },
     _refRefinedCells{ _refRefinedLayout.size() },
-    _tgtRefinedCells{ _tgtRefinedLayout.size() },
+    _secRefinedCells{ _secRefinedLayout.size() },
     _refFootprint{ _refCells * sizeof(cell_type) },
-    _tgtFootprint{ _tgtCells * sizeof(cell_type) },
+    _secFootprint{ _secCells * sizeof(cell_type) },
     _corFootprint{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
     _refRefinedFootprint{ _refRefinedCells * sizeof(cell_type) },
-    _tgtRefinedFootprint{ _tgtRefinedCells * sizeof(cell_type) },
-    _arena{ new cell_type[ _pairs * (_refCells+_tgtCells) ] },
+    _secRefinedFootprint{ _secRefinedCells * sizeof(cell_type) },
+    _arena{ new cell_type[ _pairs * (_refCells+_secCells) ] },
     _offsets{ new value_type[ 2 * _pairs ] }
 {
     // compute the footprints
-    auto footprint = _pairs*(_refFootprint + _tgtFootprint);
-    auto refinedFootprint = _pairs*(_refRefinedFootprint + _tgtRefinedFootprint);
+    auto footprint = _pairs*(_refFootprint + _secFootprint);
+    auto refinedFootprint = _pairs*(_refRefinedFootprint + _secRefinedFootprint);
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
     // show me
@@ -213,9 +213,9 @@ Sequential(size_type pairs,
         << pyre::journal::newline
         << "    ref shape: " << _refLayout << ", " << _refCells << " cells"
         << pyre::journal::newline
-        << "    tgt shape: " << _tgtLayout << ", " << _tgtCells << " cells"
+        << "    sec shape: " << _secLayout << ", " << _secCells << " cells"
         << pyre::journal::newline
-        << "    footprint: " << (_refCells+_tgtCells) << " cells in "
+        << "    footprint: " << (_refCells+_secCells) << " cells in "
         << (footprint/1024/1024) << " Mb"
         << pyre::journal::newline
         << "    refine factor: " << refineFactor
@@ -224,9 +224,9 @@ Sequential(size_type pairs,
         << pyre::journal::newline
         << "    refined ref shape: " << _refRefinedLayout << ", " << _refRefinedCells << " cells"
         << pyre::journal::newline
-        << "    refined tgt shape: " << _tgtRefinedLayout << ", " << _tgtRefinedCells << " cells"
+        << "    refined sec shape: " << _secRefinedLayout << ", " << _secRefinedCells << " cells"
         << pyre::journal::newline
-        << "    footprint: " << (_refRefinedCells+_tgtRefinedCells) << " cells in "
+        << "    footprint: " << (_refRefinedCells+_secRefinedCells) << " cells in "
         << (refinedFootprint/1024/1024) << " Mb"
         << pyre::journal::newline
         << "    arena: " << _arena
@@ -240,7 +240,7 @@ void
 ampcor::cuda::correlators::Sequential<raster_t>::
 dump() const
 {
-    // dump the arena as a sequence of reference and target tiles
+    // dump the arena as a sequence of reference and secondary tiles
     pyre::journal::debug_t channel("ampcor.cuda");
 
     // sign in
@@ -250,7 +250,7 @@ dump() const
         // inject the pid
         channel << "pid: " << pid << pyre::journal::newline;
         // compute the address of the reference tile in the arena
-        cell_type * refLoc = _arena + pid*(_refCells + _tgtCells);
+        cell_type * refLoc = _arena + pid*(_refCells + _secCells);
         // adapt it into a grid
         tile_type ref(_refLayout, refLoc);
         // inject it
@@ -262,16 +262,16 @@ dump() const
             channel << pyre::journal::newline;
         }
 
-        // compute the address of the target tile in the arena
-        cell_type * tgtLoc = refLoc + _refCells;
+        // compute the address of the secondary tile in the arena
+        cell_type * secLoc = refLoc + _refCells;
         // adapt it into a grid
-        tile_type tgt(_tgtLayout, tgtLoc);
+        tile_type sec(_secLayout, secLoc);
 
         // inject it
-        channel << "target: " << pyre::journal::newline;
-        for (auto idx = 0; idx < _tgtLayout.shape()[0]; ++idx) {
-            for (auto jdx = 0; jdx < _tgtLayout.shape()[1]; ++jdx) {
-                channel << tgt[{idx, jdx}] << " ";
+        channel << "secondary: " << pyre::journal::newline;
+        for (auto idx = 0; idx < _secLayout.shape()[0]; ++idx) {
+            for (auto jdx = 0; jdx < _secLayout.shape()[1]; ++jdx) {
+                channel << sec[{idx, jdx}] << " ";
             }
             channel << pyre::journal::newline;
         }
@@ -296,7 +296,7 @@ _push() const -> cell_type *
     // grab a spot
     cell_type * cArena = nullptr;
     // compute the required size
-    auto footprint = _pairs * (_refFootprint + _tgtFootprint);
+    auto footprint = _pairs * (_refFootprint + _secFootprint);
     // allocate room for it
     auto status = cudaMallocManaged(&cArena, footprint);
     // if something went wrong
@@ -342,17 +342,17 @@ _push() const -> cell_type *
 template <typename raster_t>
 auto
 ampcor::cuda::correlators::Sequential<raster_t>::
-_detect(const cell_type * cArena, size_type refDim, size_type tgtDim) const -> value_type *
+_detect(const cell_type * cArena, size_type refDim, size_type secDim) const -> value_type *
 {
     // compute the size of a reference tile
     auto refCells = refDim * refDim;
-    // compute the size of a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // compute the size of a secondary tile
+    auto secCells = secDim * secDim;
 
     // find a spot on the device
     value_type * rArena = nullptr;
     // compute the number of cells whose amplitude we have to compute
-    auto cells = _pairs * (refCells + tgtCells);
+    auto cells = _pairs * (refCells + secCells);
     // compute the required size
     auto footprint = cells * sizeof(value_type);
     // allocate room for it
@@ -383,12 +383,12 @@ _detect(const cell_type * cArena, size_type refDim, size_type tgtDim) const -> v
 template <typename raster_t>
 auto
 ampcor::cuda::correlators::Sequential<raster_t>::
-_refStats(value_type * rArena, size_type refDim, size_type tgtDim) const -> value_type *
+_refStats(value_type * rArena, size_type refDim, size_type secDim) const -> value_type *
 {
     // compute the size of a reference tile
     auto refCells = refDim * refDim;
-    // compute the size of a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // compute the size of a secondary tile
+    auto secCells = secDim * secDim;
 
     // grab a spot
     value_type * stats = nullptr;
@@ -413,32 +413,32 @@ _refStats(value_type * rArena, size_type refDim, size_type tgtDim) const -> valu
     }
 
     // engage
-    kernels::refStats(rArena, _pairs, refDim, refCells + tgtCells, stats);
+    kernels::refStats(rArena, _pairs, refDim, refCells + secCells, stats);
 
     // all done
     return stats;
 }
 
-// build the sum area tables for the target tiles
+// build the sum area tables for the secondary tiles
 template <typename raster_t>
 auto
 ampcor::cuda::correlators::Sequential<raster_t>::
-_sat(const value_type * rArena, size_type refDim, size_type tgtDim) const -> value_type *
+_sat(const value_type * rArena, size_type refDim, size_type secDim) const -> value_type *
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
     // compute the size of a reference tile
     auto refCells = refDim * refDim;
-    // compute the size of a target tile
-    auto tgtCells = tgtDim * tgtDim;
-    // compute the memory footprint of a target tile
-    auto tgtFootprint = tgtCells * sizeof(value_type);
+    // compute the size of a secondary tile
+    auto secCells = secDim * secDim;
+    // compute the memory footprint of a secondary tile
+    auto secFootprint = secCells * sizeof(value_type);
 
     // grab a spot for the sat tables
     value_type * sat = nullptr;
     // compute the amount of memory needed to store them
-    auto footprint = _pairs * tgtFootprint;
+    auto footprint = _pairs * secFootprint;
     // allocate memory
     auto status = cudaMallocManaged(&sat, footprint);
     // if something went wrong
@@ -462,7 +462,7 @@ _sat(const value_type * rArena, size_type refDim, size_type tgtDim) const -> val
         << pyre::journal::endl;
 
     // engage
-    kernels::sat(rArena, _pairs, refCells, tgtCells, tgtDim, sat);
+    kernels::sat(rArena, _pairs, refCells, secCells, secDim, sat);
 
     // all done
     return sat;
@@ -470,19 +470,19 @@ _sat(const value_type * rArena, size_type refDim, size_type tgtDim) const -> val
 
 
 // compute the average values for all possible placements of the reference shape within the
-// target tile
+// secondary tile
 template <typename raster_t>
 auto
 ampcor::cuda::correlators::Sequential<raster_t>::
-_tgtStats(const value_type * dSAT,
-          size_type refDim, size_type tgtDim, size_type corDim) const -> value_type *
+_secStats(const value_type * dSAT,
+          size_type refDim, size_type secDim, size_type corDim) const -> value_type *
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
     // pick a spot for the table of amplitude averages
     value_type * stats = nullptr;
-    // compute the amount of memory needed to store the target tile statistics: we store the
+    // compute the amount of memory needed to store the secondary tile statistics: we store the
     // mean per placement per tile
     auto footprint = _pairs * corDim*corDim * sizeof(value_type);
     // allocate memory on the device
@@ -496,7 +496,7 @@ _tgtStats(const value_type * dSAT,
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while allocating device memory for the table of target amplitude averages: "
+            << "while allocating device memory for the table of secondary amplitude averages: "
             << description << " (" << status << ")"
             << pyre::journal::endl;
         // and bail
@@ -505,12 +505,12 @@ _tgtStats(const value_type * dSAT,
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "allocated an arena of " << footprint << " bytes for the target amplitude averages at "
+        << "allocated an arena of " << footprint << " bytes for the secondary amplitude averages at "
         << stats
         << pyre::journal::endl;
 
     // engage
-    kernels::tgtStats(dSAT, _pairs, refDim, tgtDim, corDim, stats);
+    kernels::secStats(dSAT, _pairs, refDim, secDim, corDim, stats);
 
     // all done
     return stats;
@@ -522,16 +522,16 @@ template <typename raster_t>
 auto
 ampcor::cuda::correlators::Sequential<raster_t>::
 _correlate(const value_type * rArena,
-           const value_type * refStats, const value_type * tgtStats,
-           size_type refDim, size_type tgtDim, size_type corDim) const -> value_type *
+           const value_type * refStats, const value_type * secStats,
+           size_type refDim, size_type secDim, size_type corDim) const -> value_type *
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
     // compute the size of the reference tile
     auto refCells = refDim * refDim;
-    // compute the size of the target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // compute the size of the secondary tile
+    auto secCells = secDim * secDim;
     // compute the size of the correlation matrix
     auto corCells = corDim * corDim;
 
@@ -566,9 +566,9 @@ _correlate(const value_type * rArena,
         << pyre::journal::endl;
 
     // engage
-    kernels::correlate(rArena, refStats, tgtStats,
+    kernels::correlate(rArena, refStats, secStats,
                        _pairs,
-                       refCells, tgtCells, corCells, refDim, tgtDim, corDim,
+                       refCells, secCells, corCells, refDim, secDim, corDim,
                        dCorrelation);
 
     // all done
@@ -624,16 +624,16 @@ _maxcor(const value_type * gamma, size_type corDim) const -> int *
 }
 
 
-// adjust the locations of the correlation maxima so that the new target tiles fit within the
+// adjust the locations of the correlation maxima so that the new secondary tiles fit within the
 // search window
 template <typename raster_t>
 void
 ampcor::cuda::correlators::Sequential<raster_t>::
-_nudge(int * locations, size_type refDim, size_type tgtDim) const
+_nudge(int * locations, size_type refDim, size_type secDim) const
 {
     // make sure that all locations are adjusted so that they allow enough room for the
     // {refineMargin} by moving the ULHC of the tiles so they fit
-    kernels::nudge(_pairs, refDim, tgtDim, _refineMargin, locations);
+    kernels::nudge(_pairs, refDim, secDim, _refineMargin, locations);
 
     // all done
     return;
@@ -652,7 +652,7 @@ _refinedArena() const -> cell_type *
     // grab a spot
     cell_type * arena = nullptr;
     // compute the required size
-    auto footprint = _pairs * (_refRefinedFootprint + _tgtRefinedFootprint);
+    auto footprint = _pairs * (_refRefinedFootprint + _secRefinedFootprint);
     // allocate room for it
     auto status = cudaMallocManaged(&arena, footprint);
     // if something went wrong
@@ -724,14 +724,14 @@ _refRefine(cell_type * coarseArena, cell_type * refinedArena) const
     // the data is densely packed
     int fwdIStride = 1;
     // the distance between reference tiles
-    int fwdIDist = _refCells + _tgtCells;
+    int fwdIDist = _refCells + _secCells;
     // the data layout of the refined tiles
     // the tile shape stays the same
     int fwdOEmbed[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
     // the data is densely packed
     int fwdOStride = 1;
     // the distance between reference tiles in the refined arena
-    int fwdODist = _refRefinedCells + _tgtRefinedCells;
+    int fwdODist = _refRefinedCells + _secRefinedCells;
 
     // grab a spot for a plan
     cufftHandle fwdPlan;
@@ -800,13 +800,13 @@ _refRefine(cell_type * coarseArena, cell_type * refinedArena) const
     // the data is densely packed
     int revIStride = 1;
     // the distance between reference tiles
-    int revIDist = _refRefinedCells + _tgtRefinedCells;
+    int revIDist = _refRefinedCells + _secRefinedCells;
     // the inverse FFT tiles have identical layout
     int revOEmbed[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
     // the data is densely packed
     int revOStride = 1;
     // the distance between reference tiles
-    int revODist = _refRefinedCells + _tgtRefinedCells;
+    int revODist = _refRefinedCells + _secRefinedCells;
 
     // grab a spot
     cufftHandle revPlan;
@@ -873,37 +873,37 @@ _refRefine(cell_type * coarseArena, cell_type * refinedArena) const
 }
 
 
-// migrate the expanded unrefined target tiles into the {refinedArena}
+// migrate the expanded unrefined secondary tiles into the {refinedArena}
 template <typename raster_t>
 void
 ampcor::cuda::correlators::Sequential<raster_t>::
-_tgtMigrate(cell_type * coarseArena, int * locations, cell_type * refinedArena) const
+_secMigrate(cell_type * coarseArena, int * locations, cell_type * refinedArena) const
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
     // the reference tile shape
     auto refShape = _refLayout.shape();
-    // the target tile shape
-    auto tgtShape = _tgtLayout.shape();
+    // the secondary tile shape
+    auto secShape = _secLayout.shape();
     // the refined reference tile shape
     auto refRefinedShape = _refRefinedLayout.shape();
-    // the refined target tile shape
-    auto tgtRefinedShape = _tgtRefinedLayout.shape();
+    // the refined secondary tile shape
+    auto secRefinedShape = _secRefinedLayout.shape();
 
     // unpack the dimensions
     auto refDim = refShape[0];
-    auto tgtDim = tgtShape[0];
+    auto secDim = secShape[0];
     auto refRefinedDim = refRefinedShape[0];
-    auto tgtRefinedDim = tgtRefinedShape[0];
+    auto secRefinedDim = secRefinedShape[0];
 
     // compute the dimension of the expanded maxcor tile
     auto expDim = refDim + 2 * _refineMargin;
 
     // engage...
     kernels::migrate(coarseArena, _pairs,
-                     refDim, tgtDim, expDim,
-                     refRefinedDim, tgtRefinedDim,
+                     refDim, secDim, expDim,
+                     refRefinedDim, secRefinedDim,
                      locations,
                      refinedArena);
 
@@ -912,43 +912,43 @@ _tgtMigrate(cell_type * coarseArena, int * locations, cell_type * refinedArena) 
 }
 
 
-// refine the target tiles around the locations of the correlation maxima
+// refine the secondary tiles around the locations of the correlation maxima
 template <typename raster_t>
 void
 ampcor::cuda::correlators::Sequential<raster_t>::
-_tgtRefine(cell_type * refinedArena) const
+_secRefine(cell_type * refinedArena) const
 {
     // N.B.: assumes {locations} are already nudged and on the CPU...
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
-    // the shape of the target tile
-    auto tgtShape = _tgtLayout.shape();
-    // the shape the refined target tile
-    auto tgtRefShape = _tgtRefinedLayout.shape();
-    // the shape of the expanded target tile
+    // the shape of the secondary tile
+    auto secShape = _secLayout.shape();
+    // the shape the refined secondary tile
+    auto secRefShape = _secRefinedLayout.shape();
+    // the shape of the expanded secondary tile
     auto expShape = _refLayout.shape() + index_type::fill(2*_refineMargin);
 
-    // N.B.: the expanded maxcor target tiles are expected to have already been moved to the
+    // N.B.: the expanded maxcor secondary tiles are expected to have already been moved to the
     // refined arena after the maxcor locations were determined
 
     // step 1: forward FFT in place in {refinedArena}
     // the plan characteristics
     int dim = 2;
-    // use the shape of the expanded target tile
+    // use the shape of the expanded secondary tile
     int fwdRanks[] = { static_cast<int>(expShape[0]), static_cast<int>(expShape[1]) };
     // this tile is already occupying its destination location in {refinedArena}
-    int fwdIEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    int fwdIEmbed[] = { static_cast<int>(secRefShape[0]), static_cast<int>(secRefShape[1]) };
     // the data is dense
     int fwdIStride = 1;
     // the distance between tiles
-    int fwdIDist = _refRefinedCells + _tgtRefinedCells;
+    int fwdIDist = _refRefinedCells + _secRefinedCells;
     // the destination of the forward FFT has indentical layout
-    int fwdOEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    int fwdOEmbed[] = { static_cast<int>(secRefShape[0]), static_cast<int>(secRefShape[1]) };
     // the data is dense
     int fwdOStride = 1;
     // the distance between tiles
-    int fwdODist = _refRefinedCells + _tgtRefinedCells;
+    int fwdODist = _refRefinedCells + _secRefinedCells;
 
     // grab a spot for a plan
     cufftHandle fwdPlan;
@@ -966,10 +966,10 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while refining the target tiles: forward FFT plan: error " << status
+            << "while refining the secondary tiles: forward FFT plan: error " << status
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while refining the target tiles: forward FFT plan error");
+        throw std::runtime_error("while refining the secondary tiles: forward FFT plan error");
     }
 
     // the address of the first expanded maxcor tile
@@ -983,7 +983,7 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while refining the target tiles: executing the forward FFT plan: error "
+            << "while refining the secondary tiles: executing the forward FFT plan: error "
             << status
             << pyre::journal::endl;
         // and bail
@@ -1000,7 +1000,7 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         channel
             << pyre::journal::at(__HERE__)
-            << "while refining target tiles: STEP 1: " << description << " (" << code << ")"
+            << "while refining secondary tiles: STEP 1: " << description << " (" << code << ")"
             << pyre::journal::endl;
         // bail
         throw std::runtime_error(description);
@@ -1010,20 +1010,20 @@ _tgtRefine(cell_type * refinedArena) const
 
     // step 2: inverse FFT of the refined tiles back into the refined arena
     // the plan characteristics
-    int revRanks[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    int revRanks[] = { static_cast<int>(secRefShape[0]), static_cast<int>(secRefShape[1]) };
 
     // the data layout of the transformed reference tiles
-    int revIEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    int revIEmbed[] = { static_cast<int>(secRefShape[0]), static_cast<int>(secRefShape[1]) };
     // the data is densely packed
     int revIStride = 1;
     // the distance between reference tiles
-    int revIDist = _refRefinedCells + _tgtRefinedCells;
+    int revIDist = _refRefinedCells + _secRefinedCells;
     // the inverse FFT tiles have identical layout
-    int revOEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    int revOEmbed[] = { static_cast<int>(secRefShape[0]), static_cast<int>(secRefShape[1]) };
     // the data is densely packed
     int revOStride = 1;
     // the distance between reference tiles
-    int revODist = _refRefinedCells + _tgtRefinedCells;
+    int revODist = _refRefinedCells + _secRefinedCells;
 
     // grab a spot
     cufftHandle revPlan;
@@ -1041,10 +1041,10 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while refining the target tiles: inverse FFT plan: error " << status
+            << "while refining the secondary tiles: inverse FFT plan: error " << status
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while refining the target tiles: inverse FFT plan error");
+        throw std::runtime_error("while refining the secondary tiles: inverse FFT plan error");
     }
 
     // execute the inverse plan
@@ -1056,11 +1056,11 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while refining the target tiles: executing the inverse FFT plan: error "
+            << "while refining the secondary tiles: executing the inverse FFT plan: error "
             << status
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while executing the inverse FFT plan for the target tiles");
+        throw std::runtime_error("while executing the inverse FFT plan for the secondary tiles");
     }
     // wait for the device to finish
     code = cudaDeviceSynchronize();
@@ -1073,7 +1073,7 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         channel
             << pyre::journal::at(__HERE__)
-            << "while refining target tiles: STEP 2: " << description << " (" << code << ")"
+            << "while refining secondary tiles: STEP 2: " << description << " (" << code << ")"
             << pyre::journal::endl;
         // bail
         throw std::runtime_error(description);
@@ -1087,7 +1087,7 @@ _tgtRefine(cell_type * refinedArena) const
 }
 
 
-// refine the target tiles around the locations of the correlation maxima
+// refine the secondary tiles around the locations of the correlation maxima
 template <typename raster_t>
 void
 ampcor::cuda::correlators::Sequential<raster_t>::
@@ -1295,7 +1295,7 @@ _offsetField(const int * coarse, const int * fine) -> const value_type *
     // constants
     const auto Mb = 1.0 / (1024 * 1024);
     // compute the search margin
-    auto margin = (_tgtLayout.shape()[0] - _refLayout.shape()[0]) / 2;
+    auto margin = (_secLayout.shape()[0] - _refLayout.shape()[0]) / 2;
     // compute the overall zoom factor
     auto zoom = _refineFactor * _zoomFactor;
 

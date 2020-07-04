@@ -59,54 +59,54 @@ int main() {
     int margin = 32;
     // the refinement factor
     int refineFactor = 2;
-    // the margin around the refined target tile
+    // the margin around the refined secondary tile
     int refineMargin = 8;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
     // the number of pairs
     auto pairs = placements*placements;
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells per pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // the shape of the refined reference tiles
     auto refRefinedShape = refineFactor * refShape;
-    // the shape of the refined target tiles
-    auto tgtRefinedShape = refineFactor * (refShape + slc_t::index_type::fill(2*refineMargin));
+    // the shape of the refined secondary tiles
+    auto secRefinedShape = refineFactor * (refShape + slc_t::index_type::fill(2*refineMargin));
     // the layout of the refined reference tiles
     slc_t::layout_type refRefinedLayout { refRefinedShape };
-    // the layout of the refined target tiles
-    slc_t::layout_type tgtRefinedLayout { tgtRefinedShape };
+    // the layout of the refined secondary tiles
+    slc_t::layout_type secRefinedLayout { secRefinedShape };
     // the number of cells in a refined reference tile
     auto refRefinedCells = refRefinedLayout.size();
-    // the number of cells in a refined target tile
-    auto tgtRefinedCells = tgtRefinedLayout.size();
+    // the number of cells in a refined secondary tile
+    auto secRefinedCells = secRefinedLayout.size();
     //  the number of cells per refined pair
-    auto cellsPerRefinedPair = refRefinedCells + tgtRefinedCells;
+    auto cellsPerRefinedPair = refRefinedCells + secRefinedCells;
     // the total number of refined cells
     auto cellsRefined = pairs * cellsPerRefinedPair;
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout, refineFactor, refineMargin);
+    correlator_t c(pairs, refLayout, secLayout, refineFactor, refineMargin);
     // stop the clock
     timer.stop();
     // show me
@@ -137,14 +137,14 @@ int main() {
     // build reference tiles
     for (auto i=0; i<placements; ++i) {
         for (auto j=0; j<placements; ++j) {
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            auto slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            auto view = tgt.view(slice);
+            auto slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            auto view = sec.view(slice);
             // place a copy of the reference tile
             std::copy(rview.begin(), rview.end(), view.begin());
 
@@ -152,7 +152,7 @@ int main() {
             int pid = i*placements + j;
             // add this pair to the correlator
             c.addReferenceTile(pid, ref.constview());
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -248,16 +248,16 @@ int main() {
     timer.reset().start();
     // establish a tolerance
     auto tolerance = std::numeric_limits<value_t>::epsilon();
-    // verify that all the cells that would have been occupied by the target tiles are still zero
+    // verify that all the cells that would have been occupied by the secondary tiles are still zero
     for (auto pid=0; pid < pairs; ++pid) {
-        // find the starting point of this target tile
-        auto tgtTile = refined + pid*cellsPerRefinedPair + refRefinedCells;
+        // find the starting point of this secondary tile
+        auto secTile = refined + pid*cellsPerRefinedPair + refRefinedCells;
         // make a tile over it
-        tile_t tgt { tgtRefinedShape, tgtTile };
+        tile_t sec { secRefinedShape, secTile };
         // go through all the cells
-        for (auto idx : tgt.layout()) {
+        for (auto idx : sec.layout()) {
             // get the value
-            auto cell = tgt[idx];
+            auto cell = sec[idx];
             // check that it is zero
             if (std::abs(cell) > tolerance) {
                 // make a channel
@@ -265,7 +265,7 @@ int main() {
                 // show me
                 error
                     << pyre::journal::at(__HERE__)
-                    << "non-zero target cell: " << cell
+                    << "non-zero secondary cell: " << cell
                     << pyre::journal::newline
                     << "at [" << pid << ";" << idx << "]"
                     << pyre::journal::endl;
@@ -279,10 +279,10 @@ int main() {
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "verifying that the refined target slots were untouched: " << 1e3 * duration << " ms"
+        << "verifying that the refined secondary slots were untouched: " << 1e3 * duration << " ms"
         << pyre::journal::endl;
 
-    // let's start over with the target refinement check
+    // let's start over with the secondary refinement check
     // get rid of the refined arena
     cudaFree(refinedArena);
     // start the clock
@@ -313,7 +313,7 @@ int main() {
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "synthesizing locations for the refined target tiles: " << 1e3 * timer.read() << " ms"
+        << "synthesizing locations for the refined secondary tiles: " << 1e3 * timer.read() << " ms"
         << pyre::journal::endl;
 
     // start the clock
@@ -365,7 +365,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // nudge them
-    c._nudge(dloc, refDim, tgtDim);
+    c._nudge(dloc, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -377,7 +377,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // migrate
-    c._tgtMigrate(coarseArena, dloc, refinedArena);
+    c._secMigrate(coarseArena, dloc, refinedArena);
     // stop the clock
     timer.stop();
     // show me
@@ -390,14 +390,14 @@ int main() {
 
     // start the clock
     timer.reset().start();
-    // refine the target tiles
-    c._tgtRefine(refinedArena);
+    // refine the secondary tiles
+    c._secRefine(refinedArena);
     // stop the clock
     timer.stop();
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "refining the target tiles: " << 1e3 * timer.read() << " ms"
+        << "refining the secondary tiles: " << 1e3 * timer.read() << " ms"
         << pyre::journal::endl;
 
     // let's bring the refined arena back to the host
@@ -437,7 +437,7 @@ int main() {
     timer.reset().start();
     // verify that all the cells that would have been occupied by the reference tiles are still zero
     for (auto pid=0; pid < pairs; ++pid) {
-        // find the starting point of this target tile
+        // find the starting point of this secondary tile
         auto refTile = refined + pid*cellsPerRefinedPair;
         // make a tile over it
         tile_t ref { refRefinedShape, refTile };

@@ -22,7 +22,7 @@ class Offsets(ampcor.protocol, family="ampcor.correlators.offsets"):
     @ampcor.provides
     def map(self, **kwds):
         """
-        Build an offset map between {reference} and {target}
+        Build an offset map between {reference} and {secondary}
         """
 
 

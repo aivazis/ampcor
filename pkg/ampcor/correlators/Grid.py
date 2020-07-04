@@ -27,14 +27,14 @@ class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implement
     domain.doc = "the domain of the map"
 
     functor = ampcor.correlators.functor()
-    functor.doc = "the function that maps points from the reference raster to the target raster"
+    functor.doc = "the function that maps points from the reference raster to the secondary raster"
 
 
     # requirements
     @ampcor.export
     def map(self, reference, **kwds):
         """
-        Build an offset map between {reference} and {target}
+        Build an offset map between {reference} and {secondary}
         """
         # get my domain
         domain = self.domain
@@ -44,7 +44,7 @@ class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implement
         offmap = ampcor.dom.newOffsetMap(shape=domain.shape)
         # generate the reference points and attach them as the domain of the offset map
         offmap.domain = tuple(domain.points(bounds=reference.shape))
-        # invoke the map to generate the corresponding points on the target image
+        # invoke the map to generate the corresponding points on the secondary image
         offmap.codomain = tuple(functor.codomain(domain=offmap.domain))
         # all done
         return offmap

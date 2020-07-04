@@ -67,8 +67,8 @@ int main() {
     // the zoom factor
     int zoomFactor = 4;
 
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
     // the shape of the base correlation matrix
     auto corDim = 2*refineFactor*refineMargin + 1;
     // the shape of the zoomed correlation matrix
@@ -80,7 +80,7 @@ int main() {
     // the reference shape
     slc_t::shape_type refShape {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape {tgtDim, tgtDim};
+    slc_t::shape_type secShape {secDim, secDim};
     // the base correlation matrix shape
     cor_t::shape_type corShape {pairs, corDim, corDim};
     // the zoomed correlation matrix shape
@@ -89,12 +89,12 @@ int main() {
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // the number of cells in a reference tile
     auto refCells = refShape.size();
-    // the number of cells in a target tile
-    auto tgtCells = tgtShape.size();
+    // the number of cells in a secondary tile
+    auto secCells = secShape.size();
     // the number of cells in the correlation matrix
     auto corCells = corShape.size();
     // the number of cells in the zoomed correlation matrix
@@ -103,7 +103,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout, refineFactor, refineMargin, zoomFactor);
+    correlator_t c(pairs, refLayout, secLayout, refineFactor, refineMargin, zoomFactor);
     // stop the clock
     timer.stop();
     // show me

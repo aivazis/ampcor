@@ -60,9 +60,9 @@ int main() {
     int refDim = 128;
     // the margin around the reference tile
     int margin = 32;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
     //  the dimension of the correlation matrix
     auto corDim = placements;
@@ -72,29 +72,29 @@ int main() {
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells in the table of mean values
     auto corCells = corDim * corDim;
     // the number of cells in each pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
 
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout);
+    correlator_t c(pairs, refLayout, secLayout);
     // stop the clock
     timer.stop();
     // show me
@@ -122,25 +122,25 @@ int main() {
     }
     // make a view over the reference tile
     auto rview = ref.constview();
-    // build the target tiles
+    // build the secondary tiles
     for (auto i=0; i<placements; ++i) {
         for (auto j=0; j<placements; ++j) {
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            auto slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            auto tgtView = tgt.view(slice);
+            auto slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            auto secView = sec.view(slice);
             // fill it with the contents of the reference tile for this pair
-            std::copy(rview.begin(), rview.end(), tgtView.begin());
+            std::copy(rview.begin(), rview.end(), secView.begin());
 
             // compute the pair id
             int pid = i*placements + j;
             // add this pair to the correlator
             c.addReferenceTile(pid, rview);
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -173,7 +173,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute the amplitude of every pixel
-    auto rArena = c._detect(cArena, refDim, tgtDim);
+    auto rArena = c._detect(cArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -185,7 +185,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute reference tile statistics
-    auto refStats = c._refStats(rArena, refDim, tgtDim);
+    auto refStats = c._refStats(rArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -198,7 +198,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute the sum area tables
-    auto sat = c._sat(rArena, refDim, tgtDim);
+    auto sat = c._sat(rArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -209,20 +209,20 @@ int main() {
 
     // start the clock
     timer.reset().start();
-    // compute the average amplitude of all possible ref shaped sub-tiles in the target tile
-    auto tgtStats = c._tgtStats(sat, refDim, tgtDim, corDim);
+    // compute the average amplitude of all possible ref shaped sub-tiles in the secondary tile
+    auto secStats = c._secStats(sat, refDim, secDim, corDim);
     // stop the clock
     timer.stop();
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "computing target tile statistics: " << 1e3 * timer.read() << " ms"
+        << "computing secondary tile statistics: " << 1e3 * timer.read() << " ms"
         << pyre::journal::endl;
 
     // start the clock
     timer.reset().start();
-    // compute the average amplitude of all possible ref shaped sub-tiles in the target tile
-    auto gamma = c._correlate(rArena, refStats, tgtStats, refDim, tgtDim, corDim);
+    // compute the average amplitude of all possible ref shaped sub-tiles in the secondary tile
+    auto gamma = c._correlate(rArena, refStats, secStats, refDim, secDim, corDim);
     // stop the clock
     timer.stop();
     // show me
@@ -269,7 +269,7 @@ int main() {
         << pyre::journal::endl;
 
     // the shape of the correlation matrix: the first two indices identify the pair, the last
-    // two indicate the placement of the reference tile within the target search window
+    // two indicate the placement of the reference tile within the secondary search window
     ctile_t::shape_type corShape = {corDim, corDim, corDim, corDim};
     // the layout of the correlation matrix
     ctile_t::layout_type corLayout = { corShape };
@@ -279,7 +279,7 @@ int main() {
     // establish a tolerance
     auto tolerance = 10 * std::numeric_limits<value_t>::epsilon();
     // verify by checking that the correlation is unity for the correct placement of the
-    // reference tile within the target window
+    // reference tile within the secondary window
     for (auto idx = 0; idx < corDim; ++idx) {
         for (auto jdx = 0; jdx < corDim; ++jdx) {
             // we expect
@@ -309,7 +309,7 @@ int main() {
     delete [] cor;
 
     cudaFree(gamma);
-    cudaFree(tgtStats);
+    cudaFree(secStats);
     cudaFree(sat);
     cudaFree(rArena);
     cudaFree(cArena);

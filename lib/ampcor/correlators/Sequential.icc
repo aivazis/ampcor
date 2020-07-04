@@ -27,7 +27,7 @@ addReferenceTile(const slc_type & slc, size_type pid, slice_type slice)
     // start the clock
     timer.reset().start();
     // compute the starting point of the reference tile that corresponds to this pair id
-    cell_type * support = _buffer + pid*(_refCells + _tgtCells);
+    cell_type * support = _buffer + pid*(_refCells + _secCells);
     // adapt it into a grid
     gview_type tile { {_refShape, slc.layout().packing()} , support };
     // build a view over the entire thing
@@ -103,7 +103,7 @@ addReferenceTile(const slc_type & slc, size_type pid, slice_type slice)
         << "        to: (" << slice.high() << ")" << pyre::journal::newline
         << "    support:" << pyre::journal::newline
         << "        anchor: " << _buffer << pyre::journal::newline
-        << "        offset: " << pid*(_refCells + _tgtCells) << pyre::journal::newline
+        << "        offset: " << pid*(_refCells + _secCells) << pyre::journal::newline
         << "        support: " << support << pyre::journal::newline
         << "        extent: " << tile.layout().size() << " cells" << pyre::journal::newline
         << "        footprint: " << sizeof(cell_type) * tile.layout().size() << " bytes"
@@ -115,7 +115,7 @@ addReferenceTile(const slc_type & slc, size_type pid, slice_type slice)
 
 void
 ampcor::correlators::Sequential::
-addTargetTile(const slc_type & slc, size_type pid, slice_type slice)
+addSecondaryTile(const slc_type & slc, size_type pid, slice_type slice)
 {
     // make a timer
     timer_t timer("ampcor.sequential");
@@ -126,15 +126,15 @@ addTargetTile(const slc_type & slc, size_type pid, slice_type slice)
 
     // start the clock
     timer.reset().start();
-    // compute the starting point of the target tile that corresponds to this pair id
-    cell_type * support = _buffer + pid*(_refCells + _tgtCells) + _refCells;
+    // compute the starting point of the secondary tile that corresponds to this pair id
+    cell_type * support = _buffer + pid*(_refCells + _secCells) + _refCells;
     // adapt it into a grid
-    gview_type tile { {_tgtShape, slc.layout().packing()} , support };
+    gview_type tile { {_secShape, slc.layout().packing()} , support };
     // build a view over the entire thing
     auto view = tile.view();
 
-    // build a view to the target raster that is limited to the supplied {slice}
-    auto tgt = slc.view(slice);
+    // build a view to the secondary raster that is limited to the supplied {slice}
+    auto sec = slc.view(slice);
 
     // make a function that computes the magnitude of complex numbers
     auto magnitude = [] (slc_type::pixel_type pxl) -> cell_type
@@ -144,34 +144,34 @@ addTargetTile(const slc_type & slc, size_type pid, slice_type slice)
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "pair #" << pid << ": target window start up: " << 1e6 * timer.read() << " μs"
+        << "pair #" << pid << ": secondary window start up: " << 1e6 * timer.read() << " μs"
         << pyre::journal::endl;
 
     // start the clock
     timer.reset().start();
-    // initialize the tile by applying {magnitude} to every cell in {tgt} and storing the
+    // initialize the tile by applying {magnitude} to every cell in {sec} and storing the
     // result in {view}
-    std::transform(tgt.begin(), tgt.end(), view.begin(), magnitude);
+    std::transform(sec.begin(), sec.end(), view.begin(), magnitude);
     // stop the clock
     timer.stop();
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "reading target window, computing amplitudes, and storing: "
+        << "reading secondary window, computing amplitudes, and storing: "
         << 1e6 * timer.read() << " μs"
         << pyre::journal::endl;
 
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "adding target tile #" << pid << ":" << pyre::journal::newline
+        << "adding secondary tile #" << pid << ":" << pyre::journal::newline
         << "    pair id: " << pid << pyre::journal::newline
         << "    slice:" << pyre::journal::newline
         << "        from: (" << slice.low() << ")" << pyre::journal::newline
         << "        to: (" << slice.high() << ")" << pyre::journal::newline
         << "    support:" << pyre::journal::newline
         << "        anchor: " << _buffer << pyre::journal::newline
-        << "        offset: " << pid*(_refCells + _tgtCells) + _refCells << pyre::journal::newline
+        << "        offset: " << pid*(_refCells + _secCells) + _refCells << pyre::journal::newline
         << "        support: " << support << pyre::journal::newline
         << "        extent: " << tile.layout().size() << " cells" << pyre::journal::newline
         << "        footprint: " << sizeof(cell_type) * tile.layout().size() << " bytes"

@@ -31,7 +31,7 @@ class Constant(ampcor.component,
     @ampcor.export
     def codomain(self, domain, **kwds):
         """
-        Given {reference} points in {domain}, generate their images in {target}
+        Given {reference} points in {domain}, generate their images in {secondary}
         """
         # grab my {shift}
         shift = self.shift

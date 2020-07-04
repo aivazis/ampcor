@@ -44,12 +44,12 @@ int main() {
     // the reference shape
     correlator_t::shape_type refShape = { 128, 128};
     // the search window shape
-    correlator_t::shape_type tgtShape = { 192, 192 };
+    correlator_t::shape_type secShape = { 192, 192 };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refShape, tgtShape);
+    correlator_t c(pairs, refShape, secShape);
     // verify that its scratch space is allocated and accessible
     auto arena = c.arena();
     // stop the clock

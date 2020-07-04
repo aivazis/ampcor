@@ -25,7 +25,7 @@ template <std::size_t T, typename value_t = float>
 __global__
 void
 _correlate(const value_t * arena,
-           const value_t * refStats, const value_t * tgtStats,
+           const value_t * refStats, const value_t * secStats,
            std::size_t rdim, std::size_t rcells,
            std::size_t tdim, std::size_t tcells,
            std::size_t cdim, std::size_t ccells,
@@ -36,10 +36,10 @@ _correlate(const value_t * arena,
 // implementation
 void
 ampcor::cuda::kernels::
-correlate(const float * dArena, const float * refStats, const float * tgtStats,
+correlate(const float * dArena, const float * refStats, const float * secStats,
           std::size_t pairs,
-          std::size_t refCells, std::size_t tgtCells, std::size_t corCells,
-          std::size_t refDim, std::size_t tgtDim, std::size_t corDim,
+          std::size_t refCells, std::size_t secCells, std::size_t corCells,
+          std::size_t refDim, std::size_t secDim, std::size_t corDim,
           float * dCorrelation)
 {
     // make a channel
@@ -51,7 +51,7 @@ correlate(const float * dArena, const float * refStats, const float * tgtStats,
     // the number of threads per block is determined by the shape of the reference  tile
     auto T = refDim;
     // each thread stores in shared memory the partial sum for the numerator term and the
-    // partial sum for the target tile variance; so we need two {value_t}'s worth of shared
+    // partial sum for the secondary tile variance; so we need two {value_t}'s worth of shared
     // memory for each thread
     auto S = 2 * T * sizeof(float);
     // show me
@@ -59,7 +59,7 @@ correlate(const float * dArena, const float * refStats, const float * tgtStats,
         << pyre::journal::at(__HERE__)
         << "launching " << B << " blocks of " << T << " threads each, with "
         << S << " bytes of shared memory per block, for each of the " << corCells
-        << " possible placements of the search window within the target tile;"
+        << " possible placements of the search window within the secondary tile;"
         << " a grand total of " << (B*corCells) << " kernel launches"
         << pyre::journal::endl;
 
@@ -76,36 +76,36 @@ correlate(const float * dArena, const float * refStats, const float * tgtStats,
                 // tell me
                 channel << "deploying the 32x32 kernel";
                 // do it
-                _correlate<32> <<<B,32,S>>> (dArena, refStats, tgtStats,
-                                             refDim, refCells, tgtDim, tgtCells, corDim, corCells,
+                _correlate<32> <<<B,32,S>>> (dArena, refStats, secStats,
+                                             refDim, refCells, secDim, secCells, corDim, corCells,
                                              row, col, dCorrelation);
             } else if (refDim <= 64) {
                 // tell me
                 channel << "deploying the 64x64 kernel";
                 // do it
-                _correlate<64> <<<B,64,S>>> (dArena, refStats, tgtStats,
-                                             refDim, refCells, tgtDim, tgtCells, corDim, corCells,
+                _correlate<64> <<<B,64,S>>> (dArena, refStats, secStats,
+                                             refDim, refCells, secDim, secCells, corDim, corCells,
                                              row, col, dCorrelation);
             } else if (refDim <= 128) {
                 // tell me
                 channel << "deploying the 128x128 kernel";
                 // do it
-                _correlate<128> <<<B,128,S>>> (dArena, refStats, tgtStats,
-                                               refDim, refCells, tgtDim, tgtCells, corDim, corCells,
+                _correlate<128> <<<B,128,S>>> (dArena, refStats, secStats,
+                                               refDim, refCells, secDim, secCells, corDim, corCells,
                                                row, col, dCorrelation);
             } else if (refDim <= 256) {
                 // tell me
                 channel << "deploying the 256x256 kernel";
                 // do it
-                _correlate<256> <<<B,256,S>>> (dArena, refStats, tgtStats,
-                                               refDim, refCells, tgtDim, tgtCells, corDim, corCells,
+                _correlate<256> <<<B,256,S>>> (dArena, refStats, secStats,
+                                               refDim, refCells, secDim, secCells, corDim, corCells,
                                                row, col, dCorrelation);
             } else if (refDim <= 512) {
                 // tell me
                 channel << "deploying the 512x512 kernel";
                 // do it
-                _correlate<512> <<<B,512,S>>> (dArena, refStats, tgtStats,
-                                               refDim, refCells, tgtDim, tgtCells, corDim, corCells,
+                _correlate<512> <<<B,512,S>>> (dArena, refStats, secStats,
+                                               refDim, refCells, secDim, secCells, corDim, corCells,
                                                row, col, dCorrelation);
             } else {
                 // complain
@@ -162,9 +162,9 @@ __global__
 void
 _correlate(const value_t * arena, // the dataspace
            const value_t * refStats, // the hyper-grid of reference tile variances
-           const value_t * tgtStats, // the hyper-grid of target tile averages
+           const value_t * secStats, // the hyper-grid of secondary tile averages
            std::size_t rdim, std::size_t rcells, // ref grid shape and size
-           std::size_t tdim, std::size_t tcells, // tgt grid shape and size
+           std::size_t tdim, std::size_t tcells, // sec grid shape and size
            std::size_t cdim, std::size_t ccells, // cor grid shape and size
            std::size_t row, std::size_t col,
            value_t * correlation)
@@ -192,41 +192,41 @@ _correlate(const value_t * arena, // the dataspace
 
     // initialize the numerator term
     value_t numerator = 0;
-    // initialize the target variance accumulator
-    value_t tgtVariance = 0;
-    // look up the mean target amplitude
-    auto mean = tgtStats[b*ccells + row*cdim + col];
+    // initialize the secondary variance accumulator
+    value_t secVariance = 0;
+    // look up the mean secondary amplitude
+    auto mean = secStats[b*ccells + row*cdim + col];
 
-    // reference and target grids are interleaved; compute the stride
+    // reference and secondary grids are interleaved; compute the stride
     std::size_t stride = rcells + tcells;
 
     // my {ref} starting point is column {t} of grid {b}
     auto ref = arena + b*stride + t;
-    // my {tgt} starting point is column {t} of grid {b} at (row, col)
-    // value_t * tgt = arena + b*stride + rcells + (row*tdim + col) + t;
+    // my {sec} starting point is column {t} of grid {b} at (row, col)
+    // value_t * sec = arena + b*stride + rcells + (row*tdim + col) + t;
     // or, more simply
-    auto tgt = ref + rcells + (row*tdim + col);
+    auto sec = ref + rcells + (row*tdim + col);
 
     // if my thread id is less than the number of columns in the reference tile, i need to sum
-    // up the contributions to the numerator and the target tile variance from my column; if
+    // up the contributions to the numerator and the secondary tile variance from my column; if
     // not, m y contribution is zero out my slots in shared memory
     if (t < rdim) {
         //run down the two columns
         for (std::size_t idx=0; idx < rdim; ++idx) {
             // fetch the ref value
             value_t r = ref[idx*rdim];
-            // fetch the tgt value and subtract the mean target amplitude
-            value_t t = tgt[idx*tdim] - mean;
+            // fetch the sec value and subtract the mean secondary amplitude
+            value_t t = sec[idx*tdim] - mean;
             // update the numerator
             numerator += r * t;
-            // and the target variance
-            tgtVariance += t * t;
+            // and the secondary variance
+            secVariance += t * t;
         }
     }
 
     // save my partial results
     scratch[2*t] = numerator;
-    scratch[2*t + 1] = tgtVariance;
+    scratch[2*t + 1] = secVariance;
     // barrier: make sure everybody is done
     cta.sync();
 
@@ -240,11 +240,11 @@ _correlate(const value_t * arena, // the dataspace
         auto offset = 2*(t+256);
         // update my partial sum by reading my sibling's value
         numerator += scratch[offset];
-        // ditto for the target variance
-        tgtVariance += scratch[offset+1];
+        // ditto for the secondary variance
+        secVariance += scratch[offset+1];
         // and make them available
         scratch[2*t] = numerator;
-        scratch[2*t+1] = tgtVariance;
+        scratch[2*t+1] = secVariance;
     }
     // make sure everybody is done
     cta.sync();
@@ -255,11 +255,11 @@ _correlate(const value_t * arena, // the dataspace
         auto offset = 2*(t+128);
         // update my partial sum by reading my sibling's value
         numerator += scratch[offset];
-        // ditto for the target variance
-        tgtVariance += scratch[offset+1];
+        // ditto for the secondary variance
+        secVariance += scratch[offset+1];
         // and make them available
         scratch[2*t] = numerator;
-        scratch[2*t+1] = tgtVariance;
+        scratch[2*t+1] = secVariance;
     }
     // make sure everybody is done
     cta.sync();
@@ -270,11 +270,11 @@ _correlate(const value_t * arena, // the dataspace
         auto offset = 2*(t+64);
         // update my partial sum by reading my sibling's value
         numerator += scratch[offset];
-        // ditto for the target variance
-        tgtVariance += scratch[offset+1];
+        // ditto for the secondary variance
+        secVariance += scratch[offset+1];
         // and make them available
         scratch[2*t] = numerator;
-        scratch[2*t+1] = tgtVariance;
+        scratch[2*t+1] = secVariance;
     }
     // make sure everybody is done
     cta.sync();
@@ -289,7 +289,7 @@ _correlate(const value_t * arena, // the dataspace
             auto offset = 2*(t+32);
             // pull a neighbor's value
             numerator += scratch[offset];
-            tgtVariance += scratch[offset+1];
+            secVariance += scratch[offset+1];
         }
         // get a handle to the active thread group
         cooperative_groups::coalesced_group active = cooperative_groups::coalesced_threads();
@@ -297,7 +297,7 @@ _correlate(const value_t * arena, // the dataspace
         for (int offset = 16; offset > 0; offset >>= 1) {
             // reduce using {shuffle}
             numerator += active.shfl_down(numerator, offset);
-            tgtVariance += active.shfl_down(tgtVariance, offset);
+            secVariance += active.shfl_down(secVariance, offset);
         }
     }
 
@@ -306,7 +306,7 @@ _correlate(const value_t * arena, // the dataspace
         // looks up the sqrt of the reference tile variance
         value_t refVariance = refStats[b];
         // computes the correlation
-        auto corr = numerator / refVariance / std::sqrt(tgtVariance);
+        auto corr = numerator / refVariance / std::sqrt(secVariance);
         // computes the slot where this result goes
         std::size_t slot = b*ccells + row*cdim + col;
         // and writes the sum to the result vector

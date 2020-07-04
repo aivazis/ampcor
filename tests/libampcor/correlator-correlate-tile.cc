@@ -45,20 +45,20 @@ int main() {
     // make a slice
     auto refSlice = reference.layout().slice(refBegin, refEnd);
 
-    // the name of the target data file
-    uri_t tgtName { "../../data/20061231.slc" };
+    // the name of the secondary data file
+    uri_t secName { "../../data/20061231.slc" };
     // its shape
-    shape_t tgtShape { 36864ul, 10344ul };
+    shape_t secShape { 36864ul, 10344ul };
     // make a raster
-    slc_t target(tgtName, tgtShape);
+    slc_t secondary(secName, secShape);
 
-    // the spread of the chip that forms the target search window
+    // the spread of the chip that forms the secondary search window
     slc_t::index_type spread = {32ul, 32ul};
     // define a tile
-    slc_t::index_type tgtBegin = refBegin - spread;
-    slc_t::index_type tgtEnd  = refEnd + spread;
-    // build the target search window
-    auto tgtSlice = target.layout().slice(tgtBegin, tgtEnd);
+    slc_t::index_type secBegin = refBegin - spread;
+    slc_t::index_type secEnd  = refEnd + spread;
+    // build the secondary search window
+    auto secSlice = secondary.layout().slice(secBegin, secEnd);
 
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators");
@@ -74,23 +74,23 @@ int main() {
         << "    from: " << refSlice.low() << pyre::journal::newline
         << "      to: " << refSlice.high() << pyre::journal::newline
         << "   shape: " << refSlice.shape() << pyre::journal::newline
-        << "target raster: " << pyre::journal::newline
-        << "   shape: " << target.layout().shape() << pyre::journal::newline
-        << "  pixels: " << target.pixels() << pyre::journal::newline
-        << "   bytes: " << target.size() << pyre::journal::newline
-        << "target slice: " << pyre::journal::newline
-        << "    from: " << tgtSlice.low() << pyre::journal::newline
-        << "      to: " << tgtSlice.high() << pyre::journal::newline
-        << "   shape: " << tgtSlice.shape() << pyre::journal::newline
+        << "secondary raster: " << pyre::journal::newline
+        << "   shape: " << secondary.layout().shape() << pyre::journal::newline
+        << "  pixels: " << secondary.pixels() << pyre::journal::newline
+        << "   bytes: " << secondary.size() << pyre::journal::newline
+        << "secondary slice: " << pyre::journal::newline
+        << "    from: " << secSlice.low() << pyre::journal::newline
+        << "      to: " << secSlice.high() << pyre::journal::newline
+        << "   shape: " << secSlice.shape() << pyre::journal::newline
         << pyre::journal::endl;
 
     // make a view to the reference raster
     auto refView = reference.view(refSlice);
-    // and a view to the target raster
-    auto tgtView = target.view(tgtSlice);
+    // and a view to the secondary raster
+    auto secView = secondary.view(secSlice);
 
     // make a correlator
-    correlator_t ampcor { refView, tgtView };
+    correlator_t ampcor { refView, secView };
     // form the correlation grid
     const auto & corr = ampcor.correlate();
 

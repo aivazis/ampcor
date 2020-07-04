@@ -33,8 +33,8 @@ namespace ampcor {
                  { sequential::addReference__name__,
                    sequential::addReference, METH_VARARGS, sequential::addReference__doc__},
 
-                 { sequential::addTarget__name__,
-                   sequential::addTarget, METH_VARARGS, sequential::addTarget__doc__},
+                 { sequential::addSecondary__name__,
+                   sequential::addSecondary, METH_VARARGS, sequential::addSecondary__doc__},
 
                  { sequential::adjust__name__,
                    sequential::adjust, METH_VARARGS, sequential::adjust__doc__},

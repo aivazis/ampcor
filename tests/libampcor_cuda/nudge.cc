@@ -50,7 +50,7 @@ int main() {
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "test: adjusting the locations of the refined target tiles"
+        << "test: adjusting the locations of the refined secondary tiles"
         << pyre::journal::endl;
 
     // the reference tile extent
@@ -59,37 +59,37 @@ int main() {
     int margin = 32;
     // the refinement factor
     int refineFactor = 2;
-    // the margin around the refined target tile
+    // the margin around the refined secondary tile
     int refineMargin = 8;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
     // the number of pairs
     auto pairs = placements*placements;
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells per pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout, refineFactor, refineMargin);
+    correlator_t c(pairs, refLayout, secLayout, refineFactor, refineMargin);
     // stop the clock
     timer.stop();
     // show me
@@ -100,7 +100,7 @@ int main() {
 
     // make an array of locations to simulate the result of {_maxcor}
     int * loc = new int[2*pairs];
-    // fill with out standard strategy: the (r,c) target tile have a maximum at (r,c)
+    // fill with out standard strategy: the (r,c) secondary tile have a maximum at (r,c)
     for (auto pid = 0; pid < pairs; ++pid) {
         // decode the row and column
         int row = pid / placements;
@@ -160,7 +160,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // nudge
-    c._nudge(dloc, refDim, tgtDim);
+    c._nudge(dloc, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -201,7 +201,7 @@ int main() {
     // the lowest possible index
     int low = 0;
     // and the highest possible index
-    int high = tgtDim - (refDim + 2*refineMargin);
+    int high = secDim - (refDim + 2*refineMargin);
     // go through the locations
     for (auto pid = 0; pid < pairs; ++pid) {
         // get the row and column

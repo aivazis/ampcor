@@ -62,54 +62,54 @@ int main() {
     int margin = 32;
     // the refinement factor
     int refineFactor = 2;
-    // the margin around the refined target tile
+    // the margin around the refined secondary tile
     int refineMargin = 8;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
     // the number of pairs
     auto pairs = placements*placements;
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells per pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // the shape of the refined reference tiles
     auto refRefinedShape = refineFactor * refShape;
-    // the shape of the refined target tiles
-    auto tgtRefinedShape = refineFactor * (refShape + slc_t::index_type::fill(2*refineMargin));
+    // the shape of the refined secondary tiles
+    auto secRefinedShape = refineFactor * (refShape + slc_t::index_type::fill(2*refineMargin));
     // the layout of the refined reference tiles
     slc_t::layout_type refRefinedLayout { refRefinedShape };
-    // the layout of the refined target tiles
-    slc_t::layout_type tgtRefinedLayout { tgtRefinedShape };
+    // the layout of the refined secondary tiles
+    slc_t::layout_type secRefinedLayout { secRefinedShape };
     // the number of cells in a refined reference tile
     auto refRefinedCells = refRefinedLayout.size();
-    // the number of cells in a refined target tile
-    auto tgtRefinedCells = tgtRefinedLayout.size();
+    // the number of cells in a refined secondary tile
+    auto secRefinedCells = secRefinedLayout.size();
     //  the number of cells per refined pair
-    auto cellsPerRefinedPair = refRefinedCells + tgtRefinedCells;
+    auto cellsPerRefinedPair = refRefinedCells + secRefinedCells;
     // the total number of refined cells
     auto cellsRefined = pairs * cellsPerRefinedPair;
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout, refineFactor, refineMargin);
+    correlator_t c(pairs, refLayout, secLayout, refineFactor, refineMargin);
     // stop the clock
     timer.stop();
     // show me
@@ -140,21 +140,21 @@ int main() {
     // build reference tiles
     for (auto i=0; i<placements; ++i) {
         for (auto j=0; j<placements; ++j) {
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            auto slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            auto view = tgt.view(slice);
+            auto slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            auto view = sec.view(slice);
             // place a copy of the reference tile
             std::copy(rview.begin(), rview.end(), view.begin());
             // compute the pair id
             int pid = i*placements + j;
             // add this pair to the correlator
             c.addReferenceTile(pid, ref.constview());
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -217,7 +217,7 @@ int main() {
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "synthesizing locations for the refined target tiles: " << 1e3 * timer.read() << " ms"
+        << "synthesizing locations for the refined secondary tiles: " << 1e3 * timer.read() << " ms"
         << pyre::journal::endl;
 
     // start the clock
@@ -267,7 +267,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // nudge them
-    c._nudge(dloc, refDim, tgtDim);
+    c._nudge(dloc, refDim, secDim);
     // stop the clock
     timer.stop();
     // show me
@@ -279,7 +279,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // migrate
-    c._tgtMigrate(coarseArena, dloc, refinedArena);
+    c._secMigrate(coarseArena, dloc, refinedArena);
     // stop the clock
     timer.stop();
     // show me
@@ -359,52 +359,52 @@ int main() {
         // decode the pair id into an index
         auto row = pid / placements;
         auto col = pid % placements;
-        // compute the beginning of the target tile in the refined arena
+        // compute the beginning of the secondary tile in the refined arena
         auto trmem = refined + pid*cellsPerRefinedPair + refRefinedCells;
         // build a grid over it
-        tile_t tgtRefined { tgtRefinedLayout, trmem };
+        tile_t secRefined { secRefinedLayout, trmem };
 
 #if defined(SHOW_TILE)
         // show me the tile
         channel
             << pyre::journal::at(__HERE__)
             << "pair (" << row << "," << col << "): " << pyre::journal::newline;
-        for (auto idx : tgtRefined.layout()) {
+        for (auto idx : secRefined.layout()) {
             if (idx[1] == 0) channel << pyre::journal::newline;
-            channel << tgtRefined[idx];
+            channel << secRefined[idx];
         }
         channel << pyre::journal::endl;
 #endif
 
-        // compute the beginning of the correct target tile
+        // compute the beginning of the correct secondary tile
         auto tmem = c.arena() + pid*cellsPerPair + refCells;
         // build a grid over it
-        tile_t tgt { tgtLayout, tmem };
-        // find the ULHC of the tile expanded maxcor tile in the target tile
+        tile_t sec { secLayout, tmem };
+        // find the ULHC of the tile expanded maxcor tile in the secondary tile
         auto base = tile_t::index_type {loc[2*pid], loc[2*pid+1]};
 
         // go through it
-        for (auto idx : tgtRefined.layout()) {
+        for (auto idx : secRefined.layout()) {
             // in the expanded region
             if (idx[0] >= expDim || idx[1] >= expDim) {
                 // make sure we have a zero
-                if (std::abs(tgtRefined[idx]) > tolerance) {
+                if (std::abs(secRefined[idx]) > tolerance) {
                     // make a channel
                     pyre::journal::error_t error("ampcor.cuda");
                     // complain
                     error
                         << pyre::journal::at(__HERE__)
                         << "pair " << pid << ": mismatch at (" << idx << "): "
-                        << "expected zero, got " << tgtRefined[idx]
+                        << "expected zero, got " << secRefined[idx]
                         << pyre::journal::endl;
                     // and bail
                     throw std::runtime_error("verification error!");
                 }
             } else {
                 // what i got
-                auto actual = tgtRefined[idx];
+                auto actual = secRefined[idx];
                 // what i expect
-                auto expected = tgt[base+idx];
+                auto expected = sec[base+idx];
                 // if there is a mismatch
                 if (actual != expected) {
                     // make a channel
@@ -415,7 +415,7 @@ int main() {
                         << "pair (" << pid/placements << "," << pid%placements << ")"
                         ": mismatch at (" << idx << "): "
                         << "expected: " << expected
-                        << ", got: " << actual << " from tgt[" << base+idx << "]"
+                        << ", got: " << actual << " from sec[" << base+idx << "]"
                         << ", expDim: " << expDim
                         << pyre::journal::endl;
                     // and bail
@@ -429,7 +429,7 @@ int main() {
     // show me
     tlog
         << pyre::journal::at(__HERE__)
-        << "verifying that the target tiles were migrated correctly "
+        << "verifying that the secondary tiles were migrated correctly "
         << 1e3 * timer.read() << " ms"
         << pyre::journal::endl;
 

@@ -14,7 +14,7 @@ import ampcor
 class OffsetMap:
     """
     A logically Cartesian map that establishes a correspondence between a collection of points
-    on a {reference} raster and a {target} raster
+    on a {reference} raster and a {secondary} raster
     """
 
 
@@ -67,9 +67,9 @@ class OffsetMap:
         offset = self.tile.offset(index)
         # pull the corresponding points
         ref = self.domain[offset]
-        tgt = self.codomain[offset]
+        sec = self.codomain[offset]
         # and return them
-        return (ref, tgt)
+        return (ref, sec)
 
 
     def __setitem__(self, index, points):
@@ -79,10 +79,10 @@ class OffsetMap:
         # ask my tile for the offset
         offset = self.tile.offset(index)
         # unpack the points
-        ref, tgt = points
+        ref, sec = points
         # store them
         self.domain[offset] = ref
-        self.codomain[offset] = tgt
+        self.codomain[offset] = sec
         # all done
         return
 

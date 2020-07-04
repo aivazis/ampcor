@@ -28,7 +28,7 @@ using grid_t = pyre::grid::simple_t<2, double, std::array<std::size_t,2>>;
 // my reduction
 __global__
 static void correlate(grid_t::cell_type * ref, std::size_t rdim,
-                      grid_t::cell_type * tgt, std::size_t tdim,
+                      grid_t::cell_type * sec, std::size_t tdim,
                       std::size_t margin, std::size_t rowOffset, std::size_t colOffset,
                       grid_t::cell_type * correlation);
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
     // the reference grid dimension
     grid_t::index_type::value_type rdim = 128;
-    // the target grid shape includes a margin
+    // the secondary grid shape includes a margin
     grid_t::index_type::value_type margin = 32;
     // so here is its dimension
     grid_t::index_type::value_type tdim = margin + rdim + margin;
@@ -72,12 +72,12 @@ int main(int argc, char *argv[]) {
     grid_t::shape_type cshape { margin+1, margin+1 };
     // declare the grids
     grid_t ref { rshape };
-    grid_t tgt { tshape };
+    grid_t sec { tshape };
     grid_t cor { cshape };
 
     // the sizes
     grid_t::size_type rsize = ref.layout().size();
-    grid_t::size_type tsize = tgt.layout().size();
+    grid_t::size_type tsize = sec.layout().size();
     grid_t::size_type csize = cor.layout().size();
     // memory footprints
     grid_t::size_type rfootprint = rsize * sizeof(grid_t::cell_type);
@@ -106,28 +106,28 @@ int main(int argc, char *argv[]) {
     channel << pyre::journal::endl;
 #endif
 
-    // initialize the target grid
-    for (auto idx : tgt.layout()) {
+    // initialize the secondary grid
+    for (auto idx : sec.layout()) {
         // by setting all slots to {mask}
-        tgt[idx] = mask;
+        sec[idx] = mask;
     }
     // turn the margin into an index
     grid_t::index_type mindex { margin, margin };
     // specify a region in the interior
-    grid_t::index_type start = tgt.layout().low() + mindex;
-    grid_t::index_type end = tgt.layout().high() - mindex;
+    grid_t::index_type start = sec.layout().low() + mindex;
+    grid_t::index_type end = sec.layout().high() - mindex;
     // fill the interior
-    for (auto idx : tgt.layout().slice(start, end)) {
+    for (auto idx : sec.layout().slice(start, end)) {
         // with {value}
-        tgt[idx] = value;
+        sec[idx] = value;
     }
 #if 0
     // show me
     channel << pyre::journal::at(__HERE__);
     // go through the ref slots
-    for (auto idx : tgt.layout()) {
+    for (auto idx : sec.layout()) {
         // show me the contents
-        channel << "tgt[" << idx << "] = " << tgt[idx] << pyre::journal::newline;
+        channel << "sec[" << idx << "] = " << sec[idx] << pyre::journal::newline;
     }
     // flush
     channel << pyre::journal::endl;
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
         << dRef
         << pyre::journal::endl;
 
-    // find a spot for the target grids
+    // find a spot for the secondary grids
     grid_t::cell_type * dTgt = nullptr;
     // allocate device memory for the grid payload
     status = cudaMallocManaged(&dTgt, P * tfootprint);
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
         // complain
         channel
             << pyre::journal::at(__HERE__)
-            << "while allocating device memory for the target payload: "
+            << "while allocating device memory for the secondary payload: "
             << cudaGetErrorName(status) << " (" << status << ")"
             << pyre::journal::endl;
         // and bail
@@ -244,9 +244,9 @@ int main(int argc, char *argv[]) {
             // and bail
             return 1;
         }
-        // then the target grid
+        // then the secondary grid
         status = cudaMemcpy(dTgt + pid*tsize,
-                            tgt.data(),
+                            sec.data(),
                             tfootprint,
                             cudaMemcpyHostToDevice);
         // check
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
             // complain
             channel
                 << pyre::journal::at(__HERE__)
-                << "while copying data from target grid #" << pid << " to the device: "
+                << "while copying data from secondary grid #" << pid << " to the device: "
                 << cudaGetErrorName(status) << " (" << status << ")"
                 << pyre::journal::endl;
             // and bail
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "moving reference and target data to the device: " << 1e6 * timer.read() << " μs"
+        << "moving reference and secondary data to the device: " << 1e6 * timer.read() << " μs"
         << pyre::journal::endl;
 
 
@@ -408,7 +408,7 @@ int main(int argc, char *argv[]) {
 // the kernel
 __global__
 static void correlate(grid_t::cell_type * ref, std::size_t rdim, // ref grid data and shape
-                      grid_t::cell_type * tgt, std::size_t tdim, // tgt grid data and shape
+                      grid_t::cell_type * sec, std::size_t tdim, // sec grid data and shape
                       std::size_t margin, std::size_t rowOffset, std::size_t colOffset,
                       grid_t::cell_type * correlation) {
 
@@ -432,15 +432,15 @@ static void correlate(grid_t::cell_type * ref, std::size_t rdim, // ref grid dat
 
     // my ref starting point is column t of grid b
     std::size_t rstart = b*rdim*rdim + t;
-    // my tgt starting point is column t of grid b at (rowOffset, colOffset)
+    // my sec starting point is column t of grid b at (rowOffset, colOffset)
     std::size_t tstart = (b*tdim*tdim) + (rowOffset*tdim + colOffset) + t;
 
     // run down the two columns
     for (std::size_t idx=0; idx < rdim; ++idx) {
         // fetch the ref value
         grid_t::cell_type r = ref[rstart + idx*rdim];
-        // fetch the tgt value
-        grid_t::cell_type t = tgt[tstart + idx*tdim];
+        // fetch the sec value
+        grid_t::cell_type t = sec[tstart + idx*tdim];
         // update the numerator
         num += r * t;
     }

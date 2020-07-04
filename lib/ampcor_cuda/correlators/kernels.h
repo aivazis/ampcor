@@ -27,24 +27,24 @@ namespace ampcor {
                           std::size_t pairs, std::size_t refDim, std::size_t cellsPerTilePair,
                           float * stats);
 
-            // build the sum area tables for the target tiles
+            // build the sum area tables for the secondary tiles
             void sat(const float * rArena,
                      std::size_t pairs,
-                     std::size_t refCells, std::size_t tgtCells, std::size_t tgtDim,
+                     std::size_t refCells, std::size_t secCells, std::size_t secDim,
                      float * sat);
 
             // compute the average amplitude for all possible placements of a reference shape
             // within the search windows
-            void tgtStats(const float * sat,
+            void secStats(const float * sat,
                           std::size_t pairs,
-                          std::size_t refDim, std::size_t tgtDim, std::size_t corDim,
+                          std::size_t refDim, std::size_t secDim, std::size_t corDim,
                           float * stats);
 
             // compute the correlation matrix
-            void correlate(const float * rArena, const float * refStats, const float * tgtStats,
+            void correlate(const float * rArena, const float * refStats, const float * secStats,
                            std::size_t pairs,
-                           std::size_t refCells, std::size_t tgtCells, std::size_t corCells,
-                           std::size_t refDim, std::size_t tgtDim, std::size_t corDim,
+                           std::size_t refCells, std::size_t secCells, std::size_t corCells,
+                           std::size_t refDim, std::size_t secDim, std::size_t corDim,
                            float * dCorrelation);
 
             // compute the locations of the maximum value of the correlation map
@@ -52,16 +52,16 @@ namespace ampcor {
                         std::size_t pairs, std::size_t corCells, std::size_t corDim,
                         int * loc);
 
-            // nudge the (row, col) pairs so that they describe sub-tiles within a target tile
+            // nudge the (row, col) pairs so that they describe sub-tiles within a secondary tile
             void nudge(std::size_t pairs,
-                       std::size_t refDim,  std::size_t tgtDim, std::size_t margin,
+                       std::size_t refDim,  std::size_t secDim, std::size_t margin,
                        int * locations);
 
             // migrate the expanded maxcor tiles to the refinement arena
             void migrate(const std::complex<float>  * arena,
                          std::size_t pairs,
-                         std::size_t refDim, std::size_t tgtDim, std::size_t expDim,
-                         std::size_t refRefinedDim, std::size_t tgtRefinedDim,
+                         std::size_t refDim, std::size_t secDim, std::size_t expDim,
+                         std::size_t refRefinedDim, std::size_t secRefinedDim,
                          const int * locations,
                          std::complex<float> * refinedArena);
 

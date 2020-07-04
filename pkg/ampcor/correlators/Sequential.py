@@ -24,7 +24,7 @@ class Sequential:
         Correlate two rasters given a plan
         """
         # unpack the rasters
-        ref, tgt = rasters
+        ref, sec = rasters
         # ask the plan for the total number of points on the map
         points = len(plan)
         # the shape of the reference chips
@@ -41,8 +41,8 @@ class Sequential:
         for idx, (r,t) in enumerate(plan.pairs):
             # load the reference slice
             libampcor.addReference(worker, ref, idx, r.begin, r.end)
-            # load the target slice
-            libampcor.addTarget(worker, tgt, idx, t.begin, t.end)
+            # load the secondary slice
+            libampcor.addSecondary(worker, sec, idx, t.begin, t.end)
 
         # ask the worker to perform pixel level adjustments
         libampcor.adjust(worker)

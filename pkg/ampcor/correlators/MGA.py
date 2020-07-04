@@ -31,7 +31,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
     padding = ampcor.properties.tuple(schema=ampcor.properties.int())
     padding.default = 32, 32
-    padding.doc = "padding around the chip shape to form the search window in the target raster"
+    padding.doc = "padding around the chip shape to form the search window in the secondary raster"
 
     refineMargin = ampcor.properties.int(default=8)
     refineMargin.doc = "padding around the anti-aliased search window before the fine adjustments"
@@ -49,7 +49,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
     # protocol obligations
     @ampcor.provides
-    def estimate(self, plexus, reference, target, **kwds):
+    def estimate(self, plexus, reference, secondary, **kwds):
         """
         Estimate the offset field between a pair of raster images
         """
@@ -69,7 +69,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         # start the timer
         timer.reset().start()
         # make a plan
-        plan = self.makePlan(regmap=coarse, rasters=(reference, target))
+        plan = self.makePlan(regmap=coarse, rasters=(reference, secondary))
         # stop the timer
         timer.stop()
         # show me
@@ -79,7 +79,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         timer.reset().start()
         # open the two rasters and get access to the data
         ref = reference.open().raster
-        tgt = target.open().raster
+        sec = secondary.open().raster
         # stop the timer
         timer.stop()
         # show me
@@ -88,7 +88,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         # restart the timer
         timer.reset().start()
         # make a plan
-        regmap = worker.adjust(manager=self, rasters=(ref, tgt), plan=plan, channel=channel)
+        regmap = worker.adjust(manager=self, rasters=(ref, sec), plan=plan, channel=channel)
         # stop the timer
         timer.stop()
         # show me
@@ -124,7 +124,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
     def makePlan(self, regmap, rasters):
         """
-        Formulate a computational plan for correlating {reference} and {target} to produce an
+        Formulate a computational plan for correlating {reference} and {secondary} to produce an
         offset map
         """
         # make a plan

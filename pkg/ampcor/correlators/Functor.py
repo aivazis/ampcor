@@ -14,7 +14,7 @@ import ampcor
 # declaration
 class Functor(ampcor.protocol, family="ampcor.correlators.functors"):
     """
-    The protocol implemented by generators of points for the target raster
+    The protocol implemented by generators of points for the secondary raster
     """
 
 
@@ -22,7 +22,7 @@ class Functor(ampcor.protocol, family="ampcor.correlators.functors"):
     @ampcor.provides
     def codomain(self, domain, **kwds):
         """
-        Given points on the {reference} raster in {domain}, generate their images in {target}
+        Given points on the {reference} raster in {domain}, generate their images in {secondary}
         """
 
 

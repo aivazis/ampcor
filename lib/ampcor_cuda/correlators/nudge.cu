@@ -23,8 +23,8 @@ template <typename value_t = float>
 __global__
 static void
 _nudge(std::size_t pairs,     // the total number of tiles
-       std::size_t oldDim,    // the old shape of the target tiles
-       std::size_t newDim,    // the new shape of the target tiles
+       std::size_t oldDim,    // the old shape of the secondary tiles
+       std::size_t newDim,    // the new shape of the secondary tiles
        std::size_t margin,    // the new margin of the search window
        int * loc);
 
@@ -34,7 +34,7 @@ void
 ampcor::cuda::kernels::
 nudge(std::size_t pairs,     // the total number of tiles
       std::size_t refDim,    // the shape of the reference tiles
-      std::size_t tgtDim,    // the shape of the target tiles
+      std::size_t secDim,    // the shape of the secondary tiles
       std::size_t margin,    // the new margin around the reference tile
       int * loc)
 {
@@ -53,7 +53,7 @@ nudge(std::size_t pairs,     // the total number of tiles
         << " maxima locations"
         << pyre::journal::endl;
     // launch the kernels
-    _nudge <<<B,T>>> (pairs, tgtDim, refDim+2*margin, margin, loc);
+    _nudge <<<B,T>>> (pairs, secDim, refDim+2*margin, margin, loc);
     // wait for the kernels to finish
     cudaError_t status = cudaDeviceSynchronize();
     // check
@@ -65,7 +65,7 @@ nudge(std::size_t pairs,     // the total number of tiles
         // complain
         channel
             << pyre::journal::at(__HERE__)
-            << "while nudging the new target tile locations: "
+            << "while nudging the new secondary tile locations: "
             << description << " (" << status << ")"
             << pyre::journal::endl;
         // and bail
@@ -82,8 +82,8 @@ template <typename value_t>
 __global__
 void
 _nudge(std::size_t pairs,     // the total number of tiles
-       std::size_t oldDim,    // the shape of the target tiles
-       std::size_t newDim,    // the shape of the target tiles
+       std::size_t oldDim,    // the shape of the secondary tiles
+       std::size_t newDim,    // the shape of the secondary tiles
        std::size_t margin,    // the new margin of the search window
        int * loc)
 {

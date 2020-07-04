@@ -22,27 +22,27 @@ class Offsets(ampcor.cli.command, family="ampcor.cli.offsets"):
     reference = ampcor.dom.raster()
     reference.doc = "the reference raster image"
 
-    target = ampcor.dom.raster()
-    target.doc = "the target raster image"
+    secondary = ampcor.dom.raster()
+    secondary.doc = "the secondary raster image"
 
     correlator = ampcor.correlators.correlator()
     correlator.doc = "the calculator of the offset field"
 
 
     # behaviors
-    @ampcor.export(tip="produce the offset field between the {reference} and {target} rasters")
+    @ampcor.export(tip="produce the offset field between the {reference} and {secondary} rasters")
     def estimate(self, plexus, **kwds):
         """
-        Produce an offset map between the {reference} and {target} images
+        Produce an offset map between the {reference} and {secondary} images
         """
         # get the reference image and open it
         reference = self.reference.open()
-        # repeat for the target image
-        target = self.target.open()
+        # repeat for the secondary image
+        secondary = self.secondary.open()
         # grab the correlator
         correlator = self.correlator
         # and ask it to do its thing
-        return correlator.estimate(plexus=plexus, reference=reference, target=target, **kwds)
+        return correlator.estimate(plexus=plexus, reference=reference, secondary=secondary, **kwds)
 
 
     @ampcor.export(tip="display my configuration")
@@ -70,16 +70,16 @@ class Offsets(ampcor.cli.command, family="ampcor.cli.offsets"):
             channel.line(f"        data: {self.reference.data}")
             channel.line(f"        shape: {self.reference.shape}")
             channel.line(f"        size: {self.reference.size()} bytes")
-        # target raster
-        channel.line(f"    target: {self.target}")
-        if self.target:
-            channel.line(f"        data: {self.target.data}")
-            channel.line(f"        shape: {self.target.shape}")
-            channel.line(f"        size: {self.target.size()} bytes")
+        # secondary raster
+        channel.line(f"    secondary: {self.secondary}")
+        if self.secondary:
+            channel.line(f"        data: {self.secondary.data}")
+            channel.line(f"        shape: {self.secondary.shape}")
+            channel.line(f"        size: {self.secondary.size()} bytes")
 
         # unpack my arguments
         reference = self.reference
-        target = self.target
+        secondary = self.secondary
         correlator = self.correlator
 
         # show the correlator configuration
@@ -87,7 +87,7 @@ class Offsets(ampcor.cli.command, family="ampcor.cli.offsets"):
         # ask the correlator for the coarse map
         coarse = correlator.coarse.map(reference=reference)
         # make a plan
-        plan = correlator.makePlan(regmap=coarse, rasters=(reference, target))
+        plan = correlator.makePlan(regmap=coarse, rasters=(reference, secondary))
         # and show me the plan details
         plan.show(channel=channel)
 

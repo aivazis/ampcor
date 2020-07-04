@@ -58,9 +58,9 @@ int main() {
     int refDim = 64;
     // the margin around the reference tile
     int margin = 8;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
     //  the dimension of the correlation matrix
     auto corDim = placements;
@@ -70,29 +70,29 @@ int main() {
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells in the table of mean values
     auto corCells = corDim * corDim;
     // the number of cells in each pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
 
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout);
+    correlator_t c(pairs, refLayout, secLayout);
     // stop the clock
     timer.stop();
     // show me
@@ -123,14 +123,14 @@ int main() {
     // build reference tiles
     for (auto i=0; i<placements; ++i) {
         for (auto j=0; j<placements; ++j) {
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            auto slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            auto view = tgt.view(slice);
+            auto slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            auto view = sec.view(slice);
             // fill it with the contents of the reference tile for this pair
             std::copy(rview.begin(), rview.end(), view.begin());
 
@@ -138,7 +138,7 @@ int main() {
             int pid = i*placements + j;
             // add this pair to the correlator
             c.addReferenceTile(pid, rview);
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -171,7 +171,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute the amplitude of every pixel
-    auto rArena = c._detect(cArena, refDim, tgtDim);
+    auto rArena = c._detect(cArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // get the duration
@@ -185,7 +185,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute the sum area tables
-    auto sat = c._sat(rArena, refDim, tgtDim);
+    auto sat = c._sat(rArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // get the duration
@@ -197,8 +197,8 @@ int main() {
         << pyre::journal::endl;
     // start the clock
     timer.reset().start();
-    // compute the average amplitude of all possible ref shaped sub-tiles in the target tile
-    auto tgtStats = c._tgtStats(sat, refDim, tgtDim, corDim);
+    // compute the average amplitude of all possible ref shaped sub-tiles in the secondary tile
+    auto secStats = c._secStats(sat, refDim, secDim, corDim);
     // stop the clock
     timer.stop();
     // get the duration
@@ -210,7 +210,7 @@ int main() {
         << pyre::journal::endl;
 
     // verification: get results moved over to the host
-    // verify: go through all the tables and verify that they contain the correct target means
+    // verify: go through all the tables and verify that they contain the correct secondary means
     // we need the detected tiles, so make room for the results
     auto ampResults = new value_t[cells];
     // compute the result footprint
@@ -248,9 +248,9 @@ int main() {
         << pyre::journal::endl;
 
     // we need the SATS
-    auto satResults = new value_t[pairs * tgtCells];
+    auto satResults = new value_t[pairs * secCells];
     // compute the result footprint
-    auto satFootprint = pairs * tgtCells * sizeof(value_t);
+    auto satFootprint = pairs * secCells * sizeof(value_t);
     // start the clock
     timer.reset().start();
     // copy the results over
@@ -293,7 +293,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // copy the results over
-    status = cudaMemcpy(statResults, tgtStats, statFootprint, cudaMemcpyDeviceToHost);
+    status = cudaMemcpy(statResults, secStats, statFootprint, cudaMemcpyDeviceToHost);
     // stop the clock
     timer.stop();
     // if something went wrong
@@ -305,7 +305,7 @@ int main() {
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while retrieving the hyper-grid of average amplitudes for the target tiles: "
+            << "while retrieving the hyper-grid of average amplitudes for the secondary tiles: "
             << description << " (" << status << ")"
             << pyre::journal::endl;
         // and bail
@@ -329,10 +329,10 @@ int main() {
     timer.reset().start();
     // go through all the pairs
     for (auto pid = 0; pid < pairs; ++pid) {
-        // find the beginning of the target tile
-        value_t * tgtStart = ampResults + pid*cellsPerPair + refCells;
+        // find the beginning of the secondary tile
+        value_t * secStart = ampResults + pid*cellsPerPair + refCells;
         // make a tile
-        tile_t tgt { tgtLayout, tgtStart };
+        tile_t sec { secLayout, secStart };
         // locate the table of mean values for this pair
         value_t * stats = statResults + pid*corCells;
         // go through all the placements
@@ -340,10 +340,10 @@ int main() {
             for (auto j=0; j<corDim; ++j) {
                 // the offset to the stats for this tile for this placement
                 auto offset = i*corDim + j;
-                // slice the target tile
-                auto slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
+                // slice the secondary tile
+                auto slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
                 // make a view
-                auto view = tgt.constview(slice);
+                auto view = sec.constview(slice);
                 // use it to compute the average value in the slice
                 auto expectedMean = std::accumulate(view.begin(), view.end(), 0.0) / refCells;
                 // read the computed value
@@ -389,12 +389,12 @@ int main() {
                 << "pair " << pid << ":"
                 << pyre::journal::newline;
 
-            // the target tile
+            // the secondary tile
             channel << "TGT:" << pyre::journal::newline;
             // find the tile that corresponds to this pid and print it
-            for (auto idx=0; idx < tgtDim; ++idx) {
-                for (auto jdx=0; jdx < tgtDim; ++jdx) {
-                    channel << rArena[pid*cellsPerPair + refDim*refDim + idx*tgtDim + jdx] << " ";
+            for (auto idx=0; idx < secDim; ++idx) {
+                for (auto jdx=0; jdx < secDim; ++jdx) {
+                    channel << rArena[pid*cellsPerPair + refDim*refDim + idx*secDim + jdx] << " ";
                 }
                 channel << pyre::journal::newline;
             }
@@ -402,9 +402,9 @@ int main() {
             // the SAT
             channel << "SAT:" << pyre::journal::newline;
             // find the SAT that corresponds to this pid and print it
-            for (auto idx=0; idx < tgtDim; ++idx) {
-                for (auto jdx=0; jdx < tgtDim; ++jdx) {
-                    channel << satResults[pid*tgtCells + idx*tgtDim + jdx] << " ";
+            for (auto idx=0; idx < secDim; ++idx) {
+                for (auto jdx=0; jdx < secDim; ++jdx) {
+                    channel << satResults[pid*secCells + idx*secDim + jdx] << " ";
                 }
                 channel << pyre::journal::newline;
             }
@@ -423,7 +423,7 @@ int main() {
     }
 
     // clean up
-    cudaFree(tgtStats);
+    cudaFree(secStats);
     cudaFree(sat);
     cudaFree(rArena);
     cudaFree(cArena);

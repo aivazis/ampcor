@@ -48,9 +48,9 @@ int main() {
     int refDim = 128;
     // the margin around the reference tile
     int margin = 32;
-    // therefore, the target tile extent
-    auto tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    auto secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     auto placements = 2*margin + 1;
 
     // the number of pairs
@@ -58,27 +58,27 @@ int main() {
 
     // the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // the number of cells per pair
-    auto cellsPerPair = refCells + tgtCells;
+    auto cellsPerPair = refCells + secCells;
     // the total number of cells
     auto cells = pairs * cellsPerPair;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
 
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout);
+    correlator_t c(pairs, refLayout, secLayout);
     // stop the clock
     timer.stop();
     // show me
@@ -100,20 +100,20 @@ int main() {
             // fill it with the pair id
             std::fill(ref.view().begin(), ref.view().end(), pid);
 
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            slc_t::slice_type slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            slc_t::view_type view = tgt.view(slice);
+            slc_t::slice_type slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            slc_t::view_type view = sec.view(slice);
             // fill it with the contents of the reference tile for this pair
             std::copy(ref.view().begin(), ref.view().end(), view.begin());
 
             // add this pair to the correlator
             c.addReferenceTile(pid, ref.constview());
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -146,7 +146,7 @@ int main() {
     // start the clock
     timer.reset().start();
     // compute the amplitude of every pixel
-    auto rArena = c._detect(cArena, refDim, tgtDim);
+    auto rArena = c._detect(cArena, refDim, secDim);
     // stop the clock
     timer.stop();
     // get the duration
@@ -244,11 +244,11 @@ int main() {
                 channel << pyre::journal::newline;
             }
 
-            channel << "target:" << pyre::journal::newline;
+            channel << "secondary:" << pyre::journal::newline;
             // the amplitude of the reference tile
-            for (auto idx=0; idx < tgtDim; ++idx) {
-                for (auto jdx=0; jdx < tgtDim; ++jdx) {
-                    channel << results[pid*cellsPerPair + refDim*refDim + idx*tgtDim + jdx] << " ";
+            for (auto idx=0; idx < secDim; ++idx) {
+                for (auto jdx=0; jdx < secDim; ++jdx) {
+                    channel << results[pid*cellsPerPair + refDim*refDim + idx*secDim + jdx] << " ";
                 }
                 channel << pyre::journal::newline;
             }

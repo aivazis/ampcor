@@ -25,10 +25,10 @@ namespace ampcor {
                 extern const char * const addReference__doc__;
                 PyObject * addReference(PyObject *self, PyObject *args);
 
-                // compute the amplitude of a target chip and save it in my dataspace
-                extern const char * const addTarget__name__;
-                extern const char * const addTarget__doc__;
-                PyObject * addTarget(PyObject *self, PyObject *args);
+                // compute the amplitude of a secondary chip and save it in my dataspace
+                extern const char * const addSecondary__name__;
+                extern const char * const addSecondary__doc__;
+                PyObject * addSecondary(PyObject *self, PyObject *args);
 
                 // compute adjustments to the registration map
                 extern const char * const adjust__name__;

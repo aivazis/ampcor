@@ -40,41 +40,41 @@ int main() {
     // sign in
     channel
         << pyre::journal::at(__HERE__)
-        << "test: adding reference and target tile pairs to the correlator"
+        << "test: adding reference and secondary tile pairs to the correlator"
         << pyre::journal::endl;
 
     // the reference tile extent
     int refDim = 128;
     // the margin around the reference tile
     int margin = 32;
-    // therefore, the target tile extent
-    int tgtDim = refDim + 2*margin;
-    // the number of possible placements of the reference tile within the target tile
+    // therefore, the secondary tile extent
+    int secDim = refDim + 2*margin;
+    // the number of possible placements of the reference tile within the secondary tile
     int placements = 2*margin + 1;
     // the number of pairs
     slc_t::size_type pairs = placements*placements;
 
     // the number of cells in a reference tile
     slc_t::size_type refCells = refDim * refDim;
-    // the number of cells in a target tile
-    slc_t::size_type tgtCells = tgtDim * tgtDim;
+    // the number of cells in a secondary tile
+    slc_t::size_type secCells = secDim * secDim;
     // the number of cells per pair
-    slc_t::size_type cellsPerPair = refCells + tgtCells;
+    slc_t::size_type cellsPerPair = refCells + secCells;
 
     // the reference shape
     slc_t::shape_type refShape = {refDim, refDim};
     // the search window shape
-    slc_t::shape_type tgtShape = {tgtDim, tgtDim};
+    slc_t::shape_type secShape = {secDim, secDim};
 
     // the reference layout with the given shape and default packing
     slc_t::layout_type refLayout = { refShape };
     // the search window layout with the given shape and default packing
-    slc_t::layout_type tgtLayout = { tgtShape };
+    slc_t::layout_type secLayout = { secShape };
 
     // start the clock
     timer.reset().start();
     // make a correlator
-    correlator_t c(pairs, refLayout, tgtLayout);
+    correlator_t c(pairs, refLayout, secLayout);
     // stop the clock
     timer.stop();
     // show me
@@ -96,22 +96,22 @@ int main() {
             // fill it with ones
             std::fill(ref.view().begin(), ref.view().end(), pid);
 
-            // make a target tile
-            slc_t tgt(tgtLayout);
+            // make a secondary tile
+            slc_t sec(secLayout);
             // fill it with zeroes
-            std::fill(tgt.view().begin(), tgt.view().end(), 0);
+            std::fill(sec.view().begin(), sec.view().end(), 0);
             // make a slice
-            slc_t::slice_type slice = tgt.layout().slice({i,j}, {i+refDim, j+refDim});
-            // make a view of the tgt tile over this slice
-            slc_t::view_type view = tgt.view(slice);
+            slc_t::slice_type slice = sec.layout().slice({i,j}, {i+refDim, j+refDim});
+            // make a view of the sec tile over this slice
+            slc_t::view_type view = sec.view(slice);
             // fill it with ones
             std::copy(ref.view().begin(), ref.view().end(), view.begin());
 
             // show me
-            channel << "tgt[" << i << "," << j << "]:" << pyre::journal::newline;
-            for (auto idx=0; idx<tgtDim; ++idx) {
-                for (auto jdx=0; jdx<tgtDim; ++jdx) {
-                    channel << tgt[{idx, jdx}] << " ";
+            channel << "sec[" << i << "," << j << "]:" << pyre::journal::newline;
+            for (auto idx=0; idx<secDim; ++idx) {
+                for (auto jdx=0; jdx<secDim; ++jdx) {
+                    channel << sec[{idx, jdx}] << " ";
                 }
                 channel << pyre::journal::newline;
             }
@@ -119,7 +119,7 @@ int main() {
 
             // add this pair to the correlator
             c.addReferenceTile(pid, ref.constview());
-            c.addTargetTile(pid, tgt.constview());
+            c.addSecondaryTile(pid, sec.constview());
         }
     }
     // stop the clock
@@ -168,17 +168,17 @@ int main() {
                 }
             }
 
-            // get the target raster
-            auto tgt = arena + pid*cellsPerPair + refCells;
+            // get the secondary raster
+            auto sec = arena + pid*cellsPerPair + refCells;
             // verify its contents
             for (auto idx=0; idx<refDim; ++idx) {
                 for (auto jdx=0; jdx<refDim; ++jdx) {
-                    // the bounds of the copy of the ref tile in the tgt tile
+                    // the bounds of the copy of the ref tile in the sec tile
                     auto within = (idx >= i && idx < i+refDim && jdx >= j && idx < j+refDim);
                     // the expected value depends on whether we are within the magic subtile
                     pixel_t expected = within ? ref[idx*refDim + jdx] : 0;
                     // the actual value
-                    pixel_t actual = tgt[idx*tgtDim + jdx];
+                    pixel_t actual = sec[idx*secDim + jdx];
                     // compute the mismatch
                     auto mismatch = std::abs(expected-actual)/std::abs(actual);
                     // if there is a mismatch
@@ -188,7 +188,7 @@ int main() {
                         // complain
                         error
                             << pyre::journal::at(__HERE__)
-                            << "tgt[" << pid << "; " << idx << ", " << jdx << "] : mismatch: "
+                            << "sec[" << pid << "; " << idx << ", " << jdx << "] : mismatch: "
                             << "expected: " << expected
                             << ", actual: " << actual
                             << pyre::journal::endl;

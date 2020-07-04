@@ -24,15 +24,15 @@
 template <typename value_t = float>
 __global__
 static void
-_tgtStats(const value_t * sat,
-          std::size_t tiles, std::size_t refDim, std::size_t tgtDim, std::size_t corDim,
+_secStats(const value_t * sat,
+          std::size_t tiles, std::size_t refDim, std::size_t secDim, std::size_t corDim,
           value_t * stats);
 
 
 // implementation
 
 // precompute the amplitude averages for all possible placements of the search tile within the
-// target search window for all pairs in the plan. we allocate room for {_pairs}*{_corCells}
+// secondary search window for all pairs in the plan. we allocate room for {_pairs}*{_corCells}
 // floating point values and use the precomputed SAT tables resident on the device.
 //
 // the SAT tables require a slice and produce the sum of the values of cells within the slice
@@ -41,8 +41,8 @@ _tgtStats(const value_t * sat,
 // trivialized using ghost cells around the search window boundary, but the memory cost is high
 void
 ampcor::cuda::kernels::
-tgtStats(const float * dSAT,
-         std::size_t pairs, std::size_t refDim, std::size_t tgtDim, std::size_t corDim,
+secStats(const float * dSAT,
+         std::size_t pairs, std::size_t refDim, std::size_t secDim, std::size_t corDim,
          float * dStats)
 {
     // make a channel
@@ -57,10 +57,10 @@ tgtStats(const float * dSAT,
         << pyre::journal::at(__HERE__)
         << "launching " << B << " blocks of " << T
         << " threads each to handle the " << pairs
-        << " entries of the hyper-grid of target amplitude averages"
+        << " entries of the hyper-grid of secondary amplitude averages"
         << pyre::journal::endl;
     // launch the kernels
-    _tgtStats <<<B,T>>> (dSAT, pairs, refDim, tgtDim, corDim, dStats);
+    _secStats <<<B,T>>> (dSAT, pairs, refDim, secDim, corDim, dStats);
     // wait for the kernels to finish
     cudaError_t status = cudaDeviceSynchronize();
     // check
@@ -88,10 +88,10 @@ tgtStats(const float * dSAT,
 template <typename value_t>
 __global__
 void
-_tgtStats(const value_t * dSAT,
-      std::size_t tiles,     // the total number of target tiles
+_secStats(const value_t * dSAT,
+      std::size_t tiles,     // the total number of secondary tiles
       std::size_t refDim,    // the shape of each reference tile
-      std::size_t tgtDim,    // the shape of each target tile
+      std::size_t secDim,    // the shape of each secondary tile
       std::size_t corDim,    // the shape of each grid
       value_t * dStats)
 {
@@ -113,13 +113,13 @@ _tgtStats(const value_t * dSAT,
 
     // compute the number of cells in a reference tile
     auto refCells = refDim * refDim;
-    // compute the number of cells in a target tile
-    auto tgtCells = tgtDim * tgtDim;
+    // compute the number of cells in a secondary tile
+    auto secCells = secDim * secDim;
     // compute the number of cells in each correlation matrix
     auto corCells = corDim * corDim;
 
     // locate the beginning of my SAT table
-    auto sat = dSAT + w*tgtCells;
+    auto sat = dSAT + w*secCells;
     // locate the beginning of my stats table
     auto stats = dStats + w*corCells;
 
@@ -136,24 +136,24 @@ _tgtStats(const value_t * dSAT,
 
             // initialize the sum by reading the bottom right corner; it's guaranteed to be
             // within the SAT
-            auto sum = sat[rowMax*tgtDim + colMax];
+            auto sum = sat[rowMax*secDim + colMax];
 
             // if the slice is not top-aligned
             if (row > 0) {
                 // subtract the value from the upper right corner
-                sum -= sat[(row-1)*tgtDim + colMax];
+                sum -= sat[(row-1)*secDim + colMax];
             }
 
             // if the slice is not left-aligned
             if (col > 0) {
                 // subtract the value of the upper left corner
-                sum -= sat[rowMax*tgtDim + (col - 1)];
+                sum -= sat[rowMax*secDim + (col - 1)];
             }
 
             // if the slice is not aligned with the upper left corner
             if (row > 0 && col > 0) {
                 // restore its contribution to the sum
-                sum += sat[(row-1)*tgtDim + (col-1)];
+                sum += sat[(row-1)*secDim + (col-1)];
             }
 
             // compute the offset that brings us to this placement in this tile

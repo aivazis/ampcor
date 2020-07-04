@@ -20,7 +20,7 @@ class Correlator(ampcor.protocol, family="ampcor.correlators"):
 
     # requirements
     @ampcor.provides
-    def estimate(self, plexus, reference, target):
+    def estimate(self, plexus, reference, secondary):
         """
         Estimate the offset field between a pair of raster images
         """

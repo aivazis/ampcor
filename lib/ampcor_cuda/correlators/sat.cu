@@ -33,27 +33,27 @@ _sat(const value_t * dArena,
 void
 ampcor::cuda::kernels::
 sat(const float * dArena,
-    std::size_t pairs, std::size_t refCells, std::size_t tgtCells, std::size_t tgtDim,
+    std::size_t pairs, std::size_t refCells, std::size_t secCells, std::size_t secDim,
     float * dSAT)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
-    // to compute the SAT for each target tile, we launch as many thread blocks as there are
-    // target tiles
+    // to compute the SAT for each secondary tile, we launch as many thread blocks as there are
+    // secondary tiles
     std::size_t B = pairs;
-    // the number of threads per block is determined by the shape of the target tile; round up
+    // the number of threads per block is determined by the shape of the secondary tile; round up
     // to the nearest warp
-    std::size_t T = 32 * (tgtDim / 32 + (tgtDim % 32 ? 1 : 0));
+    std::size_t T = 32 * (secDim / 32 + (secDim % 32 ? 1 : 0));
     // show me
     channel
         << pyre::journal::at(__HERE__)
         << "launching " << B << " blocks of " << T
-        << " threads each to compute SATs for the target tiles"
+        << " threads each to compute SATs for the secondary tiles"
         << pyre::journal::endl;
 
     // launch the SAT kernel
-    _sat <<<B,T>>> (dArena, refCells+tgtCells, refCells, tgtCells, tgtDim, dSAT);
+    _sat <<<B,T>>> (dArena, refCells+secCells, refCells, secCells, secDim, dSAT);
     // wait for the device to finish
     cudaError_t status = cudaDeviceSynchronize();
     // if something went wrong
@@ -104,7 +104,7 @@ _sat(const value_t * dArena,
     // get a handle to this thread block group
     cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
 
-    // on the first pass, each thread sweeps across its row in the target tile
+    // on the first pass, each thread sweeps across its row in the secondary tile
     // on a second pass, each thread sweeps down its column in the SAT
 
     // across the row

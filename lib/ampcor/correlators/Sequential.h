@@ -45,8 +45,8 @@ public:
 public:
     // add a reference tile to the pile
     inline void addReferenceTile(const slc_type & slc, size_type pid, slice_type slice);
-    // add a target search window to the pile
-    inline void addTargetTile(const slc_type & slc, size_type pid, slice_type slice);
+    // add a secondary search window to the pile
+    inline void addSecondaryTile(const slc_type & slc, size_type pid, slice_type slice);
 
     // compute pixel level adjustments to the registration map
     void adjust();
@@ -56,22 +56,22 @@ public:
     // meta-methods
 public:
     virtual ~Sequential();
-    Sequential(size_type pairs, const shape_type & refShape, const shape_type & tgtShape);
+    Sequential(size_type pairs, const shape_type & refShape, const shape_type & secShape);
 
     // implementation details: data
 private:
-    // my capacity, in {ref/tgt} pairs
+    // my capacity, in {ref/sec} pairs
     size_type _pairs;
 
     // the shape of the reference tiles
     shape_type _refShape;
-    // the shape of the search windows in the target image
-    shape_type _tgtShape;
+    // the shape of the search windows in the secondary image
+    shape_type _secShape;
 
     // the number of cells in a reference tile
     size_type _refCells;
-    // the number of cells in a target search window
-    size_type _tgtCells;
+    // the number of cells in a secondary search window
+    size_type _secCells;
 
     // storage for the tile pairs
     cell_type * _buffer;
