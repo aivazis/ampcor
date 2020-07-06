@@ -6,13 +6,17 @@
 #
 
 
-# the action protocol
+# access the pyre framework
+import pyre
+# my protocol
 from .Action import Action as action
-# and the base command panel
-from .Command import Command as command
 
-# factories for the local objects
-from .Ampcor import Ampcor as ampcor
+
+# class declaration
+class Command(pyre.panel(), implements=action):
+    """
+    Base class for {ampcor} commands
+    """
 
 
 # end of file
