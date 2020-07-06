@@ -1,4 +1,3 @@
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -12,7 +11,7 @@ import ampcor
 
 
 # declaration
-class Offsets(ampcor.cli.command, family="ampcor.cli.offsets"):
+class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
     """
     Estimate an offset field given a pair of rasters
     """

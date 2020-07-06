@@ -11,71 +11,10 @@ import ampcor
 
 
 # declaration
-class About(ampcor.cli.command, family='ampcor.cli.about'):
+class About(ampcor.shells.command, family='ampcor.cli.about'):
     """
     Display information about this application
     """
-
-
-    # user configurable state
-    root = ampcor.properties.str(default='/')
-    root.tip = "specify the portion of the namespace to display"
-
-
-    # commands
-    @ampcor.export(tip="the name of the app for configuration purposes")
-    def name(self, plexus, **kwds):
-        """
-        Print the name of the app for configuration purposes
-        """
-        # show me
-        plexus.info.log("{!r}".format(plexus.pyre_name) or "unknown")
-        # all done
-        return
-
-
-    @ampcor.export(tip="the application home directory")
-    def home(self, plexus, **kwds):
-        """
-        Print the application home directory
-        """
-        # show me
-        plexus.info.log("{}".format(ampcor.home))
-        # all done
-        return
-
-
-    @ampcor.export(tip="the application installation directory")
-    def prefix(self, plexus, **kwds):
-        """
-        Print the application installation directory
-        """
-        # show me
-        plexus.info.log("{}".format(ampcor.prefix))
-        # all done
-        return
-
-
-    @ampcor.export(tip="the application configuration directory")
-    def defaults(self, plexus, **kwds):
-        """
-        Print the application configuration directory
-        """
-        # show me
-        plexus.info.log("{}".format(ampcor.defaults))
-        # all done
-        return
-
-
-    @ampcor.export(tip="print the version number")
-    def version(self, plexus, **kwds):
-        """
-        Print the version of the ampcor package
-        """
-        # make some space
-        plexus.info.log(ampcor.meta.header)
-        # all done
-        return
 
 
     @ampcor.export(tip="print the copyright note")
@@ -111,47 +50,13 @@ class About(ampcor.cli.command, family='ampcor.cli.about'):
         return
 
 
-    @ampcor.export(tip='dump the application configuration namespace')
-    def nfs(self, plexus, **kwds):
+    @ampcor.export(tip="print the version number")
+    def version(self, plexus, **kwds):
         """
-        Dump the application configuration namespace
+        Print the version of the ampcor package
         """
-        # get the prefix
-        prefix = self.root or 'ampcor'
-        # show me
-        plexus.pyre_nameserver.dump(prefix)
-        # all done
-        return
-
-
-    @ampcor.export(tip='dump the application private filesystem')
-    def pfs(self, plexus, **kwds):
-        """
-        Dump the application private filesystem
-        """
-        # build the report
-        report = '\n'.join(plexus.pfs.dump())
-        # sign in
-        plexus.info.line('pfs:')
-        # dump
-        plexus.info.log(report)
-        # all done
-        return
-
-
-    @ampcor.export(tip='dump the application virtual filesystem')
-    def vfs(self, plexus, **kwds):
-        """
-        Dump the application virtual filesystem
-        """
-        # get the prefix
-        prefix = self.root or '/ampcor'
-        # build the report
-        report = '\n'.join(plexus.vfs[prefix].dump())
-        # sign in
-        plexus.info.line('vfs: root={!r}'.format(prefix))
-        # dump
-        plexus.info.log(report)
+        # make some space
+        plexus.info.log(ampcor.meta.header)
         # all done
         return
 

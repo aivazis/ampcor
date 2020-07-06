@@ -7,9 +7,9 @@
 
 
 # pull the action protocol
-from .Action import Action as action
+from ..shells import action
 # and the base panel
-from .Command import Command as command
+from ..shells import command
 # pull in the command decorator
 from .. import foundry
 
@@ -34,6 +34,25 @@ def about():
     __doc__ = About.__doc__
     # and publish it
     return About
+
+
+@foundry(implements=action, tip="display configuration information about this application")
+def config():
+    # get the action
+    from .Config import Config
+    # borrow its docstring
+    __doc__ = Config.__doc__
+    # and publish it
+    return Config
+
+
+# command completion; no tip so it doesn't show up on the help panel
+@foundry(implements=action)
+def complete():
+    # get the action
+    from .Complete import Complete
+    # and publish it
+    return Complete
 
 
 # end of file
