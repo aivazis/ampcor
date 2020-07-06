@@ -33,9 +33,9 @@ class Raster(ampcor.protocol, family="ampcor.dom.rasters"):
         """
 
     @ampcor.provides
-    def slice(self, begin, end):
+    def slice(self, origin, shape):
         """
-        Grant access to a slice of my data bound by the index pair {begin} and {end}
+        Grant access to a slice of data of the given {shape} starting at {origin}
         """
 
     @ampcor.provides

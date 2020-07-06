@@ -25,18 +25,17 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
     from .Slice import Slice as sliceFactory
 
 
-    # constants
-    # the memory footprint of individual pixels
-    pixelSize = libampcor.slc_pixelSize()
-
-
-    # user configurable state
+    # public data
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
-    shape.default = (1,1)
-    shape.doc = "the shape of the raster: lines x samples"
+    shape.doc = "the shape of the raster in pixels"
 
     data = ampcor.properties.path()
     data.doc = "the path to my binary data"
+
+
+    # constants
+    # the memory footprint of individual pixels
+    pixelSize = libampcor.SLC.pixelSize
 
 
     # protocol obligations
@@ -52,28 +51,10 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
 
     @ampcor.export
-    def slice(self, begin, shape):
+    def slice(self, origin, shape):
         """
-        Grant access to a slice of my data bound by the index pair {begin} and {end}
+        Grant access to a slice of data of the given {shape} starting at {origin}
         """
-        # N.B.: {end} follows the one-past-the-end of the range convention, just like {range}
-        # this means that overflow doesn't happen unless {end} > {self.shape}
-
-        # go through the index that describes the beginning of the slice
-        for b in begin:
-            # if any of them are negative
-            if b < 0:
-                # indicate that this is an invalid slice
-                return None
-        # make sure the indices in {end} don't overflow
-        for b, s, l in zip(begin, shape, self.shape):
-            # if any of them do
-            if b+s > l:
-                # indicate this is an invalid slice
-                return None
-
-        # if all goes well, make a slice and return it
-        return self.sliceFactory(raster=self, begin=begin, shape=shape)
 
 
     @ampcor.export
@@ -81,37 +62,6 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Map me over the contents of {filename}
         """
-        # unpack my shape
-        lines, samples = self.shape
-        # build an SLC raster image over the contents of {filename}
-        self.raster = libampcor.slc_map(filename=self.data.path, lines=lines, samples=samples)
-        # all done
-        return self
-
-
-    # meta-methods
-    def __init__(self, **kwds):
-        # chain up
-        super().__init__(**kwds)
-        # make a tile out of my shape
-        self.tile = ampcor.grid.tile(shape=self.shape)
-        # all done
-        return
-
-
-    def __getitem__(self, index):
-        """
-        Fetch data at the given index
-        """
-        # convert {index} into an offset
-        offset = self.tile.offset(index)
-        # grab the data and return it
-        return libampcor.slc_getitem(self.raster, offset)
-
-
-    # implementation details
-    # private data
-    raster = None
 
 
 # end of file

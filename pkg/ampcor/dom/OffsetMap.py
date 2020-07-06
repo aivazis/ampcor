@@ -6,44 +6,49 @@
 #
 
 
-# framework
+# the framework
 import ampcor
+# the extension
+from ampcor.ext import ampcor as libampcor
+# my protocol
+from .Raster import Raster
 
 
 # declaration
-class OffsetMap:
+class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implements=Raster):
     """
-    A logically Cartesian map that establishes a correspondence between a collection of points
-    on a {reference} raster and a {secondary} raster
+    Access to the data of an offset map
     """
 
 
     # public data
-    @property
+    shape = ampcor.properties.tuple(schema=ampcor.properties.int())
+    shape.doc = "the shape of the raster in pixels"
+
+    data = ampcor.properties.path()
+    data.doc = "the path to my binary data"
+
+
+    # protocol obligations
+    @ampcor.export
     def size(self):
         """
-        Compute the total number of elements in the map
+        Compute my memory footprint
         """
-        # easy enough
-        return self.tile.size
 
 
-    @property
-    def shape(self):
+    @ampcor.export
+    def slice(self, origin, shape):
         """
-        Return the shape of the map
+        Grant access to a slice of data of the given {shape} starting at {origin}
         """
-        # easy enough
-        return self.tile.shape
 
 
-    @property
-    def layout(self):
+    @ampcor.export
+    def open(self, mode="r"):
         """
-        Return the index packing order
+        Map me over the contents of {filename}
         """
-        # easy enough
-        return self.tile.layout
 
 
     # meta-methods
@@ -74,7 +79,7 @@ class OffsetMap:
 
     def __setitem__(self, index, points):
         """
-        Return the value stored at {index}
+        Establish a correlation between the reference and secondary {points} at {index}
         """
         # ask my tile for the offset
         offset = self.tile.offset(index)
