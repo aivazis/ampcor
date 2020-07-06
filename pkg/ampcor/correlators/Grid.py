@@ -1,4 +1,3 @@
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -18,7 +17,7 @@ from .Offsets import Offsets
 # declaration
 class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implements=Offsets):
     """
-    The protocol for initial guesses for the offset map
+    a generator of a Cartesian grid of initial guesses for the offset map
     """
 
 

@@ -1,4 +1,3 @@
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -159,16 +158,16 @@ class Plan:
         # go through matching pairs of points in the initial guess
         for ref, sec in zip(regmap.domain, regmap.codomain):
             # form the upper left hand corner of the reference tile
-            begin = tuple(r - c//2 for r,c in zip(ref, chip))
+            origin = tuple(r - c//2 for r,c in zip(ref, chip))
             # attempt to make a slice; invalid specs get rejected by the slice factory
-            refSlice = reference.slice(begin=begin, shape=chip)
+            refSlice = reference.slice(origin=origin, shape=chip)
 
             # the upper left hand corner of the secondary tile
-            begin = tuple(t - c//2 - p for t,c,p in zip(sec, chip, padding))
+            origin = tuple(t - c//2 - p for t,c,p in zip(sec, chip, padding))
             # and its shape
             shape = tuple(c + 2*p for c,p in zip(chip, padding))
             # try to turn this into a slice
-            secSlice = secondary.slice(begin=begin, shape=shape)
+            secSlice = secondary.slice(origin=origin, shape=shape)
 
             # if both slices are valid
             if refSlice and secSlice:

@@ -1,4 +1,3 @@
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -7,10 +6,11 @@
 #
 
 
-# pull in the command decorators
-from .. import foundry
+# get the package
+import ampcor
 
-# protocols
+
+# the protocols
 from .Correlator import Correlator as correlator
 from .Domain import Domain as domain
 from .Functor import Functor as functor
@@ -18,7 +18,7 @@ from .Offsets import Offsets as offsets
 
 
 # correlation strategies
-@foundry(implements=correlator, tip="estimate an offset field using MGA's implementation")
+@ampcor.foundry(implements=correlator, tip="estimate an offset field using MGA's implementation")
 def mga():
     # get the action
     from .MGA import MGA
@@ -29,7 +29,7 @@ def mga():
 
 
 # strategies for placing tiles on the reference and secondary rasters
-@foundry(implements=offsets, tip="a grid based generators of a coarse offset map")
+@ampcor.foundry(implements=offsets, tip="a grid based generator of a coarse offset map")
 def grid():
     # get the action
     from .Grid import Grid
@@ -40,7 +40,7 @@ def grid():
 
 
 # strategies for laying tiles on the reference raster
-@foundry(implements=domain, tip="generate a uniform grid of reference points")
+@ampcor.foundry(implements=domain, tip="generate a uniform grid of reference points")
 def uniform():
     # get the action
     from .UniformGrid import UniformGrid
@@ -51,7 +51,7 @@ def uniform():
 
 
 # generators of points on the secondary raster
-@foundry(implements=offsets, tip="a functor that applies a constant shift")
+@ampcor.foundry(implements=offsets, tip="a functor that applies a constant shift")
 def constant():
     # get the action
     from .Constant import Constant

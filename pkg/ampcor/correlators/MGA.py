@@ -87,7 +87,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
         # restart the timer
         timer.reset().start()
-        # make a plan
+        # compute the offsets
         regmap = worker.adjust(manager=self, rasters=(ref, sec), plan=plan, channel=channel)
         # stop the timer
         timer.stop()
