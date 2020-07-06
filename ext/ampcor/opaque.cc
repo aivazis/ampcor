@@ -10,10 +10,10 @@
 #include "forward.h"
 
 
-// add bindings to the inventory
+// opaque classes do not get auto-converted to and from python
 void
 ampcor::py::
-exceptions(py::module & m) {
+opaque(py::module & m) {
     // all done
     return;
 }
