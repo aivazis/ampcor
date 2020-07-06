@@ -1,34 +1,30 @@
 # -*- Makefile -*-
 #
-# michael a.g. aïvázis
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # parasim
 # (c) 1998-2020 all rights reserved
 #
 
 
-# ampcor consists of a python package
+# ampcor has a python package
 ampcor.packages := ampcor.pkg
-# libraries
-ampcor.libraries :=
-# python extensions
-ampcor.extensions :=
-# and some tests
-ampcor.tests := ampcor.pkg.tests
 
-# the ampcor package meta-data
+# other assets
+# {libampcor} and its bindings
+ampcor.assets := ampcor.lib
+# optional cuda acceleration
+ampcor.assets += ${if ${filter cuda,$(extern.available)},ampcor_cuda.lib}
+
+
+# metadata for the ampcor python package
+# its name
 ampcor.pkg.stem := ampcor
+# its plexus wrapper in the {bin} directory
 ampcor.pkg.drivers := ampcor
 
-# the ampcor test suite
-ampcor.pkg.tests.stem := ampcor
-ampcor.pkg.tests.prerequisites := ampcor.pkg ampcor.ext
-
-# base functionality
-ampcor.assets := libampcor
-# optional CUDA acceleration
-ampcor.assets += ${if ${value cuda.dir},libampcor_cuda,}
 
 # get the asset definitions
-include ${addsuffix .def,$(ampcor.assets)}
+include ${ampcor.assets}
+
 
 # end of file

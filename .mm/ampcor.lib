@@ -1,0 +1,22 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
+# parasim
+# (c) 1998-2020 all rights reserved
+#
+
+
+# add the ampcor bindings to the pile
+ampcor.extensions += ampcor.ext
+
+# configure the extension module
+ampcor.ext.stem := ampcor
+# no capsules for {pybind11} bindings
+ampcor.ext.capsule :=
+# dependencies
+ampcor.ext.extern := pyre pybind11 python
+# compiler control
+ampcor.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
+
+
+# end of file
