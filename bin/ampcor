@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -12,7 +11,7 @@
 import ampcor
 
 # build an instance of the plexus
-app = ampcor.shells.plexus(name='ampcor.plexus')
+app = ampcor.shells.ampcor(name='ampcor.plexus')
 # and run it
 status = app.run()
 # pass the status on to the shell
