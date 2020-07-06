@@ -1,4 +1,3 @@
-# -*- Python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -24,20 +23,19 @@ from pyre import (
     )
 
 
-# bootstrap
+# register the package with the framework
 package = executive.registerPackage(name='ampcor', file=__file__)
 # save the geography
 home, prefix, defaults = package.layout()
 
-# publish local modules
-from . import (
-    meta,         # package meta-data
-    exceptions,   # the exception hierarchy
-    dom,          # the data model
-    correlators,  # the image correlators
-    cli,          # the command line interface
-    shells,       # the supported application shells
-)
+
+# publish the local modules
+from . import meta           # package meta-data
+from . import exceptions     # the exception hierarchy
+from . import shells         # the supported application shells
+from . import cli            # the command line interface
+from . import dom            # the data model
+from . import correlators    # the image correlators
 
 
 # administrivia
