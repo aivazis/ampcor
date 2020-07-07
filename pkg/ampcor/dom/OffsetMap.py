@@ -31,7 +31,14 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
 
     # protocol obligations
     @ampcor.export
-    def size(self):
+    def capacity(self):
+        """
+        Compute my memory footprint
+        """
+
+
+    @ampcor.export
+    def footprint(self):
         """
         Compute my memory footprint
         """

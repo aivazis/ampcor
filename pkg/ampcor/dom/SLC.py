@@ -40,14 +40,21 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
     # protocol obligations
     @ampcor.export
-    def size(self):
+    def capacity(self):
         """
-        Compute my memory footprint
+        Compute the number of pixels
         """
-        # unpack
-        lines, samples = self.shape
+        # my tile knows
+        return self.tile.size
+
+
+    @ampcor.export
+    def footprint(self):
+        """
+        Compute my memory footprint, in bytes
+        """
         # compute and return
-        return lines * samples * self.pixelFootprint
+        return self.tile.size * self.pixelFootprint
 
 
     @ampcor.export
@@ -62,6 +69,16 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Map me over the contents of {filename}
         """
+
+
+    # metamethods
+    def __init__(self, **kwds):
+        # chain up
+        super().__init__(**kwds)
+        # make a tile out of my shape
+        self.tile = ampcor.grid.tile(shape=self.shape)
+        # all done
+        return
 
 
 # end of file

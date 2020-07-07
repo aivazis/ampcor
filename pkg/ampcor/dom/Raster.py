@@ -27,9 +27,15 @@ class Raster(ampcor.protocol, family="ampcor.dom.rasters"):
 
     # requirements
     @ampcor.provides
-    def size(self):
+    def capacity(self):
         """
-        Compute my memory footprint
+        Compute the number of pixels
+        """
+
+    @ampcor.provides
+    def footprint(self):
+        """
+        Compute my memory footprint in bytes
         """
 
     @ampcor.provides
