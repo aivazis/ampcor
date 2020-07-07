@@ -20,14 +20,32 @@
 void
 ampcor::py::
 slc_const(py::module &m) {
+    // type aliase
+    using slc_t = dom::slc_const_t;
+
     // the SLC interface
-    py::class_<dom::slc_const_t>(m, "ConstSLC")
+    py::class_<slc_t>(m, "ConstSLC")
+        // size of things
+        // number of pixels
+        .def_property_readonly("capacity",
+                      // the getter
+                      &slc_t::capacity,
+                      // the docstring
+                      "the number of pixels in the SLC"
+                      )
+        // memory footprint
+        .def_property_readonly("footprint",
+                      // the getter
+                      &slc_t::footprint,
+                      // the docstring
+                      "the amount of memory occupied by this SLC, in bytes"
+                      )
         // the static interface
         // the size of a pixel in bytes
         .def_property_readonly_static("pixelFootprint",
                                       // the getter
                                       [] (py::object) -> size_t {
-                                          return dom::slc_const_t::pixelFootprint();
+                                          return slc_t::pixelFootprint();
                                       },
                                       // the docstring
                                       "the size of an SLC pixel"
