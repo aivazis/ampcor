@@ -1,0 +1,30 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2020 all rights reserved
+
+
+// get the declarations
+#include "meta.h"
+
+
+// version info
+auto
+ampcor:meta::
+version() -> version_t
+{
+    return version_t { AMPCOR_major, AMPCOR_minor, AMPCOR_MICRO, AMPCOR_revision };
+}
+
+
+// compilation date
+auto
+ampcor::meta::
+date() -> string_t
+{
+    return AMPCOR_date;
+}
+
+
+// end of file
