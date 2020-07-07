@@ -35,7 +35,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
     # constants
     # the memory footprint of individual pixels
-    pixelSize = libampcor.SLC.pixelSize
+    pixelFootprint = libampcor.ConstSLC.pixelFootprint
 
 
     # protocol obligations
@@ -47,7 +47,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         # unpack
         lines, samples = self.shape
         # compute and return
-        return lines * samples * self.pixelSize
+        return lines * samples * self.pixelFootprint
 
 
     @ampcor.export
