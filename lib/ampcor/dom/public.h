@@ -1,75 +1,30 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
+// -*- c++ -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 // code guard
-#if !defined(ampcor_libampcor_dom_public_h)
-#define ampcor_libampcor_dom_public_h
+#if !defined(ampcor_dom_public_h)
+#define ampcor_dom_public_h
 
 
-// externals
-#include <pyre/grid.h>
+// external packages
+#include "external.h"
+// set up the namespace
+#include "forward.h"
 
-// forward declarations
-namespace ampcor {
-    namespace dom {
-
-        // local type aliases
-        // sizes of things
-        using size_t = std::size_t;
-        // filenames
-        using uri_t = pyre::memory::uri_t;
-
-        // a memory mapped grid
-        template <size_t dim, typename pixel_t = double>
-        using mmap_t =
-            pyre::grid::directgrid_t< pixel_t,
-                                      pyre::grid::layout_t<
-                                          pyre::grid::index_t<std::array<size_t,dim>>>
-                                      >;
-
-        // a const memory mapped grid
-        template <size_t dim, typename pixel_t = double>
-        using constmmap_t =
-            pyre::grid::directgrid_t< pixel_t,
-                                      pyre::grid::layout_t<
-                                          pyre::grid::index_t<std::array<size_t,dim>>>,
-                                      pyre::memory::constdirect_t<pixel_t>
-                                      >;
-
-        // forward declarations of local classes
-        // raster images
-        class Raster;
-        // SLC images
-        class SLC;
-
-        // the public type aliases for the local objects
-        using slc_t = SLC;
-
-    } // of namespace dom
-} // of namespace ampcor
+// published type aliases and function declarations that constitute the public API of this package
+// this is the file you are looking for
+#include "api.h"
 
 
-// the class declarations
-#include "Raster.h"
+// the local entities
+// product specification
 #include "SLC.h"
+// product gives specifications their storage strategy
+#include "Product.h"
 
-// the implementations of the inline methods
-// raster
-#define ampcor_libampcor_dom_raster_icc
-#include "Raster.icc"
-#undef ampcor_libampcor_dom_raster_icc
-// slc
-#define ampcor_libampcor_dom_slc_icc
-#include "SLC.icc"
-#undef ampcor_libampcor_dom_slc_icc
-
-
-// code guard
-#endif
+# endif
 
 // end of file

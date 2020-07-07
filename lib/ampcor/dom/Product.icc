@@ -1,0 +1,36 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_dom_Product_icc)
+#error this file contains implementation details for ampcor::dom::Product
+#else
+
+
+// static interface
+// my read/write flag
+template <class specT, bool isReadOnly>
+constexpr auto
+ampcor::dom::Product<specT, isReadOnly>::
+readOnly() -> bool
+{
+    // easy enough
+    return isReadOnly;
+}
+
+
+template <class specT, bool isReadOnly>
+constexpr auto
+ampcor::dom::Product<specT, isReadOnly>::
+pixelFootprint() -> size_t
+{
+    // my product spec knows
+    return product_type::pixelFootprint();
+}
+
+
+#endif
+
+// end of file
