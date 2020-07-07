@@ -22,6 +22,7 @@ PYBIND11_MODULE(ampcor, m) {
 
     // slc products
     ampcor::py::slc(m);
+    ampcor::py::slc_const(m);
 }
 
 

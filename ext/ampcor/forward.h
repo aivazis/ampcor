@@ -17,6 +17,7 @@ namespace ampcor::py {
 
     // access to SLC instances
     void slc(py::module &);
+    void slc_const(py::module &);
 }
 
 

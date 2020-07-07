@@ -19,15 +19,15 @@
 // add bindings to SLC rasters
 void
 ampcor::py::
-slc(py::module &m) {
+slc_const(py::module &m) {
     // the SLC interface
-    py::class_<dom::slc_t>(m, "SLC")
+    py::class_<dom::slc_const_t>(m, "ConstSLC")
         // the static interface
         // the size of a pixel in bytes
         .def_property_readonly_static("pixelFootprint",
                                       // the getter
                                       [] (py::object) -> size_t {
-                                          return dom::slc_t::pixelFootprint();
+                                          return dom::slc_const_t::pixelFootprint();
                                       },
                                       // the docstring
                                       "the size of an SLC pixel"
