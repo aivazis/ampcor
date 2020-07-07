@@ -5,14 +5,10 @@
 // (c) 1998-2020 all rights reserved
 
 // code guard
-#if !defined(ampcor_correlators_h)
-#define ampcor_correlators_h
+#if !defined(ampcor_correlators_forward_h)
+#define ampcor_correlators_forward_h
 
 
-// load the correlator api
-#include "correlators/public.h"
-
-
-# endif
+#endif
 
 // end of file
