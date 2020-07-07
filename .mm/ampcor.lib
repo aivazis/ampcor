@@ -6,15 +6,30 @@
 #
 
 
+# add the library to the pile
+ampcor.libraries += ampcor.lib
 # add the ampcor bindings to the pile
 ampcor.extensions += ampcor.ext
 
+
+# configure the library
+ampcor.lib.stem := ampcor
+# dependencies
+ampcor.lib.extern := p2
+# compiler control
+ampcor.lib.c++.flags += $($(compiler.c++).std.c++17)
+
+
 # configure the extension module
 ampcor.ext.stem := ampcor
+# wrap {ampcor.lib}
+ampcor.ext.wraps := ampcor.lib
 # no capsules for {pybind11} bindings
 ampcor.ext.capsule :=
+# intra-project dependencies
+ampcor.ext.prerequisites := ampcor.lib
 # dependencies
-ampcor.ext.extern := pyre pybind11 python
+ampcor.ext.extern := ampcor.lib p2 pybind11 python
 # compiler control
 ampcor.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 
