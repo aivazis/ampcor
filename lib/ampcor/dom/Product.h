@@ -16,13 +16,42 @@ class ampcor::dom::Product : public grid_t<specT, mmap_t, isReadOnly> {
 public:
     // my parameters
     using product_type = specT;
+    using product_const_reference = const specT &;
+    // my base class
+    using grid_type = grid_t<product_type, mmap_t, isReadOnly>;
+    // sizes of things
+    using size_type = size_t;
+
+    // metamethods
+public:
+    // constructor
+    template <typename... Args>
+    constexpr Product(Args&&...);
+
+    // interface
+public:
+    // {size} is too overloaded, so we use {capacity} to denote the number of cells in the
+    // product layout, and {footprint} for its memory requirements
+    constexpr auto capacity() const -> size_type;
+    constexpr auto footprint() const -> size_type;
+
 
     // static interface
 public:
     // my read/write flag
     static constexpr auto readOnly() -> bool;
     // my pixel size
-    static constexpr auto pixelFootprint() -> size_t;
+    static constexpr auto pixelFootprint() -> size_type;
+
+    // default metamethods
+public:
+    // destructor
+    ~Product() = default;
+    // constructors
+    Product(const Product &) = default;
+    Product(Product &&) = default;
+    Product & operator=(const Product &) = default;
+    Product & operator=(Product &&) = default;
 };
 
 
