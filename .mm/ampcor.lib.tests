@@ -13,4 +13,11 @@ ampcor.lib.tests.extern := ampcor.lib p2
 # c++ compiler flags
 ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 
+
+# global clean up
+tests.ampcor.lib.dom.clean += slc.dat
+
+# the {slc} product tests must be executed in a specific order
+tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
+
 # end of file
