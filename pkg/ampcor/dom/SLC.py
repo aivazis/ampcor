@@ -67,8 +67,12 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
     @ampcor.export
     def open(self, mode="r"):
         """
-        Map me over the contents of {filename}
+        Map me over the contents of my {data} file
         """
+        # build the raster
+        self.raster = libampcor.ConstSLC(filename=self.data, shape=self.shape)
+        # all done
+        return
 
 
     # metamethods
@@ -79,6 +83,11 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         self.tile = ampcor.grid.tile(shape=self.shape)
         # all done
         return
+
+
+    # implementation details
+    # private data
+    raster = None  # set by {open}
 
 
 # end of file
