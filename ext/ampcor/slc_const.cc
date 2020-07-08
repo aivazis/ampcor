@@ -25,6 +25,22 @@ slc_const(py::module &m) {
 
     // the SLC interface
     py::class_<slc_t>(m, "ConstSLC")
+
+        // constructor
+        .def(
+             // the handler
+             py::init([](py::tuple shape, std::string filename) {
+                          // extract the shape
+                          int lines = shape[0].cast<int>();
+                          int samples = shape[1].cast<int>();
+                          // make a spec out of the shape
+                          slc_t::product_type spec { {lines, samples} };
+                          // build the product
+                          return std::unique_ptr<slc_t>(new slc_t(spec, filename));
+                      }),
+            // the signature
+            "shape"_a, "filename"_a
+            )
         // size of things
         // number of pixels
         .def_property_readonly("capacity",
