@@ -9,6 +9,16 @@
 #else
 
 
+
+// metamethods
+constexpr
+ampcor::dom::SLC::
+SLC(shape_const_reference shape) :
+    layout_type(shape)
+{}
+
+
+// static interface
 constexpr auto
 ampcor::dom::SLC::
 pixelFootprint() -> size_t

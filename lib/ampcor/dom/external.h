@@ -33,7 +33,8 @@ namespace ampcor::dom {
                                       >;
 
     // most products are {lines}x{samples} packed in row-major order
-    using layout_t = pyre::grid::canonical_t<2>;
+    template <size_t N>
+    using layout_t = pyre::grid::canonical_t<N>;
 
     // pull {pyre::grid:grid_t}, with a twist
     template <class specT, template <typename, bool> class storageT, bool isReadOnly = true>

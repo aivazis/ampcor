@@ -11,11 +11,20 @@
 
 // specification of an SLC product; here we are concerned about its layout and its pixel type;
 // determining the storage type is {Product}'s responsibility
-class ampcor::dom::SLC : public layout_t {
+class ampcor::dom::SLC : public layout_t<2> {
     // types
 public:
+    // my base
+    using layout_type = layout_t<2>;
     // my parts
     using pixel_type = complex_t<float>;
+    // my shape
+    using shape_type = typename layout_type::shape_type;
+    using shape_const_reference = const shape_type &;
+
+    // metamethods
+public:
+    constexpr SLC(shape_const_reference);
 
     // static interface
 public:

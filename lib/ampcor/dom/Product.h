@@ -26,7 +26,7 @@ public:
 public:
     // constructor
     template <typename... Args>
-    constexpr Product(Args&&...);
+    constexpr Product(product_const_reference, Args&&...);
 
     // interface
 public:

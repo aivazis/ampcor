@@ -14,8 +14,8 @@ template <class specT, bool isReadOnly>
 template <typename... Args>
 constexpr
 ampcor::dom::Product<specT, isReadOnly>::
-Product(Args&&... args) :
-    grid_type(std::forward<Args>(args)...)
+Product(product_const_reference spec, Args&&... args) :
+    grid_type(spec, std::forward<Args>(args)...)
 {}
 
 
