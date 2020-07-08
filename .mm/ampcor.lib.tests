@@ -1,0 +1,16 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
+# parasim
+# (c) 1998-2020 all rights reserved
+#
+
+
+# the libampcor test suite
+ampcor.lib.tests.stem := ampcor.lib
+ampcor.lib.tests.prerequisites := ampcor.lib
+ampcor.lib.tests.extern := ampcor.lib p2
+# c++ compiler flags
+ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
+
+# end of file

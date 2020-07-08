@@ -24,7 +24,9 @@ ampcor.pkg.drivers := ampcor
 
 
 # get the asset definitions
-include ${ampcor.assets}
+include $(ampcor.assets)
 
+# get the test suites
+include $(ampcor.tests)
 
 # end of file
