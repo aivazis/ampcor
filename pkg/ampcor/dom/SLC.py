@@ -84,7 +84,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         # build the raster
         self.raster = libampcor.ConstSLC(uri=self.data, shape=self.shape)
         # all done
-        return
+        return self
 
 
     # metamethods
