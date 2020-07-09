@@ -107,7 +107,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         if layout.gpus and ampcor.ext.libampcor_cuda:
             # use the GPU aware implementation
             from .CUDA import CUDA as workerFactory
-        # if the CPU acceleration is available
+        # if the CPU implementation is available
         elif ampcor.ext.libampcor:
             # use the native implementation
             from .Sequential import Sequential as workerFactory

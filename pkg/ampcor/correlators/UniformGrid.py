@@ -32,7 +32,7 @@ class UniformGrid(ampcor.component,
     @ampcor.export
     def points(self, bounds, **kwds):
         """
-        Generate a cloud of points within {extent} where reference tiles will be placed
+        Generate a cloud of points within {bounds} where reference tiles will be placed
         """
         # get my shape
         shape = self.shape

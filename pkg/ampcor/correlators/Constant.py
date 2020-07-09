@@ -30,13 +30,13 @@ class Constant(ampcor.component,
     @ampcor.export
     def codomain(self, domain, **kwds):
         """
-        Given {reference} points in {domain}, generate their images in {secondary}
+        Given a sequence of points in {domain}, generate their images
         """
         # grab my {shift}
         shift = self.shift
         # go through the points
         for point in domain:
-            # apply the shift and yield the poit
+            # apply the shift and yield the point
             yield tuple(p+s for p,s in zip(point, shift))
         # all done
         return
