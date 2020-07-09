@@ -6,48 +6,42 @@
 #
 
 
-# framework
+# get the package
 import ampcor
 
 
-# declaration
+# this worker takes a plan, attempts to allocate enough memory to execute it, and goes through
+# each pair of tiles in sequence until they are all done. it is smart about memory allocation,
+# in the sense that it will execute the specified plan in batches whose size is determined by
+# the available memory
 class Sequential:
     """
-    The sequential registration strategy
+    The sequential tile registration strategy
     """
 
 
     # interface
-    def adjust(self, manager, rasters, plan, channel):
+    def adjust(self, rasters, plan, **kwds):
         """
-        Correlate two rasters given a plan
+        Compute the offset map between a pair of {rasters} given a correlation {plan}
         """
-        # unpack the rasters
+        # unpack the raster
         ref, sec = rasters
-        # ask the plan for the total number of points on the map
+        # ask the plan for the number of points in the domain
         points = len(plan)
-        # the shape of the reference chips
+        # get the shape of the reference chip
         chip = plan.chip
         # and the shape of the search windows
         window = plan.window
 
-        # get the bindings
+        # access the bindings; this is guaranteed to succeed
         libampcor = ampcor.ext.libampcor
-        # instantiate the worker
-        worker = libampcor.sequential(points, chip, window)
-
-        # go through the valid pairs
-        for idx, (r,t) in enumerate(plan.pairs):
-            # load the reference slice
-            libampcor.addReference(worker, ref, idx, r.begin, r.end)
-            # load the secondary slice
-            libampcor.addSecondary(worker, sec, idx, t.begin, t.end)
-
-        # ask the worker to perform pixel level adjustments
-        libampcor.adjust(worker)
+        # instantiate my worker
+        worker = libampcor.Sequential(points, chip, window)
 
         # all done
         return
+
 
 
 # end of file
