@@ -82,7 +82,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         Map me over the contents of my {data} file
         """
         # build the raster
-        self.raster = libampcor.ConstSLC(filename=self.data, shape=self.shape)
+        self.raster = libampcor.ConstSLC(uri=self.data, shape=self.shape)
         # all done
         return
 

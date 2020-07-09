@@ -15,31 +15,30 @@
 // libampcor
 #include <ampcor/dom.h>
 
+// type aliase
+using slc_t = ampcor::dom::slc_const_t;
+
+// helpers
+namespace ampcor::py {
+    // the constructor
+    inline auto
+    constructor(py::tuple, py::object) -> unique_pointer<slc_t>;
+}
+
 
 // add bindings to SLC rasters
 void
 ampcor::py::
 slc_const(py::module &m) {
-    // type aliase
-    using slc_t = dom::slc_const_t;
-
     // the SLC interface
     py::class_<slc_t>(m, "ConstSLC")
 
         // constructor
         .def(
-             // the handler
-             py::init([](py::tuple shape, std::string filename) {
-                          // extract the shape
-                          int lines = shape[0].cast<int>();
-                          int samples = shape[1].cast<int>();
-                          // make a spec out of the shape
-                          slc_t::product_type spec { {lines, samples} };
-                          // build the product
-                          return std::unique_ptr<slc_t>(new slc_t(spec, filename));
-                      }),
+             // the constructor wrapper
+             py::init([](py::tuple shape, py::object uri) { return constructor(shape, uri); }),
             // the signature
-            "shape"_a, "filename"_a
+            "shape"_a, "uri"_a
             )
         // size of things
         // number of pixels
@@ -71,6 +70,28 @@ slc_const(py::module &m) {
 
     // all done
     return;
+}
+
+
+// helper definitions
+auto
+ampcor::py::
+constructor(py::tuple shape, py::object uri) -> unique_pointer<slc_t>
+{
+    // extract the shape
+    int lines = py::int_(shape[0]);
+    int samples = py::int_(shape[1]);
+    // make a product specification out of the shape
+    slc_t::product_type spec { {lines, samples} };
+
+    // convert the path-like object into a string
+    // get {os.fspath}
+    auto fspath = py::module::import("os").attr("fspath");
+    // call it and convert its return value into a string
+    string_t filename = py::str(fspath(uri));
+
+    // build the product and return it
+    return std::unique_ptr<slc_t>(new slc_t(spec, filename));
 }
 
 

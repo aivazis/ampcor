@@ -10,6 +10,7 @@
 
 // STL
 #include <complex>
+#include <string>
 
 // journal
 #include <pyre/journal.h>
@@ -26,6 +27,15 @@ namespace ampcor::py {
     namespace py = pybind11;
     // get the special {pybind11} literals
     using namespace py::literals;
+
+    // sizes of things
+    using size_t = std::size_t;
+    // strings
+    using string_t = std::string;
+
+    // pointer wrappers
+    template <class T>
+    using unique_pointer = std::unique_ptr<T>;
 }
 
 
