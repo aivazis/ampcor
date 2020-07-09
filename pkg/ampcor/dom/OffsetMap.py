@@ -33,7 +33,7 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
     @ampcor.export
     def capacity(self):
         """
-        Compute my memory footprint
+        Compute the number of points
         """
 
 
@@ -104,7 +104,7 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
         Compute my length
         """
         # delegate to the corresponding property
-        return self.size
+        return self.capacity
 
 
 # end of file
