@@ -15,7 +15,7 @@
 // libampcor
 #include <ampcor/dom.h>
 
-// type aliase
+// type aliases
 using slc_t = ampcor::dom::slc_const_t;
 
 // helpers
@@ -32,7 +32,6 @@ ampcor::py::
 slc_const(py::module &m) {
     // the SLC interface
     py::class_<slc_t>(m, "ConstSLC")
-
         // constructor
         .def(
              // the constructor wrapper
