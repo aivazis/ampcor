@@ -22,10 +22,11 @@ class Slice:
 
     # public data
     raster = None
+
     begin = None
     end = None
-
     shape = None
+
     size = None
     footprint = None
 
@@ -61,7 +62,7 @@ class Slice:
         # size
         self.size = functools.reduce(operator.mul, shape, 1)
         # and footprint
-        self.footprint = self.size * raster.pixelSize
+        self.footprint = self.size * raster.pixelFootprint
 
         # all done
         return

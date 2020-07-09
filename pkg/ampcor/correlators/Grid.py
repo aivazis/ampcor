@@ -17,7 +17,7 @@ from .Offsets import Offsets
 # declaration
 class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implements=Offsets):
     """
-    a generator of a Cartesian grid of initial guesses for the offset map
+    A generator of a Cartesian grid of initial guesses for the offset map
     """
 
 

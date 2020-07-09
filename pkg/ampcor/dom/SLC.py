@@ -21,10 +21,6 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
     """
 
 
-    # types
-    from .Slice import Slice as sliceFactory
-
-
     # public data
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
     shape.doc = "the shape of the raster in pixels"
@@ -36,6 +32,8 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
     # constants
     # the memory footprint of individual pixels
     pixelFootprint = libampcor.ConstSLC.pixelFootprint
+    # factories
+    from .Slice import Slice as newSlice
 
 
     # protocol obligations
@@ -62,6 +60,20 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Grant access to a slice of data of the given {shape} starting at {origin}
         """
+        # go through the indices that describe the {origin} of the slice
+        for idx in origin:
+            # if any of them are negative
+            if idx < 0:
+                # mark the slice as invalid
+                return None
+        # similarly, make sure that we don't overflow on the other end
+        for beg, shp, lim in zip(origin, shape, self.shape):
+            # if any of them do
+            if beg + shp > lim:
+                # mark this slice as invalid
+                return None
+        # if all goes well, make a slice and return it
+        return self.newSlice(raster=self, begin=origin, shape=shape)
 
 
     @ampcor.export
