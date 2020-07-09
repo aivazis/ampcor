@@ -9,6 +9,14 @@
 #define ampcor_correlators_api_h
 
 
+// publicly visible types
+namespace ampcor::correlators {
+    // the sequential worker
+    template <class productT>
+    using sequential_t = Sequential<productT>;
+}
+
+
 #endif
 
 // end of file

@@ -1,86 +1,50 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
+// -*- c++ -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 // code guard
-#if !defined(ampcor_libampcor_correlators_sequential_h)
-#define ampcor_libampcor_correlators_sequential_h
+#if !defined(ampcor_correlators_Sequential_h)
+#define ampcor_correlators_Sequential_h
 
 
-// access to the dom
-#include <ampcor/dom.h>
-
-// resource management and orchestration of the execution of the correlation plan
+// a worker that executes a correlation plan one tile at a time
+template <class productT>
 class ampcor::correlators::Sequential {
     // types
 public:
-    // my storage type
-    using cell_type = double;
-    // my client raster type
-    using slc_type = ampcor::dom::slc_t;
-    // for describing slices of rasters
-    using slice_type = slc_type::slice_type;
-    // for describing the shapes of tiles
-    using shape_type = slc_type::shape_type;
-    // for index arithmetic
-    using index_type = slc_type::index_type;
-    // for sizing things
-    using size_type = slc_type::size_type;
+    // my template parameter
+    using product_type = productT;
+    using product_const_reference = const product_type &;
+    // the product spec
+    using spec_type = typename product_type::product_type;
+    // tile shape
+    using shape_type = typename spec_type::shape_type;
+    using shape_const_reference = const shape_type &;
 
-    // i use {cell_type} grids that ride on top of my dataspace with the same layout as the SLC
-    using gview_type = pyre::grid::grid_t<cell_type,
-                                          slc_type::layout_type,
-                                          pyre::memory::view_t<cell_type>>;
+    // the size of things
+    using size_type = size_t;
 
-    // for the sum area table, use a grid on the heap
-    using grid_type = heapgrid_t<slc_type::layout_type::dim(), cell_type>;
-    // sum area tables
-    using sat_type = sumarea_t<grid_type>;
-
-    // interface
+    // metamethods
 public:
-    // add a reference tile to the pile
-    inline void addReferenceTile(const slc_type & slc, size_type pid, slice_type slice);
-    // add a secondary search window to the pile
-    inline void addSecondaryTile(const slc_type & slc, size_type pid, slice_type slice);
+    Sequential(size_type pairs,
+               shape_const_reference ref, shape_const_reference sec,
+               size_type refineFactor, size_type refineMargin,
+               size_type zoomFactor);
 
-    // compute pixel level adjustments to the registration map
-    void adjust();
-    // compute sub-pixel level refinements to the registration map
-    void refine();
-
-    // meta-methods
+    // default metamethods
 public:
-    virtual ~Sequential();
-    Sequential(size_type pairs, const shape_type & refShape, const shape_type & secShape);
-
-    // implementation details: data
-private:
-    // my capacity, in {ref/sec} pairs
-    size_type _pairs;
-
-    // the shape of the reference tiles
-    shape_type _refShape;
-    // the shape of the search windows in the secondary image
-    shape_type _secShape;
-
-    // the number of cells in a reference tile
-    size_type _refCells;
-    // the number of cells in a secondary search window
-    size_type _secCells;
-
-    // storage for the tile pairs
-    cell_type * _buffer;
-    // storage for the correlation results
-    cell_type * _correlation;
+    // destructor
+    ~Sequential() = default;
+    // constructors
+    Sequential(const Sequential &) = default;
+    Sequential(Sequential &&) = default;
+    Sequential & operator=(const Sequential &) = default;
+    Sequential & operator=(Sequential &&) = default;
 };
 
 
-// code guard
-#endif
+# endif
 
 // end of file

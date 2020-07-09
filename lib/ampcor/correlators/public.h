@@ -19,6 +19,10 @@
 #include "api.h"
 
 
+// the local entities
+#include "Sequential.h"
+
+
 # endif
 
 // end of file

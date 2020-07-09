@@ -9,6 +9,14 @@
 #define ampcor_correlators_forward_h
 
 
+// set up the namespace
+namespace ampcor::correlators {
+    // the sequential worker
+    template <class productT>
+    class Sequential;
+}
+
+
 #endif
 
 // end of file

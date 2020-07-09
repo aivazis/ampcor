@@ -9,6 +9,23 @@
 #define ampcor_correlators_external_h
 
 
+// STL
+#include <complex>
+// externals
+#include <p2/grid.h>
+
+
+// type aliases
+namespace ampcor::correlators {
+    // the sizes of things
+    using size_t = std::size_t;
+
+    // complex numbers
+    template <typename T>
+    using complex_t = std::complex<T>;
+}
+
+
 #endif
 
 // end of file
