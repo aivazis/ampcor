@@ -21,23 +21,37 @@ class Sequential:
 
 
     # interface
-    def adjust(self, rasters, plan, **kwds):
+    def adjust(self, manager, rasters, plan, **kwds):
         """
         Compute the offset map between a pair of {rasters} given a correlation {plan}
         """
         # unpack the raster
         ref, sec = rasters
-        # ask the plan for the number of points in the domain
-        points = len(plan)
+        # ask the plan for the number of valid tile pairs
+        pairs = len(plan)
         # get the shape of the reference chip
         chip = plan.chip
         # and the shape of the search windows
         window = plan.window
 
+        # the manager holds the refinement plan
+        refineFactor = manager.refineFactor
+        refineMargin = manager.refineMargin
+        zoomFactor = manager.zoomFactor
+
         # access the bindings; this is guaranteed to succeed
         libampcor = ampcor.ext.libampcor
         # instantiate my worker
-        worker = libampcor.Sequential(points, chip, window)
+        worker = libampcor.Sequential(pairs=pairs,
+                                      ref=chip, sec=window,
+                                      refineFactor=refineFactor, refineMargin=refineMargin,
+                                      zoomFactor=zoomFactor
+                                      )
+        # go through the valid (reference,secondary) tile pairs
+        for idx, (r,s) in enumerate(plan.pairs):
+            # load the reference tile
+            worker.addReferenceTile(raster=ref, tid=idx, origin=r.begin, shape=r.shape)
+            # load the secondary tile
 
         # all done
         return
