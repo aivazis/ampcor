@@ -19,12 +19,24 @@ public:
     using product_const_reference = const specT &;
     // my base class
     using grid_type = grid_t<product_type, mmap_t, isReadOnly>;
+    // my parts
+    using storage_pointer = typename grid_type::storage_pointer;
+    // my shape
+    using shape_type = typename grid_type::shape_type;
+    using shape_const_reference = typename grid_type::shape_const_reference;
+    // my index
+    using index_type = typename grid_type::index_type;
+    using index_const_reference = typename grid_type::index_const_reference;
+
     // sizes of things
     using size_type = size_t;
 
     // metamethods
 public:
-    // constructor
+    // constructor that makes a product using the supplied product spec and storage strategy
+    constexpr Product(product_const_reference, storage_pointer);
+
+    // constructor that passes its extra arguments to the storage strategy
     template <typename... Args>
     constexpr Product(product_const_reference, Args&&...);
 
@@ -34,7 +46,6 @@ public:
     // product layout, and {footprint} for its memory requirements
     constexpr auto capacity() const -> size_type;
     constexpr auto footprint() const -> size_type;
-
 
     // static interface
 public:

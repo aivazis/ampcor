@@ -17,7 +17,8 @@ public:
     // my base
     using layout_type = layout_t<2>;
     // my parts
-    using pixel_type = complex_t<float>;
+    using value_type = float;
+    using pixel_type = complex_t<value_type>;
     // my shape
     using shape_type = typename layout_type::shape_type;
     using shape_const_reference = const shape_type &;
