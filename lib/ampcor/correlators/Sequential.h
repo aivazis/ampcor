@@ -76,14 +76,14 @@ private:
     // after zooming
     const layout_type _corZoomedLayout;
 
-    // capacity is number of cells
+    // the number of cells
     // initially
-    const size_type _refCapacity;
-    const size_type _secCapacity;
-    const size_type _corCapacity;
+    const size_type _refCells;
+    const size_type _secCells;
+    const size_type _corCells;
     // after refinement
-    const size_type _refRefinedCapacity;
-    const size_type _secRefinedCapacity;
+    const size_type _refRefinedCells;
+    const size_type _secRefinedCells;
 
     // the stride from one tile pair to the net
     const size_type _coarseStride;

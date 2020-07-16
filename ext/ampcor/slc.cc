@@ -36,18 +36,18 @@ slc(py::module &m) {
         // constructor
         .def(
              // the constructor wrapper
-             py::init([](py::tuple shape, py::object uri, size_t capacity) {
+             py::init([](py::tuple shape, py::object uri, size_t cells) {
                           // ask the helper
-                          return constructor(shape, uri, capacity);
+                          return constructor(shape, uri, cells);
                       }),
              // the signature
-             "shape"_a, "uri"_a, "capacity"_a
+             "shape"_a, "uri"_a, "cells"_a
              )
         // size of things
         // number of pixels
-        .def_property_readonly("capacity",
+        .def_property_readonly("cells",
                       // the getter
-                      &slc_t::capacity,
+                      &slc_t::cells,
                       // the docstring
                       "the number of pixels in the SLC"
                       )
@@ -79,7 +79,7 @@ slc(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-constructor(py::tuple shape, py::object uri, size_t capacity) -> unique_pointer<slc_t>
+constructor(py::tuple shape, py::object uri, size_t cells) -> unique_pointer<slc_t>
 {
     // extract the shape
     int lines = py::int_(shape[0]);
@@ -94,7 +94,7 @@ constructor(py::tuple shape, py::object uri, size_t capacity) -> unique_pointer<
     string_t filename = py::str(fspath(uri));
 
     // build the product and return it
-    return std::unique_ptr<slc_t>(new slc_t(spec, filename, capacity));
+    return std::unique_ptr<slc_t>(new slc_t(spec, filename, cells));
 }
 
 

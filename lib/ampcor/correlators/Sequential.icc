@@ -50,25 +50,25 @@ Sequential(size_type pairs,
 
     // the number of cells
     // initially
-    _refCapacity{ ref.capacity() },
-    _secCapacity{ sec.capacity() },
-    _corCapacity{ _corLayout.capacity() },
+    _refCells{ ref.cells() },
+    _secCells{ sec.cells() },
+    _corCells{ _corLayout.cells() },
     // after refinement
-    _refRefinedCapacity{ _refRefinedLayout.capacity() },
-    _secRefinedCapacity{ _secRefinedLayout.capacity() },
+    _refRefinedCells{ _refRefinedLayout.cells() },
+    _secRefinedCells{ _secRefinedLayout.cells() },
 
     // strides
-    _coarseStride{ _refCapacity + _secCapacity },
-    _refinedStride{ _refRefinedCapacity + _secRefinedCapacity },
+    _coarseStride{ _refCells + _secCells },
+    _refinedStride{ _refRefinedCells + _secRefinedCells },
 
     // memory footprint, in bytes
     // initially
-    _refFootprint{ _refCapacity * sizeof(cell_type) },
-    _secFootprint{ _secCapacity * sizeof(cell_type) },
-    _corFootprint{ _corCapacity * sizeof(value_type) }, // the correlation matrix is real...
+    _refFootprint{ _refCells * sizeof(cell_type) },
+    _secFootprint{ _secCells * sizeof(cell_type) },
+    _corFootprint{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
     // after refinement
-    _refRefinedFootprint{ _refRefinedCapacity * sizeof(cell_type) },
-    _secRefinedFootprint{ _secRefinedCapacity * sizeof(cell_type) },
+    _refRefinedFootprint{ _refRefinedCells * sizeof(cell_type) },
+    _secRefinedFootprint{ _secRefinedCells * sizeof(cell_type) },
 
     // scratch space
     _coarseArena{ new cell_type [_pairs * _coarseStride] },
@@ -87,16 +87,16 @@ Sequential(size_type pairs,
         << pyre::journal::newline
         << "  pairs: " << _pairs
         << pyre::journal::newline
-        << "    ref shape: {" << _refLayout.shape() << "}, " << _refCapacity << " cells"
+        << "    ref shape: {" << _refLayout.shape() << "}, " << _refCells << " cells"
         << pyre::journal::newline
-        << "    sec shape: {" << _secLayout.shape() << "}, " << _secCapacity << " cells"
+        << "    sec shape: {" << _secLayout.shape() << "}, " << _secCells << " cells"
         << pyre::journal::newline
 
         << "  arena: "
         << pyre::journal::newline
         << "    at: " << _coarseArena
         << pyre::journal::newline
-        << "    footprint: " << _pairs*(_refCapacity + _secCapacity) << " cells in "
+        << "    footprint: " << _pairs*(_refCells + _secCells) << " cells in "
         << (footprint/1024/1024) << " Mb"
         << pyre::journal::newline
 
@@ -107,17 +107,17 @@ Sequential(size_type pairs,
         << "    margin: " << refineMargin
         << pyre::journal::newline
         << "    refined ref shape: {" << _refRefinedLayout.shape()
-        << "}, " << _refRefinedCapacity << " cells"
+        << "}, " << _refRefinedCells << " cells"
         << pyre::journal::newline
         << "    refined sec shape: {" << _secRefinedLayout.shape()
-        << "}, " << _secRefinedCapacity << " cells"
+        << "}, " << _secRefinedCells << " cells"
         << pyre::journal::newline
 
         << "  refined arena: "
         << pyre::journal::newline
         << "    at: " << _refinedArena
         << pyre::journal::newline
-        << "    footprint: " << _pairs*(_refRefinedCapacity + _secRefinedCapacity) << " cells in "
+        << "    footprint: " << _pairs*(_refRefinedCells + _secRefinedCells) << " cells in "
         << (refinedFootprint/1024/1024) << " Mb"
         << pyre::journal::endl;
 }
@@ -129,10 +129,18 @@ void
 ampcor::correlators::Sequential<productT>::
 addReferenceTile(size_t pid, product_const_reference ref)
 {
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential");
+    // sign on
+    channel
+        << "adding reference tile #" << pid << " to the arena"
+        << pyre::journal::endl(__HERE__);
+
     // figure out the starting address of this tile in the arena given its pair id
     cell_type * support = _coarseArena + pid * _coarseStride;
     // move the data
-    std::copy(support, support+_refCapacity, ref.begin());
+    std::copy(support, support+_refCells, ref.begin());
+
     // all done
     return;
 }

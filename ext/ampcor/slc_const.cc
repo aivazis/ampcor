@@ -35,15 +35,17 @@ slc_const(py::module &m) {
         // constructor
         .def(
              // the constructor wrapper
-             py::init([](py::tuple shape, py::object uri) { return constructor(shape, uri); }),
+             py::init([](py::tuple shape, py::object uri) {
+                          return constructor(shape, uri);
+                      }),
             // the signature
             "shape"_a, "uri"_a
             )
         // size of things
         // number of pixels
-        .def_property_readonly("capacity",
+        .def_property_readonly("cells",
                       // the getter
-                      &slc_t::capacity,
+                      &slc_t::cells,
                       // the docstring
                       "the number of pixels in the SLC"
                       )

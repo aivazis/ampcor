@@ -42,9 +42,9 @@ public:
 
     // interface
 public:
-    // {size} is too overloaded, so we use {capacity} to denote the number of cells in the
+    // {size} is too overloaded, so we use {cells} to denote the number of cells in the
     // product layout, and {footprint} for its memory requirements
-    constexpr auto capacity() const -> size_type;
+    constexpr auto cells() const -> size_type;
     constexpr auto footprint() const -> size_type;
 
     // static interface

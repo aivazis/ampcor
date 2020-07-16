@@ -31,7 +31,7 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
 
     # protocol obligations
     @ampcor.export
-    def capacity(self):
+    def cells(self):
         """
         Compute the number of points
         """
@@ -104,7 +104,7 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
         Compute my length
         """
         # delegate to the corresponding property
-        return self.capacity
+        return self.cells
 
 
 # end of file

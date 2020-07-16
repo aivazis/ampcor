@@ -27,7 +27,7 @@ class Raster(ampcor.protocol, family="ampcor.dom.rasters"):
 
     # requirements
     @ampcor.provides
-    def capacity(self):
+    def cells(self):
         """
         Compute the number of pixels
         """

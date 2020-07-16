@@ -38,7 +38,7 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
     # protocol obligations
     @ampcor.export
-    def capacity(self):
+    def cells(self):
         """
         Compute the number of pixels
         """

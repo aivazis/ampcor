@@ -23,10 +23,10 @@ Product(product_const_reference spec, Args&&... args) :
 template <class specT, bool isReadOnly>
 constexpr auto
 ampcor::dom::Product<specT, isReadOnly>::
-capacity() const -> size_type
+cells() const -> size_type
 {
     // my grid knows
-    return this->layout().capacity();
+    return this->layout().cells();
 }
 
 
@@ -36,7 +36,7 @@ ampcor::dom::Product<specT, isReadOnly>::
 footprint() const -> size_type
 {
     // my grid knows
-    return this->capacity() * this->layout().pixelFootprint();;
+    return this->cells() * this->layout().pixelFootprint();;
 }
 
 
