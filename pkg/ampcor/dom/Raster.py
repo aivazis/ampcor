@@ -33,7 +33,7 @@ class Raster(ampcor.protocol, family="ampcor.dom.rasters"):
         """
 
     @ampcor.provides
-    def footprint(self):
+    def bytes(self):
         """
         Compute my memory footprint in bytes
         """

@@ -18,10 +18,20 @@ SLC(shape_const_reference shape) :
 {}
 
 
+// interface
+constexpr auto
+ampcor::dom::SLC::
+bytes() const -> size_type
+{
+    // easy enough
+    return cells() * bytesPerCell();
+}
+
+
 // static interface
 constexpr auto
 ampcor::dom::SLC::
-pixelFootprint() -> size_t
+bytesPerCell() -> size_type
 {
     // ask my pixel type for its size
     return sizeof(pixel_type);

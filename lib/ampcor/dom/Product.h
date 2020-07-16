@@ -43,16 +43,16 @@ public:
     // interface
 public:
     // {size} is too overloaded, so we use {cells} to denote the number of cells in the
-    // product layout, and {footprint} for its memory requirements
+    // product layout, and {bytes} for its memory requirements
     constexpr auto cells() const -> size_type;
-    constexpr auto footprint() const -> size_type;
+    constexpr auto bytes() const -> size_type;
 
     // static interface
 public:
     // my read/write flag
     static constexpr auto readOnly() -> bool;
     // my pixel size
-    static constexpr auto pixelFootprint() -> size_type;
+    static constexpr auto bytesPerCell() -> size_type;
 
     // default metamethods
 public:

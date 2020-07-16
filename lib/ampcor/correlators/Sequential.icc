@@ -63,20 +63,20 @@ Sequential(size_type pairs,
 
     // memory footprint, in bytes
     // initially
-    _refFootprint{ _refCells * sizeof(cell_type) },
-    _secFootprint{ _secCells * sizeof(cell_type) },
-    _corFootprint{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
+    _refBytes{ _refCells * sizeof(cell_type) },
+    _secBytes{ _secCells * sizeof(cell_type) },
+    _corBytes{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
     // after refinement
-    _refRefinedFootprint{ _refRefinedCells * sizeof(cell_type) },
-    _secRefinedFootprint{ _secRefinedCells * sizeof(cell_type) },
+    _refRefinedBytes{ _refRefinedCells * sizeof(cell_type) },
+    _secRefinedBytes{ _secRefinedCells * sizeof(cell_type) },
 
     // scratch space
     _coarseArena{ new cell_type [_pairs * _coarseStride] },
     _refinedArena{ new cell_type [_pairs * _refinedStride] }
 {
     // compute the footprints
-    auto footprint = _pairs*(_refFootprint + _secFootprint);
-    auto refinedFootprint = _pairs*(_refRefinedFootprint + _secRefinedFootprint);
+    auto bytes = _pairs*(_refBytes + _secBytes);
+    auto refinedBytes = _pairs*(_refRefinedBytes + _secRefinedBytes);
 
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential");
@@ -97,7 +97,7 @@ Sequential(size_type pairs,
         << "    at: " << _coarseArena
         << pyre::journal::newline
         << "    footprint: " << _pairs*(_refCells + _secCells) << " cells in "
-        << (footprint/1024/1024) << " Mb"
+        << (bytes/1024/1024) << " Mb"
         << pyre::journal::newline
 
         << "  refinement:"
@@ -118,7 +118,7 @@ Sequential(size_type pairs,
         << "    at: " << _refinedArena
         << pyre::journal::newline
         << "    footprint: " << _pairs*(_refRefinedCells + _secRefinedCells) << " cells in "
-        << (refinedFootprint/1024/1024) << " Mb"
+        << (refinedBytes/1024/1024) << " Mb"
         << pyre::journal::endl;
 }
 

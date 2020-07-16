@@ -27,8 +27,8 @@ class Slice:
     end = None
     shape = None
 
-    size = None
-    footprint = None
+    cells = None
+    bytes = None
 
 
     # interface
@@ -40,8 +40,8 @@ class Slice:
         channel.line(f"                begin: {self.begin}")
         channel.line(f"                shape: {self.shape}")
         channel.line(f"                end: {self.end}")
-        channel.line(f"                size: {self.size} cells")
-        channel.line(f"                footprint: {self.footprint} bytes")
+        channel.line(f"                size: {self.cells} cells")
+        channel.line(f"                footprint: {self.bytes} bytes")
         # all done
         return
 
@@ -59,10 +59,10 @@ class Slice:
         self.end = tuple(b+s for b,s in zip(begin, shape))
         # its shape
         self.shape = shape
-        # size
-        self.size = functools.reduce(operator.mul, shape, 1)
-        # and footprint
-        self.footprint = self.size * raster.pixelFootprint
+        # capacity
+        self.cells = functools.reduce(operator.mul, shape, 1)
+        # and memory footprint
+        self.bytes = self.cells * raster.bytesPerCell
 
         # all done
         return

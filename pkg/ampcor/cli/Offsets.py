@@ -69,14 +69,14 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             channel.line(f"        data: {self.reference.data}")
             channel.line(f"        shape: {self.reference.shape}")
             channel.line(f"        pixels: {self.reference.cells()}")
-            channel.line(f"        footprint: {self.reference.footprint()} bytes")
+            channel.line(f"        footprint: {self.reference.bytes()} bytes")
         # secondary raster
         channel.line(f"    secondary: {self.secondary}")
         if self.secondary:
             channel.line(f"        data: {self.secondary.data}")
             channel.line(f"        shape: {self.secondary.shape}")
             channel.line(f"        pixels: {self.secondary.cells()}")
-            channel.line(f"        footprint: {self.secondary.footprint()} bytes")
+            channel.line(f"        footprint: {self.secondary.bytes()} bytes")
 
         # unpack my arguments
         reference = self.reference

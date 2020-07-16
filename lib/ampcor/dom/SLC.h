@@ -22,15 +22,21 @@ public:
     // my shape
     using shape_type = typename layout_type::shape_type;
     using shape_const_reference = const shape_type &;
+    // size of things
+    using size_type = typename shape_type::size_type;
 
     // metamethods
 public:
     constexpr SLC(shape_const_reference);
 
+    // interface
+public:
+    constexpr auto bytes() const -> size_type;
+
     // static interface
 public:
     // the memory footprint of my pixels
-    static constexpr auto pixelFootprint() -> size_t;
+    static constexpr auto bytesPerCell() -> size_type;
 };
 
 

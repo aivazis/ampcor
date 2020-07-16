@@ -31,7 +31,8 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
     # constants
     # the memory footprint of individual pixels
-    pixelFootprint = libampcor.ConstSLC.pixelFootprint
+    bytesPerCell = libampcor.ConstSLC.bytesPerCell
+
     # factories
     from .Slice import Slice as newSlice
 
@@ -47,12 +48,12 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
 
 
     @ampcor.export
-    def footprint(self):
+    def bytes(self):
         """
         Compute my memory footprint, in bytes
         """
         # compute and return
-        return self.tile.size * self.pixelFootprint
+        return self.tile.size * self.bytesPerCell
 
 
     @ampcor.export

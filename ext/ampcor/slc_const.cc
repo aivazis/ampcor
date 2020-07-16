@@ -50,18 +50,18 @@ slc_const(py::module &m) {
                       "the number of pixels in the SLC"
                       )
         // memory footprint
-        .def_property_readonly("footprint",
+        .def_property_readonly("bytes",
                       // the getter
-                      &slc_t::footprint,
+                      &slc_t::bytes,
                       // the docstring
                       "the amount of memory occupied by this SLC, in bytes"
                       )
         // the static interface
         // the size of a pixel in bytes
-        .def_property_readonly_static("pixelFootprint",
+        .def_property_readonly_static("bytesPerCell",
                                       // the getter
                                       [] (py::object) -> size_t {
-                                          return slc_t::pixelFootprint();
+                                          return slc_t::bytesPerCell();
                                       },
                                       // the docstring
                                       "the size of an SLC pixel"

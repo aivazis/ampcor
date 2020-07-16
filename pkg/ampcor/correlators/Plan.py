@@ -45,14 +45,14 @@ class Plan:
 
 
     @property
-    def footprint(self):
+    def bytes(self):
         """
         Compute the total amount of memory required to store the reference and secondary tiles
         """
         # the reference footprint
-        ref = sum(tile.footprint for tile in filter(None, self.reference))
+        ref = sum(tile.bytes for tile in filter(None, self.reference))
         # the secondary footprint
-        sec = sum(tile.footprint for tile in filter(None, self.secondary))
+        sec = sum(tile.bytes for tile in filter(None, self.secondary))
         # all done
         return ref, sec
 
@@ -68,10 +68,10 @@ class Plan:
         channel.line(f"        shape: {self.tile.shape}, layout: {self.tile.layout}")
         channel.line(f"        pairs: {len(self)} out of {self.tile.size}")
         # memory footprint
-        refFootprint, secFootprint = self.footprint
+        refBytes, secBytes = self.bytes
         channel.line(f"        footprint:")
-        channel.line(f"            reference: {refFootprint} bytes")
-        channel.line(f"            secondary: {secFootprint} bytes")
+        channel.line(f"            reference: {refBytes} bytes")
+        channel.line(f"            secondary: {secBytes} bytes")
 
         # go through the pairs
         for offset, (ref,sec) in enumerate(zip(self.reference, self.secondary)):

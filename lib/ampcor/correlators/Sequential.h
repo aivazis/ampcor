@@ -91,12 +91,12 @@ private:
 
     // memory footprint, in bytes
     // initially
-    const size_type _refFootprint;
-    const size_type _secFootprint;
-    const size_type _corFootprint;
+    const size_type _refBytes;
+    const size_type _secBytes;
+    const size_type _corBytes;
     // after refinement
-    const size_type _refRefinedFootprint;
-    const size_type _secRefinedFootprint;
+    const size_type _refRefinedBytes;
+    const size_type _secRefinedBytes;
 
     // scratch space
     cell_type * _coarseArena;

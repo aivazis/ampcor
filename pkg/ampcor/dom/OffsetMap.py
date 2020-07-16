@@ -38,7 +38,7 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
 
 
     @ampcor.export
-    def footprint(self):
+    def bytes(self):
         """
         Compute my memory footprint
         """

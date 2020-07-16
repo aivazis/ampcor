@@ -33,10 +33,10 @@ cells() const -> size_type
 template <class specT, bool isReadOnly>
 constexpr auto
 ampcor::dom::Product<specT, isReadOnly>::
-footprint() const -> size_type
+bytes() const -> size_type
 {
     // my grid knows
-    return this->cells() * this->layout().pixelFootprint();;
+    return this->layout().bytes();;
 }
 
 
@@ -55,10 +55,10 @@ readOnly() -> bool
 template <class specT, bool isReadOnly>
 constexpr auto
 ampcor::dom::Product<specT, isReadOnly>::
-pixelFootprint() -> size_type
+bytesPerCell() -> size_type
 {
     // my product spec knows
-    return product_type::pixelFootprint();
+    return product_type::bytesPerCell();
 }
 
 
