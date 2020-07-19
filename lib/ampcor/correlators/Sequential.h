@@ -18,7 +18,7 @@ public:
     using product_type = productT;
     using product_const_reference = const product_type &;
     // the product spec
-    using spec_type = typename product_type::product_type;
+    using spec_type = typename product_type::spec_type;
 
     // the product pixel type
     using cell_type = typename spec_type::pixel_type;

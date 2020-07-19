@@ -139,7 +139,7 @@ addReferenceTile(size_t pid, product_const_reference ref)
     // figure out the starting address of this tile in the arena given its pair id
     cell_type * support = _coarseArena + pid * _coarseStride;
     // move the data
-    std::copy(support, support+_refCells, ref.begin());
+    std::copy(ref.begin(), ref.end(), support);
 
     // all done
     return;
