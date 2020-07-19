@@ -77,19 +77,21 @@ slc_const(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-constructor(py::tuple shape, py::object uri) -> unique_pointer<slc_t>
+constructor(py::tuple pyShape, py::object pyURI) -> unique_pointer<slc_t>
 {
     // extract the shape
-    int lines = py::int_(shape[0]);
-    int samples = py::int_(shape[1]);
+    int lines = py::int_(pyShape[0]);
+    int samples = py::int_(pyShape[1]);
+    // make a shape
+    slc_t::spec_type::shape_type shape {lines, samples};
     // make a product specification out of the shape
-    slc_t::product_type spec { {lines, samples} };
+    slc_t::spec_type spec { shape };
 
     // convert the path-like object into a string
     // get {os.fspath}
     auto fspath = py::module::import("os").attr("fspath");
     // call it and convert its return value into a string
-    string_t filename = py::str(fspath(uri));
+    string_t filename = py::str(fspath(pyURI));
 
     // build the product and return it
     return std::unique_ptr<slc_t>(new slc_t(spec, filename));
