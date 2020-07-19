@@ -5,6 +5,8 @@
 // (c) 1998-2020 all rights reserved
 
 
+// support
+#include <cassert>
 // get the header
 #include <ampcor/dom.h>
 // access the complex literals
@@ -25,14 +27,14 @@ int main(int argc, char *argv[]) {
 
     // the name of the product
     std::string name = "slc.dat";
-    // make the spac
-    slc_t::product_type spec { {256, 256} };
+    // build the product specification
+    slc_t::spec_type spec { {256, 256} };
 
     // open the product
     slc_t slc { spec, name };
 
     // go through it
-    for (const auto & idx : slc) {
+    for (const auto & idx : slc.layout()) {
         // convert the index into a complex float
         auto expected = static_cast<float>(idx[0]) + static_cast<float>(idx[1]) * 1if;
         // verify that the file contains what we expect

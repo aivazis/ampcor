@@ -28,14 +28,14 @@ int main(int argc, char *argv[]) {
     // the name of the product
     std::string name = "slc.dat";
     // make the spac
-    slc_t::product_type spec { {256, 256} };
+    slc_t::spec_type spec { {256, 256} };
 
     // make the product; supplying the grid capacity is the signal to create a new one rather
     // than map over an existing product
-    slc_t slc { spec, name, spec.capacity() };
+    slc_t slc { spec, name, spec.cells() };
 
     // go through it
-    for (const auto & idx : slc) {
+    for (const auto & idx : slc.layout()) {
         // convert the index into a complex float
         auto value = static_cast<float>(idx[0]) + static_cast<float>(idx[1]) * 1if;
         // and set each pixel
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     }
 
     // once more
-    for (const auto & idx : slc) {
+    for (const auto & idx : slc.layout()) {
         // convert the index into a complex float
         auto expected = static_cast<float>(idx[0]) + static_cast<float>(idx[1]) * 1if;
         // verify
