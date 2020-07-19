@@ -15,10 +15,13 @@ class ampcor::dom::Product : public grid_t<specT, mmap_t, isReadOnly> {
     // type aliases
 public:
     // my parameters
-    using product_type = specT;
-    using product_const_reference = const specT &;
+    using spec_type = specT;
+    using spec_const_reference = const specT &;
+    // me
+    using product_type = Product<spec_type, isReadOnly>;
+    using product_const_reference = const product_type &;
     // my base class
-    using grid_type = grid_t<product_type, mmap_t, isReadOnly>;
+    using grid_type = grid_t<spec_type, mmap_t, isReadOnly>;
     // my parts
     using storage_pointer = typename grid_type::storage_pointer;
     // my shape
@@ -33,12 +36,9 @@ public:
 
     // metamethods
 public:
-    // constructor that makes a product using the supplied product spec and storage strategy
-    constexpr Product(product_const_reference, storage_pointer);
-
     // constructor that passes its extra arguments to the storage strategy
     template <typename... Args>
-    constexpr Product(product_const_reference, Args&&...);
+    constexpr Product(spec_const_reference, Args&&...);
 
     // interface
 public:
@@ -46,6 +46,10 @@ public:
     // product layout, and {bytes} for its memory requirements
     constexpr auto cells() const -> size_type;
     constexpr auto bytes() const -> size_type;
+
+    // tile factory
+public:
+    constexpr auto tile(index_const_reference, shape_const_reference) const -> product_type;
 
     // static interface
 public:

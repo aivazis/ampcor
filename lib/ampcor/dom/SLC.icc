@@ -11,10 +11,19 @@
 
 
 // metamethods
+// whole raster constructor
 constexpr
 ampcor::dom::SLC::
 SLC(shape_const_reference shape) :
     layout_type(shape)
+{}
+
+
+// constructor from a given layout
+constexpr
+ampcor::dom::SLC::
+SLC(layout_const_reference layout) :
+    layout_type(layout)
 {}
 
 
@@ -25,6 +34,18 @@ bytes() const -> size_type
 {
     // easy enough
     return cells() * bytesPerCell();
+}
+
+
+// slice factory
+constexpr auto
+ampcor::dom::SLC::
+tile(index_const_reference base, shape_const_reference shape) const -> slc_type
+{
+    // ask my layout to get me a slice
+    auto slice = box(base, shape);
+    // use it to make a tile and return it
+    return slc_type(slice);
 }
 
 

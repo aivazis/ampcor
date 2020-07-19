@@ -14,7 +14,7 @@ template <class specT, bool isReadOnly>
 template <typename... Args>
 constexpr
 ampcor::dom::Product<specT, isReadOnly>::
-Product(product_const_reference spec, Args&&... args) :
+Product(spec_const_reference spec, Args&&... args) :
     grid_type(spec, std::forward<Args>(args)...)
 {}
 
@@ -40,6 +40,19 @@ bytes() const -> size_type
 }
 
 
+// tile factory
+template <class specT, bool isReadOnly>
+constexpr auto
+ampcor::dom::Product<specT, isReadOnly>::
+tile(index_const_reference base, shape_const_reference shape) const -> product_type
+{
+    // specify the region
+    auto spec = this->layout().tile(base, shape);
+    // build the tile
+    return product_type(spec, this->data());
+}
+
+
 // static interface
 // my read/write flag
 template <class specT, bool isReadOnly>
@@ -58,7 +71,7 @@ ampcor::dom::Product<specT, isReadOnly>::
 bytesPerCell() -> size_type
 {
     // my product spec knows
-    return product_type::bytesPerCell();
+    return spec_type::bytesPerCell();
 }
 
 

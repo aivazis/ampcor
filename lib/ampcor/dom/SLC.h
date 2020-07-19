@@ -14,24 +14,37 @@
 class ampcor::dom::SLC : public layout_t<2> {
     // types
 public:
+    // me
+    using slc_type = SLC;
     // my base
     using layout_type = layout_t<2>;
+    using layout_const_reference = const layout_type &;
     // my parts
     using value_type = float;
     using pixel_type = complex_t<value_type>;
     // my shape
     using shape_type = typename layout_type::shape_type;
     using shape_const_reference = const shape_type &;
+    // my indices
+    using index_type = typename layout_type::index_type;
+    using index_const_reference = const index_type &;
     // size of things
     using size_type = typename shape_type::size_type;
 
     // metamethods
 public:
+    // whole raster specification
     constexpr SLC(shape_const_reference);
+    // for tiles
+    constexpr SLC(layout_const_reference);
 
     // interface
 public:
     constexpr auto bytes() const -> size_type;
+
+    // slice factory
+public:
+    constexpr auto tile(index_const_reference, shape_const_reference) const -> slc_type;
 
     // static interface
 public:
