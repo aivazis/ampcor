@@ -112,23 +112,28 @@ addReferenceTile(sequential_t & worker,
     // make a shape out of the extent
     slc_t::shape_type shape { ext[0].cast<shp_rank_t>(), ext[1].cast<shp_rank_t>() };
 
-    // use the origin+shape to cut a box out of the raster
-    auto box = raster.layout().box(origin, shape);
+    // make the tile
+    auto tile = raster.tile(origin, shape);
 
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential");
+    pyre::journal::debug_t channel("ampcor.sequential.reference");
     // sign on
     channel
         << "addReferenceTile: tile #" << tid << pyre::journal::newline
         << "  raster:" << pyre::journal::newline
         << "    shape: " << raster.layout().shape() << pyre::journal::newline
-        << "  tile: " << pyre::journal::newline
+        << "    data: " << raster.data().get() << pyre::journal::newline
+        << "  spec: " << pyre::journal::newline
         << "    origin: " << origin << pyre::journal::newline
         << "    shape: " << shape << pyre::journal::newline
-        << "  box: " << pyre::journal::newline
-        << "    origin: " << box.origin() << pyre::journal::newline
-        << "    shape: " << box.shape() << pyre::journal::newline
+        << "  tile: " << pyre::journal::newline
+        << "    origin: " << tile.layout().origin() << pyre::journal::newline
+        << "    shape: " << tile.layout().shape() << pyre::journal::newline
+        << "    data: " << tile.data().get() << pyre::journal::newline
         << pyre::journal::endl(__HERE__);
+
+    // engage
+    worker.addReferenceTile(tid, tile);
 
     // all done
     return worker;
