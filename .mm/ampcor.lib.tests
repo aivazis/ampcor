@@ -21,4 +21,8 @@ tests.ampcor.lib.correlators.clean += slc_ref.dat slc_sec.dat
 # the {slc} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
 
+# the correlator tests have some order requirements
+tests.ampcor.lib.correlators.seq_ref.pre := tests.ampcor.lib.correlators.slc_ref
+tests.ampcor.lib.correlators.seq_sec.pre := tests.ampcor.lib.correlators.slc_sec
+
 # end of file
