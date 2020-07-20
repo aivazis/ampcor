@@ -27,8 +27,10 @@ int main(int argc, char *argv[]) {
 
     // the name of the product
     std::string name = "slc.dat";
-    // make the spac
-    slc_t::spec_type spec { {256, 256} };
+    // make a shape
+    slc_t::shape_type shape { 256, 256};
+    // build the product specification
+    slc_t::spec_type spec { shape };
 
     // make the product; supplying the grid capacity is the signal to create a new one rather
     // than map over an existing product

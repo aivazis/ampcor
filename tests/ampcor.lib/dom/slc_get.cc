@@ -27,8 +27,10 @@ int main(int argc, char *argv[]) {
 
     // the name of the product
     std::string name = "slc.dat";
+    // make a shape
+    slc_t::shape_type shape { 256, 256};
     // build the product specification
-    slc_t::spec_type spec { {256, 256} };
+    slc_t::spec_type spec { shape };
 
     // open the product
     slc_t slc { spec, name };
