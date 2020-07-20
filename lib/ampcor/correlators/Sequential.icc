@@ -210,8 +210,8 @@ addReferenceTile(size_t pid, product_const_reference ref)
 
     // tell me
     channel
-        << "copied " << ref.bytes() << " bytes from " << *ref.begin()
-        << " to " << support
+        << "copied " << ref.bytes() << " bytes from (" << *ref.layout().begin()
+        << ") to " << support
         << pyre::journal::endl(__HERE__);
 
     // all done
@@ -239,8 +239,8 @@ addSecondaryTile(size_t pid, product_const_reference sec)
 
     // tell me
     channel
-        << "copied " << sec.bytes() << " bytes from " << *sec.begin()
-        << " to " << support
+        << "copied " << sec.bytes() << " bytes from (" << *sec.layout().begin()
+        << ") to " << support
         << pyre::journal::endl(__HERE__);
 
     // all done
