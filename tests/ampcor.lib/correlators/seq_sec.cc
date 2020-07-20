@@ -62,8 +62,10 @@ int main(int argc, char *argv[]) {
 
     // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
     seq_t seq(4, refLayout, secLayout, 1, 0, 1);
+    // pick a value
+    slc_t::spec_type::pixel_type value = 4.f + 42.if;
     // zero out its coarse arena
-    seq.fillCoarseArena();
+    seq.fillCoarseArena(value);
 
     // pick a spot somewhere in the middle of the secondary raster: the {1,0} tile
     slc_t::index_type i_10 { dim/2, 0 };
@@ -94,27 +96,27 @@ int main(int argc, char *argv[]) {
 
     // the first ref/sec pair should be untouched
     for (auto c = arena; c != arena+stride; ++c) {
-        // i.e. equal to zero
-        assert(( *c == 0if ));
+        // i.e. equal to the initialization value
+        assert(( *c == value ));
     }
     // ditto for the second ref/sec pair
     for (auto c = arena+stride; c != arena+2*stride; ++c) {
-        // i.e. equal to zero
-        assert(( *c == 0if ));
+        // i.e. equal to the initialization value
+        assert(( *c == value ));
     }
 
     // the third pair has zeros for the reference tile
     for (auto c = arena+2*stride; c != arena+2*stride+refShape.cells(); ++c) {
-        // so check
-        assert(( *c == 0if ));
+        // i.e. equal to the initialization value
+        assert(( *c == value ));
     }
     // and the secondary tile
     assert(( std::equal(t_10.begin(), t_10.end(), arena+2*stride+refShape.cells()) ));
 
     // the fourth pair is untouched
     for (auto c = arena+3*stride; c != arena+4*stride; ++c) {
-        // i.e. equal to zero
-        assert(( *c == 0if ));
+        // i.e. equal to the initialization value
+        assert(( *c == value ));
     }
 
     // all done
