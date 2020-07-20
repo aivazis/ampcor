@@ -96,21 +96,21 @@ auto
 ampcor::py::
 addReferenceTile(sequential_t & worker,
                  const slc_t & raster,
-                 size_t tid, py::tuple idx, py::tuple ext) -> sequential_reference
+                 size_t tid, py::tuple pyOrigin, py::tuple pyShape) -> sequential_reference
 {
     // alias for the index
     using idx_t = slc_t::index_type;
     // and the type of its ranks
     using idx_rank_t = idx_t::value_type;
     // make an index out of the origin
-    slc_t::index_type origin { idx[0].cast<idx_rank_t>(), idx[1].cast<idx_rank_t>() };
+    slc_t::index_type origin { pyOrigin[0].cast<idx_rank_t>(), pyOrigin[1].cast<idx_rank_t>() };
 
     // alias for the shape
     using shp_t = slc_t::shape_type;
     // and the type of its ranks
     using shp_rank_t = shp_t::value_type;
     // make a shape out of the extent
-    slc_t::shape_type shape { ext[0].cast<shp_rank_t>(), ext[1].cast<shp_rank_t>() };
+    slc_t::shape_type shape { pyShape[0].cast<shp_rank_t>(), pyShape[1].cast<shp_rank_t>() };
 
     // make the tile
     auto tile = raster.tile(origin, shape);
