@@ -50,8 +50,18 @@ public:
                size_type refineFactor, size_type refineMargin,
                size_type zoomFactor);
 
+    // accessors
+public:
+    inline auto pairs() const -> size_type;
+
+    inline auto coarseArena() const -> const cell_type *;
+    inline auto coarseArenaCells() const -> size_type;
+    inline auto coarseArenaBytes() const -> size_type;
+    inline auto coarseArenaStride() const -> size_type;
+
     // interface
 public:
+    inline void fillCoarseArena(cell_type = 0) const;
     inline void addReferenceTile(size_type pid, product_const_reference ref);
 
     // implementation details: data
@@ -98,6 +108,12 @@ private:
     const size_type _refRefinedBytes;
     const size_type _secRefinedBytes;
 
+    // scratch space capacity
+    const size_type _coarseArenaCells;
+    const size_type _refinedArenaCells;
+    // scratch space memory footprint
+    const size_type _coarseArenaBytes;
+    const size_type _refinedArenaBytes;
     // scratch space
     cell_type * _coarseArena;
     cell_type * _refinedArena;

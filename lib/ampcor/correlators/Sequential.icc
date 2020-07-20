@@ -70,14 +70,16 @@ Sequential(size_type pairs,
     _refRefinedBytes{ _refRefinedCells * sizeof(cell_type) },
     _secRefinedBytes{ _secRefinedCells * sizeof(cell_type) },
 
+    // scratch space capacity
+    _coarseArenaCells { _pairs * _coarseStride },
+    _refinedArenaCells { _pairs * _refinedStride },
+    // scratch space memory footprint
+    _coarseArenaBytes { _coarseArenaCells * sizeof(cell_type) },
+    _refinedArenaBytes { _refinedArenaCells * sizeof(cell_type) },
     // scratch space
-    _coarseArena{ new cell_type [_pairs * _coarseStride] },
-    _refinedArena{ new cell_type [_pairs * _refinedStride] }
+    _coarseArena{ new cell_type [_coarseArenaCells] },
+    _refinedArena{ new cell_type [_refinedArenaCells] }
 {
-    // compute the footprints
-    auto bytes = _pairs*(_refBytes + _secBytes);
-    auto refinedBytes = _pairs*(_refRefinedBytes + _secRefinedBytes);
-
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential");
     // show me
@@ -97,7 +99,7 @@ Sequential(size_type pairs,
         << "    at: " << _coarseArena
         << pyre::journal::newline
         << "    footprint: " << _pairs*(_refCells + _secCells) << " cells in "
-        << (bytes/1024/1024) << " Mb"
+        << _coarseArenaBytes << " bytes"
         << pyre::journal::newline
 
         << "  refinement:"
@@ -118,12 +120,77 @@ Sequential(size_type pairs,
         << "    at: " << _refinedArena
         << pyre::journal::newline
         << "    footprint: " << _pairs*(_refRefinedCells + _secRefinedCells) << " cells in "
-        << (refinedBytes/1024/1024) << " Mb"
+        << _refinedArenaBytes << " bytes"
         << pyre::journal::endl;
 }
 
 
+// accessors
+template <class productT>
+auto
+ampcor::correlators::Sequential<productT>::
+pairs() const -> size_type
+{
+    // easy enough
+    return _pairs;
+}
+
+
+template <class productT>
+auto
+ampcor::correlators::Sequential<productT>::
+coarseArena() const -> const cell_type *
+{
+    // easy enough
+    return _coarseArena;
+}
+
+
+template <class productT>
+auto
+ampcor::correlators::Sequential<productT>::
+coarseArenaCells() const -> size_type
+{
+    // easy enough
+    return _coarseArenaCells;
+}
+
+
+template <class productT>
+auto
+ampcor::correlators::Sequential<productT>::
+coarseArenaBytes() const -> size_type
+{
+    // easy enough
+    return _coarseArenaBytes;
+}
+
+
+template <class productT>
+auto
+ampcor::correlators::Sequential<productT>::
+coarseArenaStride() const -> size_type
+{
+    // easy enough
+    return _coarseStride;
+}
+
+
 // interface
+// zero out the coarse arena
+template <class productT>
+void
+ampcor::correlators::Sequential<productT>::
+fillCoarseArena(cell_type value) const
+{
+    // easy enough
+    std::fill(_coarseArena, _coarseArena+_coarseArenaCells, value);
+    // all done
+    return;
+}
+
+
+// add a reference tile to the coarse arena
 template <class productT>
 void
 ampcor::correlators::Sequential<productT>::
@@ -134,12 +201,18 @@ addReferenceTile(size_t pid, product_const_reference ref)
     // sign on
     channel
         << "adding reference tile #" << pid << " to the arena"
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
     cell_type * support = _coarseArena + pid * _coarseStride;
     // move the data
     std::copy(ref.begin(), ref.end(), support);
+
+    // tell me
+    channel
+        << "copied " << ref.bytes() << " bytes from " << *ref.begin()
+        << " to " << support
+        << pyre::journal::endl(__HERE__);
 
     // all done
     return;
