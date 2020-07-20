@@ -63,6 +63,7 @@ public:
 public:
     inline void fillCoarseArena(cell_type = 0) const;
     inline void addReferenceTile(size_type pid, product_const_reference ref);
+    inline void addSecondaryTile(size_type pid, product_const_reference ref);
 
     // implementation details: data
 private:

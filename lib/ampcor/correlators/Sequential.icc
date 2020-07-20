@@ -219,6 +219,35 @@ addReferenceTile(size_t pid, product_const_reference ref)
 }
 
 
+// add a secondary tile to the coarse arena
+template <class productT>
+void
+ampcor::correlators::Sequential<productT>::
+addSecondaryTile(size_t pid, product_const_reference sec)
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential");
+    // sign on
+    channel
+        << "adding secondary tile #" << pid << " to the arena"
+        << pyre::journal::newline;
+
+    // figure out the starting address of this tile in the arena given its pair id
+    cell_type * support = _coarseArena + pid * _coarseStride + _refCells;
+    // move the data
+    std::copy(sec.begin(), sec.end(), support);
+
+    // tell me
+    channel
+        << "copied " << sec.bytes() << " bytes from " << *sec.begin()
+        << " to " << support
+        << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
+}
+
+
 # endif
 
 // end of file
