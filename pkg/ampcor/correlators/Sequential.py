@@ -52,6 +52,7 @@ class Sequential:
             # load the reference tile
             worker.addReferenceTile(raster=ref, tid=idx, origin=r.begin, shape=r.shape)
             # load the secondary tile
+            worker.addSecondaryTile(raster=sec, tid=idx, origin=s.begin, shape=s.shape)
 
         # all done
         return
