@@ -34,13 +34,13 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Produce an offset map between the {reference} and {secondary} images
         """
-        # get the reference image and open it
-        reference = self.reference.open()
-        # repeat for the secondary image
-        secondary = self.secondary.open()
-        # grab the correlator
+        # get the reference image
+        reference = self.reference
+        # the secondary image
+        secondary = self.secondary
+        # and the correlator
         correlator = self.correlator
-        # and ask it to do its thing
+        # ask the correlator to do its thing
         return correlator.estimate(plexus=plexus, reference=reference, secondary=secondary, **kwds)
 
 
