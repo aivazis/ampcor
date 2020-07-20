@@ -33,6 +33,10 @@ namespace ampcor::py {
     static inline auto
     addReferenceTile(sequential_t &, const slc_t &,
                      size_t, py::tuple, py::tuple) -> sequential_reference;
+    // add a secondary tile
+    static inline auto
+    addSecondaryTile(sequential_t &, const slc_t &,
+                     size_t, py::tuple, py::tuple) -> sequential_reference;
 }
 
 
@@ -52,10 +56,14 @@ sequential(py::module &m) {
              "pairs"_a, "ref"_a, "sec"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
-
         // add a reference tile
         .def("addReferenceTile",
              addReferenceTile,
+             "raster"_a, "tid"_a, "origin"_a, "shape"_a
+             )
+        // add a secondary tile
+        .def("addSecondaryTile",
+             addSecondaryTile,
              "raster"_a, "tid"_a, "origin"_a, "shape"_a
              )
         // done
@@ -91,7 +99,7 @@ constructor(size_t pairs, py::tuple ref, py::tuple sec,
 }
 
 
-// add a reference tile to the worker's arena
+// add a reference tile to the worker's coarse arena
 auto
 ampcor::py::
 addReferenceTile(sequential_t & worker,
@@ -134,6 +142,55 @@ addReferenceTile(sequential_t & worker,
 
     // engage
     worker.addReferenceTile(tid, tile);
+
+    // all done
+    return worker;
+}
+
+
+// add a secondary tile to the worker's coarse arena
+auto
+ampcor::py::
+addSecondaryTile(sequential_t & worker,
+                 const slc_t & raster,
+                 size_t tid, py::tuple pyOrigin, py::tuple pyShape) -> sequential_reference
+{
+    // alias for the index
+    using idx_t = slc_t::index_type;
+    // and the type of its ranks
+    using idx_rank_t = idx_t::value_type;
+    // make an index out of the origin
+    slc_t::index_type origin { pyOrigin[0].cast<idx_rank_t>(), pyOrigin[1].cast<idx_rank_t>() };
+
+    // alias for the shape
+    using shp_t = slc_t::shape_type;
+    // and the type of its ranks
+    using shp_rank_t = shp_t::value_type;
+    // make a shape out of the extent
+    slc_t::shape_type shape { pyShape[0].cast<shp_rank_t>(), pyShape[1].cast<shp_rank_t>() };
+
+    // make the tile
+    auto tile = raster.tile(origin, shape);
+
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.reference");
+    // sign on
+    channel
+        << "addSeoncaryTile: tile #" << tid << pyre::journal::newline
+        << "  raster:" << pyre::journal::newline
+        << "    shape: " << raster.layout().shape() << pyre::journal::newline
+        << "    data: " << raster.data().get() << pyre::journal::newline
+        << "  spec: " << pyre::journal::newline
+        << "    origin: " << origin << pyre::journal::newline
+        << "    shape: " << shape << pyre::journal::newline
+        << "  tile: " << pyre::journal::newline
+        << "    origin: " << tile.layout().origin() << pyre::journal::newline
+        << "    shape: " << tile.layout().shape() << pyre::journal::newline
+        << "    data: " << tile.data().get() << pyre::journal::newline
+        << pyre::journal::endl(__HERE__);
+
+    // engage
+    worker.addSecondaryTile(tid, tile);
 
     // all done
     return worker;
