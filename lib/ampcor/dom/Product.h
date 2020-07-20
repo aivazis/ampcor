@@ -25,14 +25,17 @@ public:
     // my parts
     using storage_pointer = typename grid_type::storage_pointer;
     // my shape
-    using shape_type = typename grid_type::shape_type;
-    using shape_const_reference = typename grid_type::shape_const_reference;
+    using shape_type = typename spec_type::shape_type;
+    using shape_const_reference = typename spec_type::shape_const_reference;
+    // my layout
+    using layout_type = typename spec_type::layout_type;
+    using layout_const_reference = typename spec_type::layout_const_reference;
     // my index
-    using index_type = typename grid_type::index_type;
-    using index_const_reference = typename grid_type::index_const_reference;
+    using index_type = typename spec_type::index_type;
+    using index_const_reference = typename spec_type::index_const_reference;
 
     // sizes of things
-    using size_type = size_t;
+    using size_type = typename spec_type::size_type;
 
     // metamethods
 public:
