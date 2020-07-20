@@ -35,14 +35,14 @@ using index_t = slc_t::index_type;
 int main(int argc, char *argv[]) {
     // initialize the journal
     pyre::journal::init(argc, argv);
-    pyre::journal::application("slc_set");
+    pyre::journal::application("slc_ref");
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.slc");
 
     // the name of the product
     std::string name = "slc_ref.dat";
     // the base dimension
-    size_t dim = 256;
+    size_t dim = 8;
     // make a shape
     shape_t shape { dim, dim };
     // build the product specification
