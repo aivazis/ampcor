@@ -82,8 +82,10 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Map me over the contents of my {data} file
         """
+        # deduce the raster type based on the read/wrote mode
+        newRaster = libampcor.ConstSLC if mode == "r" else libampcor.SLC
         # build the raster
-        self.raster = libampcor.ConstSLC(uri=self.data, shape=self.shape)
+        self.raster = newRaster(uri=self.data, shape=self.shape)
         # all done
         return self
 
