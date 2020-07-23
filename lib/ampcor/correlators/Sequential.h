@@ -54,14 +54,14 @@ public:
 public:
     inline auto pairs() const -> size_type;
 
-    inline auto coarseArena() const -> const cell_type *;
+    inline auto coarseArena() const -> const value_type *;
     inline auto coarseArenaCells() const -> size_type;
     inline auto coarseArenaBytes() const -> size_type;
     inline auto coarseArenaStride() const -> size_type;
 
     // interface
 public:
-    inline void fillCoarseArena(cell_type = 0) const;
+    inline void fillCoarseArena(value_type = 0) const;
     inline void addReferenceTile(size_type pid, product_const_reference ref);
     inline void addSecondaryTile(size_type pid, product_const_reference ref);
 
@@ -116,8 +116,8 @@ private:
     const size_type _coarseArenaBytes;
     const size_type _refinedArenaBytes;
     // scratch space
-    cell_type * _coarseArena;
-    cell_type * _refinedArena;
+    value_type * _coarseArena;
+    value_type * _refinedArena;
 
     // disabled metamethods
 public:

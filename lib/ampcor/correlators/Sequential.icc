@@ -63,22 +63,22 @@ Sequential(size_type pairs,
 
     // memory footprint, in bytes
     // initially
-    _refBytes{ _refCells * sizeof(cell_type) },
-    _secBytes{ _secCells * sizeof(cell_type) },
+    _refBytes{ _refCells * sizeof(value_type) },
+    _secBytes{ _secCells * sizeof(value_type) },
     _corBytes{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
     // after refinement
-    _refRefinedBytes{ _refRefinedCells * sizeof(cell_type) },
-    _secRefinedBytes{ _secRefinedCells * sizeof(cell_type) },
+    _refRefinedBytes{ _refRefinedCells * sizeof(value_type) },
+    _secRefinedBytes{ _secRefinedCells * sizeof(value_type) },
 
     // scratch space capacity
     _coarseArenaCells { _pairs * _coarseStride },
     _refinedArenaCells { _pairs * _refinedStride },
     // scratch space memory footprint
-    _coarseArenaBytes { _coarseArenaCells * sizeof(cell_type) },
-    _refinedArenaBytes { _refinedArenaCells * sizeof(cell_type) },
+    _coarseArenaBytes { _coarseArenaCells * sizeof(value_type) },
+    _refinedArenaBytes { _refinedArenaCells * sizeof(value_type) },
     // scratch space
-    _coarseArena{ new cell_type [_coarseArenaCells] },
-    _refinedArena{ new cell_type [_refinedArenaCells] }
+    _coarseArena{ new value_type [_coarseArenaCells] },
+    _refinedArena{ new value_type [_refinedArenaCells] }
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential");
@@ -139,7 +139,7 @@ pairs() const -> size_type
 template <class productT>
 auto
 ampcor::correlators::Sequential<productT>::
-coarseArena() const -> const cell_type *
+coarseArena() const -> const value_type *
 {
     // easy enough
     return _coarseArena;
@@ -181,7 +181,7 @@ coarseArenaStride() const -> size_type
 template <class productT>
 void
 ampcor::correlators::Sequential<productT>::
-fillCoarseArena(cell_type value) const
+fillCoarseArena(value_type value) const
 {
     // easy enough
     std::fill(_coarseArena, _coarseArena+_coarseArenaCells, value);
@@ -204,9 +204,9 @@ addReferenceTile(size_t pid, product_const_reference ref)
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    cell_type * support = _coarseArena + pid * _coarseStride;
+    value_type * support = _coarseArena + pid * _coarseStride;
     // move the data
-    std::copy(ref.begin(), ref.end(), support);
+    // std::copy(ref.begin(), ref.end(), support);
 
     // tell me
     channel
@@ -233,9 +233,9 @@ addSecondaryTile(size_t pid, product_const_reference sec)
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    cell_type * support = _coarseArena + pid * _coarseStride + _refCells;
+    value_type * support = _coarseArena + pid * _coarseStride + _refCells;
     // move the data
-    std::copy(sec.begin(), sec.end(), support);
+    // std::copy(sec.begin(), sec.end(), support);
 
     // tell me
     channel
