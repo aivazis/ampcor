@@ -26,13 +26,10 @@ def test():
     # journal.debug("ampcor.slc").activate()
 
     # create an SLC
-    slc = ampcor.dom.newSLC()
-    # configure it
-    slc.shape = 36864, 10344
-    slc.data = "../../data/20061231.slc"
-
+    slc = ampcor.dom.newSLC(name="ref")
     # load the data
     slc.open()
+
     # verify that the two access modes produce the same result
     assert slc[0] == slc[0,0]
     # show me
