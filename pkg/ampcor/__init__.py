@@ -19,7 +19,7 @@ from pyre import (
     # support for multidimensional containers
     grid,
     # miscellaneous
-    tracking, units
+    primitives, tracking, units
     )
 
 
