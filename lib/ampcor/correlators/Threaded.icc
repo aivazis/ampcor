@@ -1,0 +1,15 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_correlators_Threaded_icc)
+#error this file contains implementation details for ampcor::correlators::Threaded
+#else
+
+
+# endif
+
+// end of file

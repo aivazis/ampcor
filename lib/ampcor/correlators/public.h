@@ -21,6 +21,7 @@
 
 // the local entities
 #include "Sequential.h"
+#include "Threaded.h"
 
 
 # endif
