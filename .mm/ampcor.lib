@@ -11,7 +11,7 @@ ampcor.libraries += ampcor.lib
 # add the ampcor bindings to the pile
 ampcor.extensions += ampcor.ext
 # and its testsuite
-ampcor.tests += ampcor.lib.tests
+ampcor.tests += ampcor.pkg.tests ampcor.lib.tests
 
 
 # configure the library

@@ -1,0 +1,17 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
+# parasim
+# (c) 1998-2020 all rights reserved
+#
+
+
+# the libampcor test suite
+ampcor.pkg.tests.stem := ampcor.pkg
+ampcor.pkg.tests.prerequisites := ampcor.pkg ampcor.lib ampcor.ext
+
+# global clean up
+tests.ampcor.pkg.clean +=
+
+
+# end of file
