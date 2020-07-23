@@ -100,6 +100,14 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         return
 
 
+    def __getitem__(self, index):
+        """
+        Fetch the pixel at the given {index}
+        """
+        # ask my raster
+        return self.raster[index]
+
+
     # implementation details
     # private data
     raster = None  # set by {open}
