@@ -24,6 +24,8 @@ public:
     using cell_type = typename spec_type::pixel_type;
     // and its underlying support
     using value_type = typename spec_type::value_type;
+    // const pointer to values
+    using const_pointer = const value_type *;
 
     // tile shape
     using shape_type = typename spec_type::shape_type;
@@ -61,9 +63,12 @@ public:
 
     // interface
 public:
-    inline void fillCoarseArena(value_type = 0) const;
+    // transfer and detect data from the incoming rasters
     inline void addReferenceTile(size_type pid, product_const_reference ref);
     inline void addSecondaryTile(size_type pid, product_const_reference ref);
+
+    // initializer; useful for debugging
+    inline void fillCoarseArena(value_type = 0) const;
 
     // implementation details: data
 private:
@@ -118,6 +123,9 @@ private:
     // scratch space
     value_type * _coarseArena;
     value_type * _refinedArena;
+
+    // storage for the offset field
+    value_type * _offsets;
 
     // disabled metamethods
 public:

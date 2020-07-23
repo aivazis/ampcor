@@ -17,8 +17,9 @@ ampcor::correlators::Sequential<productT>::
 ~Sequential()
 {
     // clean up
-    delete [] _coarseArena;
+    delete [] _offsets;
     delete [] _refinedArena;
+    delete [] _coarseArena;
 }
 
 
@@ -78,7 +79,9 @@ Sequential(size_type pairs,
     _refinedArenaBytes { _refinedArenaCells * sizeof(value_type) },
     // scratch space
     _coarseArena{ new value_type [_coarseArenaCells] },
-    _refinedArena{ new value_type [_refinedArenaCells] }
+    _refinedArena{ new value_type [_refinedArenaCells] },
+    // storage for the offset fields: two floats per tile pair
+    _offsets{ new value_type [2 * _pairs] }
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential");
