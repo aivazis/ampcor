@@ -41,21 +41,54 @@ slc_const(py::module &m) {
             // the signature
             "shape"_a, "uri"_a
             )
-        // size of things
-        // number of pixels
+
+        // accessors
+        // sizes of things: number of pixels
         .def_property_readonly("cells",
                       // the getter
                       &slc_t::cells,
                       // the docstring
                       "the number of pixels in the SLC"
                       )
-        // memory footprint
+        // sizes of things: memory footprint
         .def_property_readonly("bytes",
                       // the getter
                       &slc_t::bytes,
                       // the docstring
                       "the amount of memory occupied by this SLC, in bytes"
                       )
+
+        // metamethods
+        // data read access given an index
+        .def("__getitem__",
+             // convert the incoming tuple into an index and fetch the data
+             [](const slc_t & slc, py::tuple pyIdx) {
+                 // type aliases
+                 using index_t = slc_t::index_type;
+                 using rank_t = slc_t::index_type::rank_type;
+                 // make an index out of the python tuple
+                 slc_t::index_type idx {pyIdx[0].cast<rank_t>(), pyIdx[1].cast<rank_t>()};
+                 // get the data and return it
+                 return slc[idx];
+             },
+             // the signature
+             "index"_a,
+             // the docstring
+             "access the data at the given index"
+             )
+        // data read access given an offset
+        .def("__getitem__",
+             // delegate directly to the {slc_t}
+             [](const slc_t & slc, size_t offset) {
+                 // easy enough
+                 return slc[offset];
+             },
+             // the signature
+             "offset"_a,
+             // the docstring
+             "access the data at the given offset"
+             )
+
         // the static interface
         // the size of a pixel in bytes
         .def_property_readonly_static("bytesPerCell",
