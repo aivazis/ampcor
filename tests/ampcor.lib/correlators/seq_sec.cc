@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
     seq_t seq(4, refLayout, secLayout, 1, 0, 1);
     // pick a value
-    slc_t::spec_type::pixel_type value = 4.f + 42.if;
+    slc_t::spec_type::value_type value = 42;
     // zero out its coarse arena
     seq.fillCoarseArena(value);
 
@@ -111,7 +111,14 @@ int main(int argc, char *argv[]) {
         assert(( *c == value ));
     }
     // and the secondary tile
-    assert(( std::equal(t_10.begin(), t_10.end(), arena+2*stride+refShape.cells()) ));
+    auto cur = arena + 2*stride + refShape.cells();
+    // go through the tile values in packing order
+    for (auto pixel : t_10) {
+        // verify that the value stored in the arena is the magnitude of the tile value
+        assert(( *cur == std::abs(pixel) ));
+        // and grab the next one
+        ++cur;
+    }
 
     // the fourth pair is untouched
     for (auto c = arena+3*stride; c != arena+4*stride; ++c) {
