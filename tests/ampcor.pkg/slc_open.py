@@ -25,13 +25,14 @@ def test():
     channel = journal.debug("ampcor.slc")#.activate()
 
     # create an SLC
-    slc = ampcor.dom.newSLC()
-    # configure it
-    slc.shape = 36864, 10344
-    slc.data = "../../data/20061231.slc"
+    slc = ampcor.dom.newSLC(name="ref")
+
+    # verify the configuration
+    assert slc.shape == (36864, 10344)
+    assert slc.data == ampcor.primitives.path("../../data/20061231.slc")
 
     # show me its size
-    channel.log(f"slc: {slc.size()/1024**3:.3f} Gb")
+    channel.log(f"slc: {slc.cells()} cells, in {slc.bytes()/1024**3:.3f} Gb")
     # load some real data
     slc.open()
 

@@ -1,0 +1,24 @@
+;
+; michael a.g. aïvázis <michael.aivazis@para-sim.com>
+; parasim
+; (c) 1998-2020 all rights reserved
+;
+
+
+; the reference raster
+ref:
+    ; pfs path to the data file
+    data = ../../data/20061231.slc
+    ; shape
+    shape = 36864,10344
+
+
+; the secondary raster
+sec:
+    ; pfs path to the data file
+    data = ../../data/20070215.slc
+    ; shape
+    shape = 36864,10344
+
+
+; end of file
