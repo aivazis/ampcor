@@ -23,7 +23,7 @@ using seq_t = ampcor::correlators::sequential_t<slc_t>;
 int main(int argc, char *argv[]) {
     // initialize the journal
     pyre::journal::init(argc, argv);
-    pyre::journal::application("seq_ref");
+    pyre::journal::application("seq_coarse_zero");
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.seq");
 
@@ -52,13 +52,16 @@ int main(int argc, char *argv[]) {
     // make a sequential worker
     seq_t seq(4, refLayout, secLayout, 1, 0, 1);
 
+    // pick a value
+    slc_t::spec_type::value_type v = 42;
     // zero out its coarse arena
-    seq.fillCoarseArena();
+    seq.fillCoarseArena(v);
 
-    // check
+    // go through every cell
     for (auto cursor = seq.coarseArena();
          cursor != seq.coarseArena()+seq.coarseArenaCells(); ++cursor) {
-        assert(( *cursor == 0if ));
+        // make sure it contains what we expect
+        assert(( *cursor == v ));
     }
 
     // all done
