@@ -23,7 +23,7 @@ ampcor.plexus.offsets:
     ; secondary image: an SLC instance named {sec}; see below
     secondary = slc#sec
     ; correlator: an MGA correlator instance named {mga-large}; see below
-    correlator = mga#tiles.small
+    correlator = mga#tiles.large
 
 
 ; the reference raster
@@ -56,6 +56,38 @@ tiles.large:
     zoomFactor = 8
     ; the generator of the initial guess: look below for the grid configuration
     coarse = grid#dense
+
+
+; correlator that uses large chips but a smaller grid
+tiles.medium:
+    ; reference chip size
+    chip = 128, 128
+    ; padding used to form the search window in the secondary raster
+    padding = 32, 32
+    ; the refinement factor
+    refineFactor = 2
+    ; the refinement margin
+    refineMargin = 8
+    ; the zoom factor
+    zoomFactor = 8
+    ; the generator of the initial guess: look below for the grid configuration
+    coarse = grid#medium
+
+
+; correlator that uses large chips and a huge grid
+tiles.huge:
+    ; reference chip size
+    chip = 128, 128
+    ; padding used to form the search window in the secondary raster
+    padding = 32, 32
+    ; the refinement factor
+    refineFactor = 2
+    ; the refinement margin
+    refineMargin = 8
+    ; the zoom factor
+    zoomFactor = 8
+    ; the generator of the initial guess: look below for the grid configuration
+    coarse = grid#huge
 
 
 ; correlator that uses small chips
@@ -101,6 +133,20 @@ dense:
     ; by a fixed amount
     functor:
         shift = 0, 0
+
+
+; a medium grid of initial points
+medium:
+    ; a small grid used for debugging
+    domain:
+        shape = 60, 40
+
+
+; a huge grid of initial points
+huge:
+    ; a small grid used for debugging
+    domain:
+        shape = 240, 80
 
 
 ; a small grid of initial points
