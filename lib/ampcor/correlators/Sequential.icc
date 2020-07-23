@@ -205,8 +205,14 @@ addReferenceTile(size_t pid, product_const_reference ref)
 
     // figure out the starting address of this tile in the arena given its pair id
     value_type * support = _coarseArena + pid * _coarseStride;
-    // move the data
-    // std::copy(ref.begin(), ref.end(), support);
+
+    // the lambda that does the detection
+    auto detect = [](cell_type cell) -> value_type {
+                      // compute the magnitude and return
+                      return std::abs(cell);
+                  };
+    // move the data and detect in transit
+    std::transform(ref.begin(), ref.end(), support, detect);
 
     // tell me
     channel

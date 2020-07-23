@@ -11,6 +11,7 @@
 
 // STL
 #include <complex>
+#include <algorithm>
 // externals
 #include <p2/grid.h>
 

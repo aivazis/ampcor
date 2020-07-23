@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     seq_t seq(4, refLayout, secLayout, 1, 0, 1);
 
     // pick a value
-    slc_t::spec_type::pixel_type value = 4.f + 42.if;
+    slc_t::spec_type::value_type value = 42;
     // zero out its coarse arena
     seq.fillCoarseArena(value);
 
@@ -106,11 +106,18 @@ int main(int argc, char *argv[]) {
         assert(( *c == value ));
     }
 
-    // the third pair has our ref tile
-    assert(( std::equal(t_10.begin(), t_10.end(), arena+2*stride) ));
-    // and zeros in the sec tile spots
+    // the third pair has our ref tile; set up a cursor that looks in the arena
+    auto cur = arena + 2*stride;
+    // go through the tile values in packing order
+    for (auto pixel : t_10) {
+        // verify that the value stored in the arena is the magnitude of the tile value
+        assert(( *cur == std::abs(pixel) ));
+        // and grab the next one
+        ++cur;
+    }
+    // the sec tile spot should contain
     for (auto c = arena+2*stride+t_10.cells(); c != arena+3*stride; ++c) {
-        // i.e. equal to the initialization value
+        // the initialization value
         assert(( *c == value ));
     }
 
