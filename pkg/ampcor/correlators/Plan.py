@@ -57,45 +57,6 @@ class Plan:
         return ref, sec
 
 
-    # interface
-    def show(self, indent, margin):
-        """
-        Display details about this plan in {channel}
-        """
-        # sign on
-        channel.line(f"{margin}plan:")
-        # tile info
-        channel.line(f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}")
-        channel.line(f"{margin}{indent}pairs: {len(self)} out of {self.tile.size}")
-        # memory footprint
-        refBytes, secBytes = self.bytes
-        channel.line(f"{margin}{indent}footprint:")
-        channel.line(f"{margin}{indent*2}reference: {refBytes} bytes")
-        channel.line(f"{margin}{indent*2}secondary: {secBytes} bytes")
-
-        # go through the pairs
-        for offset, (ref,sec) in enumerate(zip(self.reference, self.secondary)):
-            # compute the index of this pair
-            index = self.tile.index(offset)
-            # if this is a valid pair
-            if ref and sec:
-                # identify the pair
-                channel.line(f"{margin}{indent}pair: {index}")
-                # show me the reference slice
-                channel.line(f"{margin}{indent*2}ref:")
-                ref.show(channel)
-                # and the secondary slice
-                channel.line(f"{margin}{indent*2}sec:")
-                sec.show(channel)
-            # otherwise
-            else:
-                # identify the pair as invalid
-                channel.line(f"{margin}{indent}pair: {index} INVALID")
-
-        # all done
-        return
-
-
     # meta-methods
     def __init__(self, correlator, regmap, rasters, **kwds):
         # chain up
@@ -182,6 +143,45 @@ class Plan:
 
         # all done
         return referenceTiles, secondaryTiles
+
+
+    # interface
+    def show(self, indent, margin):
+        """
+        Display details about this plan
+        """
+        # sign on
+        yield f"{margin}plan:"
+        # tile info
+        yield f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}"
+        yield f"{margin}{indent}pairs: {len(self)} out of {self.tile.size}"
+        # memory footprint
+        refBytes, secBytes = self.bytes
+        yield f"{margin}{indent}footprint:"
+        yield f"{margin}{indent*2}reference: {refBytes} bytes"
+        yield f"{margin}{indent*2}secondary: {secBytes} bytes"
+
+        # go through the pairs
+        for offset, (ref,sec) in enumerate(zip(self.reference, self.secondary)):
+            # compute the index of this pair
+            index = self.tile.index(offset)
+            # if this is a valid pair
+            if ref and sec:
+                # identify the pair
+                yield f"{margin}{indent}pair: {index}"
+                # show me the reference slice
+                yield f"{margin}{indent*2}ref:"
+                yield from ref.show(indent, margin=margin+3*indent)
+                # and the secondary slice
+                yield f"{margin}{indent*2}sec:"
+                yield from sec.show(indent, margin=margin+3*indent)
+            # otherwise
+            else:
+                # identify the pair as invalid
+                yield f"{margin}{indent}pair: {index} INVALID"
+
+        # all done
+        return
 
 
 # end of file
