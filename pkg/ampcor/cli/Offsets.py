@@ -7,6 +7,7 @@
 
 
 # externals
+import journal
 import ampcor
 
 
@@ -18,12 +19,18 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
 
 
     # user configurable state
+    # the input data products
     reference = ampcor.dom.raster()
     reference.doc = "the reference raster image"
 
     secondary = ampcor.dom.raster()
     secondary.doc = "the secondary raster image"
 
+    # the output data product
+    offsets = ampcor.dom.offsets()
+    offsets.doc = "the offset map from the reference to the secondary raster"
+
+    # the factory
     correlator = ampcor.correlators.correlator()
     correlator.doc = "the calculator of the offset field"
 
@@ -38,10 +45,14 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         reference = self.reference
         # the secondary image
         secondary = self.secondary
+        # the output offset map
+        offsets = self.offsets
         # and the correlator
         correlator = self.correlator
         # ask the correlator to do its thing
-        return correlator.estimate(plexus=plexus, reference=reference, secondary=secondary, **kwds)
+        return correlator.estimate(plexus=plexus,
+                                   reference=reference, secondary=secondary, offsets=offsets,
+                                   **kwds)
 
 
     @ampcor.export(tip="display my configuration")
@@ -49,8 +60,11 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Display the action configuration
         """
+        # configure the workflow
+        self.flow()
+
         # grab a channel
-        channel = plexus.info
+        channel = journal.info("ampcor.info")
         # get things going
         channel.line()
         # get the report
@@ -71,6 +85,7 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         # unpack my arguments
         reference = self.reference
         secondary = self.secondary
+        offsets = self.offsets
         correlator = self.correlator
 
         # show the shell configuration
@@ -80,27 +95,61 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         yield f"{margin}{indent}gpus:  {plexus.shell.gpus} per task"
 
         # inputs
-        yield f"{margin}input rasters"
+        yield f"{margin}input rasters:"
+
         # reference raster
         yield f"{margin}{indent}reference: {reference}"
+        # if i have one
         if reference:
             yield f"{margin}{indent*2}data: {reference.data}"
             yield f"{margin}{indent*2}shape: {reference.shape}"
             yield f"{margin}{indent*2}pixels: {reference.cells()}"
             yield f"{margin}{indent*2}footprint: {reference.bytes()} bytes"
+
         # secondary raster
         yield f"{margin}{indent}secondary: {secondary}"
+        # if i have one
         if secondary:
             yield f"{margin}{indent*2}data: {secondary.data}"
             yield f"{margin}{indent*2}shape: {secondary.shape}"
             yield f"{margin}{indent*2}pixels: {secondary.cells()}"
             yield f"{margin}{indent*2}footprint: {secondary.bytes()} bytes"
 
+        # the output
+        yield f"{margin}output:"
+        yield f"{margin}{indent}offsets: {offsets}"
+        # if i have one
+        if offsets:
+            # show me
+            yield f"{margin}{indent*2}shape: {offsets.shape}"
+
         # the factory
         yield from correlator.show(indent=indent, margin=margin)
 
         # all done
         return
+
+
+    def flow(self):
+        """
+        Assemble the workflow
+        """
+        # unpack my products
+        reference = self.reference
+        secondary = self.secondary
+        offsets = self.offsets
+        # and my factory
+        correlator = self.correlator
+
+        # configure the workflow
+        # set up the inputs
+        correlator.reference = reference
+        correlator.secondary = secondary
+        # attach the output
+        correlator.offsets = offsets
+
+        # and return the factory
+        return correlator
 
 
 # end of file

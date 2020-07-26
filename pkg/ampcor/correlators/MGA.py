@@ -7,6 +7,8 @@
 #
 
 
+# externals
+import journal
 # framework
 import ampcor
 # my protocol
@@ -18,6 +20,18 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
     """
     MGA's implementation of the offset field estimator
     """
+
+
+    # input data products
+    reference = ampcor.dom.raster()
+    reference.doc = "the reference raster image"
+
+    secondary = ampcor.dom.raster()
+    secondary.doc = "the secondary raster image"
+
+    # the output data product
+    offsets = ampcor.dom.offsets()
+    offsets.doc = "the offset map from the reference to the secondary raster"
 
 
     # user configurable state
@@ -49,7 +63,7 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
     # protocol obligations
     @ampcor.provides
-    def estimate(self, plexus, reference, secondary, **kwds):
+    def estimate(self, plexus, **kwds):
         """
         Estimate the offset field between a pair of raster images
         """
@@ -61,15 +75,10 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         # show me
         channel.log(f"correlator: {self.pyre_family()}")
 
-        # choose the correlator implementation
-        worker = self.makeWorker(layout=plexus.shell)
-        # get the coarse map specified by the user
-        coarse = self.coarse.map(reference=reference)
-
         # start the timer
         timer.reset().start()
         # make a plan
-        plan = self.makePlan(regmap=coarse, rasters=(reference, secondary))
+        plan = self.makePlan()
         # stop the timer
         timer.stop()
         # show me
@@ -87,8 +96,11 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
         # restart the timer
         timer.reset().start()
+        # choose the correlator implementation
+        worker = self.makeWorker(layout=plexus.shell)
         # compute the offsets
-        regmap = worker.adjust(manager=self, rasters=(ref, sec), plan=plan, channel=channel)
+        regmap = worker.adjust(manager=self,
+                               rasters=(ref, sec), map=offsets, plan=plan, channel=channel)
         # stop the timer
         timer.stop()
         # show me
@@ -122,13 +134,23 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         return worker
 
 
-    def makePlan(self, regmap, rasters):
+    def makePlan(self):
         """
         Formulate a computational plan for correlating {reference} and {secondary} to produce an
         offset map
         """
+        # get the inputs
+        reference = self.reference
+        secondary = self.secondary
+        # grab the output
+        offsets = self.offsets
+
+        # pair up the rasters
+        rasters = reference, secondary
+        # get the coarse map
+        coarse = self.coarse.map(reference=reference)
         # make a plan
-        plan = self.newPlan(correlator=self, regmap=regmap, rasters=rasters)
+        plan = self.newPlan(correlator=self, regmap=coarse, rasters=rasters)
         # and return it
         return plan
 
@@ -148,9 +170,9 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         yield from self.coarse.show(indent, margin=margin+indent)
 
         # make a plan
-        # plan = self.makePlan()
+        plan = self.makePlan()
         # and show me the plan details
-        # yield from plan.show(indent=indent, margin=margin+indent)
+        yield from plan.show(indent=indent, margin=margin+indent)
 
         # all done
         return self
