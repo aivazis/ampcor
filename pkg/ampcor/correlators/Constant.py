@@ -43,13 +43,13 @@ class Constant(ampcor.component,
 
 
     # interface
-    def show(self, channel):
+    def show(self, indent, margin):
         """
         Display my configuration
         """
         # show who i am
-        channel.line(f" -- functor: {self.pyre_family()}")
-        channel.line(f"        shift: {self.shift}")
+        yield f"{margin}functor: {self.pyre_family()}"
+        yield f"{margin}{indent}shift: {self.shift}"
         # all done
         return
 

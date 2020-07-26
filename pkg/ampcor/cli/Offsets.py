@@ -51,52 +51,56 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         # grab a channel
         channel = plexus.info
-
         # get things going
         channel.line()
+        # get the report
+        doc = "\n".join(self.show(plexus=plexus))
+        # and print it
+        channel.log(doc)
+        # all done; indicate success
+        return 0
 
-        # shell
-        channel.line(f" -- shell: {plexus.shell}")
-        channel.line(f"    hosts: {plexus.shell.hosts}")
-        channel.line(f"    tasks: {plexus.shell.tasks} per host")
-        channel.line(f"    gpus:  {plexus.shell.gpus} per task")
 
-        # inputs
-        channel.line(f" -- data files")
-        # reference raster
-        channel.line(f"    reference: {self.reference}")
-        if self.reference:
-            channel.line(f"        data: {self.reference.data}")
-            channel.line(f"        shape: {self.reference.shape}")
-            channel.line(f"        pixels: {self.reference.cells()}")
-            channel.line(f"        footprint: {self.reference.bytes()} bytes")
-        # secondary raster
-        channel.line(f"    secondary: {self.secondary}")
-        if self.secondary:
-            channel.line(f"        data: {self.secondary.data}")
-            channel.line(f"        shape: {self.secondary.shape}")
-            channel.line(f"        pixels: {self.secondary.cells()}")
-            channel.line(f"        footprint: {self.secondary.bytes()} bytes")
-
+    # implementation details
+    def show(self, plexus, indent=" "*4, margin=""):
+        """
+        Generate a configuration report
+        """
+        # get shell
+        shell = plexus.shell
         # unpack my arguments
         reference = self.reference
         secondary = self.secondary
         correlator = self.correlator
 
-        # show the correlator configuration
-        correlator.show(channel=channel)
-        # ask the correlator for the coarse map
-        coarse = correlator.coarse.map(reference=reference)
-        # make a plan
-        plan = correlator.makePlan(regmap=coarse, rasters=(reference, secondary))
-        # and show me the plan details
-        plan.show(channel=channel)
+        # show the shell configuration
+        yield f"{margin}shell: {plexus.shell}"
+        yield f"{margin}{indent}hosts: {plexus.shell.hosts}"
+        yield f"{margin}{indent}tasks: {plexus.shell.tasks} per host"
+        yield f"{margin}{indent}gpus:  {plexus.shell.gpus} per task"
 
-        # flush
-        channel.log()
+        # inputs
+        yield f"{margin}input rasters"
+        # reference raster
+        yield f"{margin}{indent}reference: {reference}"
+        if reference:
+            yield f"{margin}{indent*2}data: {reference.data}"
+            yield f"{margin}{indent*2}shape: {reference.shape}"
+            yield f"{margin}{indent*2}pixels: {reference.cells()}"
+            yield f"{margin}{indent*2}footprint: {reference.bytes()} bytes"
+        # secondary raster
+        yield f"{margin}{indent}secondary: {secondary}"
+        if secondary:
+            yield f"{margin}{indent*2}data: {secondary.data}"
+            yield f"{margin}{indent*2}shape: {secondary.shape}"
+            yield f"{margin}{indent*2}pixels: {secondary.cells()}"
+            yield f"{margin}{indent*2}footprint: {secondary.bytes()} bytes"
 
-        # all done; indicate success
-        return 0
+        # the factory
+        yield from correlator.show(indent=indent, margin=margin)
+
+        # all done
+        return
 
 
 # end of file

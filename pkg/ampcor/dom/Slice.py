@@ -32,16 +32,16 @@ class Slice:
 
 
     # interface
-    def show(self, channel):
+    def show(self, indent, margin):
         """
-        Display my vitals in {channel}
+        Generate a report of my configuration
         """
         # sign on
-        channel.line(f"                begin: {self.begin}")
-        channel.line(f"                shape: {self.shape}")
-        channel.line(f"                end: {self.end}")
-        channel.line(f"                size: {self.cells} cells")
-        channel.line(f"                footprint: {self.bytes} bytes")
+        yield f"{margin}begin: {self.begin}"
+        yield f"{margin}shape: {self.shape}"
+        yield f"{margin}end: {self.end}"
+        yield f"{margin}size: {self.cells} cells"
+        yield f"{margin}footprint: {self.bytes} bytes"
         # all done
         return
 

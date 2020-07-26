@@ -58,20 +58,20 @@ class Plan:
 
 
     # interface
-    def show(self, channel):
+    def show(self, indent, margin):
         """
         Display details about this plan in {channel}
         """
         # sign on
-        channel.line(f" -- plan:")
+        channel.line(f"{margin}plan:")
         # tile info
-        channel.line(f"        shape: {self.tile.shape}, layout: {self.tile.layout}")
-        channel.line(f"        pairs: {len(self)} out of {self.tile.size}")
+        channel.line(f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}")
+        channel.line(f"{margin}{indent}pairs: {len(self)} out of {self.tile.size}")
         # memory footprint
         refBytes, secBytes = self.bytes
-        channel.line(f"        footprint:")
-        channel.line(f"            reference: {refBytes} bytes")
-        channel.line(f"            secondary: {secBytes} bytes")
+        channel.line(f"{margin}{indent}footprint:")
+        channel.line(f"{margin}{indent*2}reference: {refBytes} bytes")
+        channel.line(f"{margin}{indent*2}secondary: {secBytes} bytes")
 
         # go through the pairs
         for offset, (ref,sec) in enumerate(zip(self.reference, self.secondary)):
@@ -80,17 +80,17 @@ class Plan:
             # if this is a valid pair
             if ref and sec:
                 # identify the pair
-                channel.line(f"        pair: {index}")
+                channel.line(f"{margin}{indent}pair: {index}")
                 # show me the reference slice
-                channel.line(f"            ref:")
+                channel.line(f"{margin}{indent*2}ref:")
                 ref.show(channel)
                 # and the secondary slice
-                channel.line(f"            sec:")
+                channel.line(f"{margin}{indent*2}sec:")
                 sec.show(channel)
             # otherwise
             else:
                 # identify the pair as invalid
-                channel.line(f"        pair: {index} INVALID")
+                channel.line(f"{margin}{indent}pair: {index} INVALID")
 
         # all done
         return

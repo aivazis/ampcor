@@ -50,16 +50,16 @@ class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implement
 
 
     # interface
-    def show(self, channel):
+    def show(self, indent, margin):
         """
         Display my configuration
         """
         # show who i am
-        channel.line(f" -- offsets: {self.pyre_family()}")
+        yield f"{margin}offsets: {self.pyre_family()}"
         # show my domain
-        self.domain.show(channel=channel)
+        yield from self.domain.show(indent=indent, margin=margin+indent)
         # and my codomain generator
-        self.functor.show(channel=channel)
+        yield from self.functor.show(indent=indent, margin=margin+indent)
         # all done
         return
 

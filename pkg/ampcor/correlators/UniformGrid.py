@@ -54,13 +54,13 @@ class UniformGrid(ampcor.component,
 
 
     # interface
-    def show(self, channel):
+    def show(self, indent, margin):
         """
         Display my configuration
         """
         # show who i am
-        channel.line(f" -- domain: {self.pyre_family()}")
-        channel.line(f"        shape: {self.shape}")
+        yield f"{margin}domain: {self.pyre_family()}"
+        yield f"{margin}{indent}shape: {self.shape}"
         # all done
         return
 

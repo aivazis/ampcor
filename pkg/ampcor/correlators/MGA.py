@@ -133,18 +133,24 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         return plan
 
 
-    def show(self, channel):
+    def show(self, indent, margin):
         """
-        Display my configuration and details about the correlation plan
+        Generate a report of my configuration
         """
         # show who i am
-        channel.line(f" -- estimator: {self.pyre_family()}")
+        yield f"{margin}estimator: {self.pyre_family()}"
         # display the reference chip size
-        channel.line(f"        chip: {self.chip}")
+        yield f"{margin}{indent}chip: {self.chip}"
         # and the search window padding
-        channel.line(f"        padding: {self.padding}")
+        yield f"{margin}{indent}padding: {self.padding}"
+
         # describe my coarse map strategy
-        self.coarse.show(channel=channel)
+        yield from self.coarse.show(indent, margin=margin+indent)
+
+        # make a plan
+        # plan = self.makePlan()
+        # and show me the plan details
+        # yield from plan.show(indent=indent, margin=margin+indent)
 
         # all done
         return self
