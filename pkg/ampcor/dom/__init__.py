@@ -44,4 +44,14 @@ def slc():
     return SLC
 
 
+@ampcor.foundry(implements=raster, tip="an offset map from a reference to a secondary raster")
+def offsets():
+    # get the component
+    from .OffsetMap import OffsetMap
+    # borrow its docstring
+    __doc__ = OffsetMap.__doc__
+    # and publish it
+    return OffsetMap
+
+
 # end of file
