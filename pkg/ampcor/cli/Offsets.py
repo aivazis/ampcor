@@ -41,18 +41,10 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Produce an offset map between the {reference} and {secondary} images
         """
-        # get the reference image
-        reference = self.reference
-        # the secondary image
-        secondary = self.secondary
-        # the output offset map
-        offsets = self.offsets
-        # and the correlator
-        correlator = self.correlator
-        # ask the correlator to do its thing
-        return correlator.estimate(plexus=plexus,
-                                   reference=reference, secondary=secondary, offsets=offsets,
-                                   **kwds)
+        # set up the workflow
+        correlator = self.flow()
+        # and ask it to do its thing; {plexus} carries the runtime context, so pass it along
+        return correlator.estimate(plexus=plexus)
 
 
     @ampcor.export(tip="display my configuration")

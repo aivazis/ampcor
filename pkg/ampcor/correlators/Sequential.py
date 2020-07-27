@@ -23,16 +23,16 @@ class Sequential:
 
 
     # interface
-    def adjust(self, manager, rasters, plan, **kwds):
+    def adjust(self, manager, plan, rasters, offsets, **kwds):
         """
         Compute the offset map between a pair of {rasters} given a correlation {plan}
         """
         # make a timer
         timer = ampcor.executive.newTimer(name="ampcor.sequential")
         # and a journal channel
-        channel = journal.info("ampcor.sequential.timings")
+        channel = journal.info("ampcor.timings.sequential")
 
-        # unpack the raster
+        # unpack the rasters
         ref, sec = rasters
         # ask the plan for the number of valid tile pairs
         pairs = len(plan)
@@ -59,7 +59,7 @@ class Sequential:
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"instantiated the sequential worker: {1e3 * timer.read():.3f} ms")
+        channel.log(f"  instantiated the sequential worker: {1e3 * timer.read():.3f} ms")
 
         # start the timer
         timer.reset().start()
@@ -72,11 +72,10 @@ class Sequential:
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"transferred the tiles to the coarse arena: {1e3 * timer.read():.3f} ms")
+        channel.log(f"  transferred the tiles to the coarse arena: {1e3 * timer.read():.3f} ms")
 
         # all done
         return
-
 
 
 # end of file

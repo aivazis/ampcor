@@ -68,12 +68,19 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         Estimate the offset field between a pair of raster images
         """
         # make a channel
-        channel = plexus.info
+        channel = journal.info("ampcor.timings")
         # grab my timer
         timer = self.timer
 
         # show me
         channel.log(f"correlator: {self.pyre_family()}")
+
+        # unpack my products
+        # inputs
+        reference = self.reference
+        secondary = self.secondary
+        # outputs
+        offsets = self.offsets
 
         # start the timer
         timer.reset().start()
@@ -82,25 +89,24 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"correlation plan: {1e3 * timer.read():.3f} ms")
+        channel.log(f"  correlation plan: {1e3 * timer.read():.3f} ms")
 
         # restart the timer
         timer.reset().start()
         # open the two rasters and get access to the data
-        ref = reference.open().raster
-        sec = secondary.open().raster
+        ref = self.reference.open().raster
+        sec = self.secondary.open().raster
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"opened the two rasters: {1e3 * timer.read():.3f} ms")
+        channel.log(f"  opened the two rasters: {1e3 * timer.read():.3f} ms")
 
         # restart the timer
         timer.reset().start()
         # choose the correlator implementation
         worker = self.makeWorker(layout=plexus.shell)
         # compute the offsets
-        regmap = worker.adjust(manager=self,
-                               rasters=(ref, sec), map=offsets, plan=plan, channel=channel)
+        regmap = worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
         # stop the timer
         timer.stop()
         # show me
