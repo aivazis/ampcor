@@ -21,14 +21,14 @@ using slc_t = ampcor::dom::slc_const_t;
 int main(int argc, char *argv[]) {
     // initialize the journal
     pyre::journal::init(argc, argv);
-    pyre::journal::application("slc_set");
+    pyre::journal::application("slc_get");
     // make a channel
     pyre::journal::debug_t channel("ampcor.dom.slc");
 
     // the name of the product
     std::string name = "slc.dat";
     // make a shape
-    slc_t::shape_type shape { 256, 256};
+    slc_t::shape_type shape { 256, 256 };
     // build the product specification
     slc_t::spec_type spec { shape };
 
