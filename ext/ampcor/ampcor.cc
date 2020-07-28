@@ -24,6 +24,10 @@ PYBIND11_MODULE(ampcor, m) {
     ampcor::py::slc(m);
     ampcor::py::slc_const(m);
 
+    // offset maps
+    ampcor::py::offsets(m);
+    ampcor::py::offsets_const(m);
+
     // correlators
     ampcor::py::sequential(m);
 }
