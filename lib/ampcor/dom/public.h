@@ -20,8 +20,9 @@
 
 
 // the local entities
-// product specification
+// product specifications
 #include "SLC.h"
+#include "Offsets.h"
 // product gives specifications their storage strategy
 #include "Product.h"
 

@@ -13,6 +13,8 @@
 namespace ampcor::dom {
     // the layout specification for the various product types
     class SLC;
+    class Offsets;
+
     // turning specs into actual products
     template <class specT, bool isReadOnly>
     class Product;
