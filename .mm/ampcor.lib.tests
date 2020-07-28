@@ -15,11 +15,13 @@ ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 
 
 # global clean up
-tests.ampcor.lib.dom.clean += slc.dat
+tests.ampcor.lib.dom.clean += slc.dat offsets.dat
 tests.ampcor.lib.correlators.clean += slc_ref.dat slc_sec.dat
 
-# the {slc} product tests must be executed in a specific order
+# the {slc_t} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
+# simimlarly for the {offsets_t} tests
+tests.ampcor.lib.dom.offsets_get.pre := tests.ampcor.lib.dom.offsets_set
 
 # the correlator tests have some order requirements
 tests.ampcor.lib.correlators.seq_ref.pre := tests.ampcor.lib.correlators.slc_ref
