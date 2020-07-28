@@ -23,7 +23,7 @@ using slc_t = ampcor::dom::slc_t;
 namespace ampcor::py {
     // the constructor
     inline auto
-    constructor(py::tuple, py::object, size_t) -> unique_pointer<slc_t>;
+    slc_constructor(py::tuple, py::object, size_t) -> unique_pointer<slc_t>;
 }
 
 
@@ -38,7 +38,7 @@ slc(py::module &m) {
              // the constructor wrapper
              py::init([](py::tuple shape, py::object uri, size_t cells) {
                           // ask the helper
-                          return constructor(shape, uri, cells);
+                          return slc_constructor(shape, uri, cells);
                       }),
              // the signature
              "shape"_a, "uri"_a, "cells"_a
@@ -112,7 +112,7 @@ slc(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique_pointer<slc_t>
+slc_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique_pointer<slc_t>
 {
     // extract the shape
     int lines = py::int_(pyShape[0]);
