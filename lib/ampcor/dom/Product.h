@@ -22,6 +22,9 @@ public:
     using product_const_reference = const product_type &;
     // my base class
     using grid_type = grid_t<spec_type, mmap_t, isReadOnly>;
+    // my pixel
+    using pixel_type = typename spec_type::pixel_type;
+    using pixel_const_reference = const pixel_type &;
     // my parts
     using storage_pointer = typename grid_type::storage_pointer;
     // my shape
