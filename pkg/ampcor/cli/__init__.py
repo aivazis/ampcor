@@ -46,6 +46,16 @@ def config():
     return Config
 
 
+@foundry(implements=action, tip="display debugging information about this application")
+def debug():
+    # get the action
+    from .Debug import Debug
+    # borrow its docstring
+    __doc__ = Debug.__doc__
+    # and publish it
+    return Debug
+
+
 # command completion; no tip so it doesn't show up on the help panel
 @foundry(implements=action)
 def complete():
