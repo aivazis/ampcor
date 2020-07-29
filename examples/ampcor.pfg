@@ -5,6 +5,30 @@
 ;
 
 
+; inputs
+; the reference raster
+ref:
+    ; shape
+    shape = 36864,10344
+    ; pfs path to the data file
+    data = ../data/20061231.slc
+
+; the secondary raster
+sec:
+    ; shape
+    shape = 36864,10344
+    ; pfs path to the data file
+    data = ../data/20070215.slc
+
+; output
+; the offset map
+map:
+    ; shape
+    shape = 120, 40
+    ; pfs path to the file; currently left in the working directory
+    data = offsets.dat
+
+
 ; overall application configuration
 ampcor.plexus:
     ; machine layout
@@ -16,30 +40,16 @@ ampcor.plexus:
 
 ; configuration for the offset estimator action
 ampcor.plexus.offsets:
-    ; reference image: an SLC instance named {ref}; see below
+    ; reference image: an SLC instance named {ref}, configured above
     ; the setting below is equivalent to
     ;    reference = ampcor.dom.rasters.slc#ref
     reference = slc#ref
-    ; secondary image: an SLC instance named {sec}; see below
+    ; secondary image: an SLC instance named {sec}, configured above
     secondary = slc#sec
-    ; correlator: an MGA correlator instance named {mga-large}; see below
-    correlator = mga#tiles.large
-
-
-; the reference raster
-ref:
-    ; pfs path to the data file
-    data = ../data/20061231.slc
-    ; shape
-    shape = 36864,10344
-
-
-; the secondary raster
-sec:
-    ; pfs path to the data file
-    data = ../data/20070215.slc
-    ; shape
-    shape = 36864,10344
+    ; the output of this process, configured above
+    offsets = offsetMap#map
+    ; correlator: see further below for configuration details
+    correlator = mga#tiles.tiny
 
 
 ; correlator that uses large chips
