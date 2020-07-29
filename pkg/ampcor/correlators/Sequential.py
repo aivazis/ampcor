@@ -74,6 +74,15 @@ class Sequential:
         # show me
         channel.log(f"  transferred the tiles to the coarse arena: {1e3 * timer.read():.3f} ms")
 
+        # start the timer
+        timer.reset().start()
+        # compute the adjustments to the offset field
+        # worker.adjust(offsets)
+        # stop the timer
+        timer.stop()
+        # show me
+        channel.log(f"  computed the offsets: {1e3 * timer.read():.3f} ms")
+
         # all done
         return
 
