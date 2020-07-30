@@ -45,18 +45,36 @@ slc_const(py::module &m) {
         // accessors
         // sizes of things: number of pixels
         .def_property_readonly("cells",
-                      // the getter
-                      &slc_t::cells,
-                      // the docstring
-                      "the number of pixels in the SLC"
-                      )
+                               // the getter
+                               &slc_t::cells,
+                               // the docstring
+                               "the number of pixels in the SLC"
+                               )
         // sizes of things: memory footprint
         .def_property_readonly("bytes",
-                      // the getter
-                      &slc_t::bytes,
-                      // the docstring
-                      "the amount of memory occupied by this SLC, in bytes"
-                      )
+                               // the getter
+                               &slc_t::bytes,
+                               // the docstring
+                               "the amount of memory occupied by this SLC, in bytes"
+                               )
+        // access to the shape
+        .def_property_readonly("tile",
+                               // the getter
+                               [](const slc_t & slc) {
+                                   // get the shape
+                                   auto shape = slc.layout().shape();
+                                   // convert it to a tuple
+                                   auto pyShape = py::make_tuple(shape[0], shape[1]);
+                                   // get the tile from {pyre.grid}
+                                   auto pyFactory = py::module::import("pyre.grid").attr("tile");
+                                   // invoke it
+                                   auto pyTile = pyFactory("shape"_a=pyShape);
+                                   // and return it
+                                   return pyTile;
+                               },
+                               // the docstring
+                               "the shape of the SLC"
+                               )
 
         // metamethods
         // data read access given an index

@@ -60,6 +60,25 @@ slc(py::module &m) {
                       "the amount of memory occupied by this SLC, in bytes"
                       )
 
+        // access to the shape
+        .def_property_readonly("tile",
+                               // the getter
+                               [](const slc_t & slc) {
+                                   // get the shape
+                                   auto shape = slc.layout().shape();
+                                   // convert it to a tuple
+                                   auto pyShape = py::make_tuple(shape[0], shape[1]);
+                                   // get the tile from {pyre.grid}
+                                   auto pyFactory = py::module::import("pyre.grid").attr("tile");
+                                   // invoke it
+                                   auto pyTile = pyFactory("shape"_a=pyShape);
+                                   // and return it
+                                   return pyTile;
+                               },
+                               // the docstring
+                               "the shape of the SLC"
+                               )
+
         // metamethods
         // data read access given an index
         .def("__getitem__",
