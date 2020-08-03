@@ -11,14 +11,14 @@ import ampcor
 
 
 # the protocols
-from .Correlator import Correlator as correlator
 from .Domain import Domain as domain
 from .Functor import Functor as functor
 from .Offsets import Offsets as offsets
 
 
 # correlation strategies
-@ampcor.foundry(implements=correlator, tip="estimate an offset field using MGA's implementation")
+@ampcor.foundry(implements=ampcor.specs.correlator,
+                tip="estimate an offset field using MGA's implementation")
 def mga():
     # get the action
     from .MGA import MGA

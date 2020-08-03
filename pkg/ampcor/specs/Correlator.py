@@ -11,7 +11,7 @@ import ampcor
 
 
 # declaration
-class Correlator(ampcor.protocol, family="ampcor.correlators"):
+class Correlator(ampcor.flow.producer, family="ampcor.correlators"):
     """
     The protocol for all AMPCOR correlator implementations
     """
@@ -31,10 +31,8 @@ class Correlator(ampcor.protocol, family="ampcor.correlators"):
         """
         Provide a default implementation
         """
-        # pull mga's implementation
-        from .MGA import MGA
         # and publish it
-        return MGA
+        return ampcor.correlators.mga()
 
 
 # end of file

@@ -11,12 +11,11 @@
 import journal
 # framework
 import ampcor
-# my protocol
-from .Correlator import Correlator
 
 
 # declaration
-class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlator):
+class MGA(ampcor.flow.factory,
+          family="ampcor.correlators.mga", implements=ampcor.specs.correlator):
     """
     MGA's implementation of the offset field estimator
     """

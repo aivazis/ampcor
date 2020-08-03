@@ -31,7 +31,7 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
     offsetMap.doc = "the offset map from the reference to the secondary raster"
 
     # the factory
-    correlator = ampcor.correlators.correlator()
+    correlator = ampcor.specs.correlator()
     correlator.doc = "the calculator of the offset field"
 
 

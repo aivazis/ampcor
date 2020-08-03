@@ -11,4 +11,8 @@ from .SLC import SLC as slc
 from .OffsetMap import OffsetMap as offsets
 
 
+# publish the factory specs
+from .Correlator import Correlator as correlator
+
+
 # end of file
