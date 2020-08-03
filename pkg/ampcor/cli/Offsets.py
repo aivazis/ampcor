@@ -27,8 +27,8 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
     secondary.doc = "the secondary raster image"
 
     # the output data product
-    offsets = ampcor.dom.offsets()
-    offsets.doc = "the offset map from the reference to the secondary raster"
+    offsetMap = ampcor.dom.raster()
+    offsetMap.doc = "the offset map from the reference to the secondary raster"
 
     # the factory
     correlator = ampcor.correlators.correlator()
@@ -77,7 +77,7 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         # unpack my arguments
         reference = self.reference
         secondary = self.secondary
-        offsets = self.offsets
+        offsets = self.offsetMap
         correlator = self.correlator
 
         # show the shell configuration
@@ -115,6 +115,7 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             # show me
             yield f"{margin}{indent*2}shape: {offsets.shape}"
 
+        return
         # the factory
         yield from correlator.show(indent=indent, margin=margin)
 
@@ -129,7 +130,7 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         # unpack my products
         reference = self.reference
         secondary = self.secondary
-        offsets = self.offsets
+        offsets = self.offsetMap
         # and my factory
         correlator = self.correlator
 

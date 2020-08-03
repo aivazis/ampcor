@@ -47,7 +47,7 @@ ampcor.plexus.offsets:
     ; secondary image: an SLC instance named {sec}, configured above
     secondary = slc#sec
     ; the output of this process, configured above
-    offsets = offsetMap#map
+    offsetMap = offsets#map
     ; correlator: see further below for configuration details
     correlator = mga#tiles.tiny
 
