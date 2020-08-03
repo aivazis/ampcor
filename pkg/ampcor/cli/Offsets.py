@@ -20,14 +20,14 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
 
     # user configurable state
     # the input data products
-    reference = ampcor.dom.raster()
+    reference = ampcor.specs.slc()
     reference.doc = "the reference raster image"
 
-    secondary = ampcor.dom.raster()
+    secondary = ampcor.specs.slc()
     secondary.doc = "the secondary raster image"
 
     # the output data product
-    offsetMap = ampcor.dom.raster()
+    offsetMap = ampcor.specs.offsets()
     offsetMap.doc = "the offset map from the reference to the secondary raster"
 
     # the factory
@@ -115,7 +115,6 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             # show me
             yield f"{margin}{indent*2}shape: {offsets.shape}"
 
-        return
         # the factory
         yield from correlator.show(indent=indent, margin=margin)
 
