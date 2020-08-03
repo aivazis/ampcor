@@ -23,14 +23,14 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
 
     # input data products
-    reference = ampcor.dom.raster()
+    reference = ampcor.specs.slc()
     reference.doc = "the reference raster image"
 
-    secondary = ampcor.dom.raster()
+    secondary = ampcor.specs.slc()
     secondary.doc = "the secondary raster image"
 
     # the output data product
-    offsets = ampcor.dom.offsets()
+    offsets = ampcor.specs.offsets()
     offsets.doc = "the offset map from the reference to the secondary raster"
 
 
@@ -155,6 +155,10 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
         rasters = reference, secondary
         # get the coarse map
         coarse = self.coarse.map(reference=reference)
+
+        # mark
+        raise NotImplementedError("must use the {offsets} product")
+
         # make a plan
         plan = self.newPlan(correlator=self, regmap=coarse, rasters=rasters)
         # and return it
@@ -174,6 +178,9 @@ class MGA(ampcor.component, family="ampcor.correlators.mga", implements=Correlat
 
         # describe my coarse map strategy
         yield from self.coarse.show(indent, margin=margin+indent)
+
+        # MGA: mark
+        return
 
         # make a plan
         plan = self.makePlan()
