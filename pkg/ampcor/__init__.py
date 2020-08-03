@@ -36,7 +36,8 @@ from . import meta           # package meta-data
 from . import exceptions     # the exception hierarchy
 from . import shells         # the supported application shells
 from . import cli            # the command line interface
-from . import dom            # the data model
+from . import specs          # the product specifications
+from . import products       # the product implementations
 from . import correlators    # the image correlators
 
 
