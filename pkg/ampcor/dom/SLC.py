@@ -10,12 +10,11 @@
 import ampcor
 # the extension
 from ampcor.ext import ampcor as libampcor
-# my protocol
-from .Raster import Raster
 
 
 # declaration
-class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
+class SLC(ampcor.flow.product,
+          family="ampcor.products.slc.slc", implements=ampcor.specs.slc):
     """
     Access to the data of a file based SLC
     """
@@ -29,22 +28,12 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
     data.doc = "the path to my binary data"
 
 
-    # constants
-    # the memory footprint of individual pixels
-    bytesPerCell = libampcor.ConstSLC.bytesPerCell
-
-    # factories
-    from .Slice import Slice as newSlice
-
-
     # protocol obligations
     @ampcor.export
     def cells(self):
         """
         Compute the number of pixels
         """
-        # my tile knows
-        return self.tile.size
 
 
     @ampcor.export
@@ -52,8 +41,6 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Compute my memory footprint, in bytes
         """
-        # compute and return
-        return self.tile.size * self.bytesPerCell
 
 
     @ampcor.export
@@ -61,20 +48,6 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Grant access to a slice of data of the given {shape} starting at {origin}
         """
-        # go through the indices that describe the {origin} of the slice
-        for idx in origin:
-            # if any of them are negative
-            if idx < 0:
-                # mark the slice as invalid
-                return None
-        # similarly, make sure that we don't overflow on the other end
-        for beg, shp, lim in zip(origin, shape, self.shape):
-            # if any of them do
-            if beg + shp > lim:
-                # mark this slice as invalid
-                return None
-        # if all goes well, make a slice and return it
-        return self.newSlice(raster=self, begin=origin, shape=shape)
 
 
     @ampcor.export
@@ -82,35 +55,14 @@ class SLC(ampcor.component, family="ampcor.dom.rasters.slc", implements=Raster):
         """
         Map me over the contents of my {data} file
         """
-        # deduce the raster type based on the read/wrote mode
-        newRaster = libampcor.ConstSLC if mode == "r" else libampcor.SLC
-        # build the raster
-        self.raster = newRaster(uri=self.data, shape=self.shape)
-        # all done
-        return self
 
 
     # metamethods
     def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
-        # make a tile out of my shape
-        self.tile = ampcor.grid.tile(shape=self.shape)
         # all done
         return
-
-
-    def __getitem__(self, index):
-        """
-        Fetch the pixel at the given {index}
-        """
-        # ask my raster
-        return self.raster[index]
-
-
-    # implementation details
-    # private data
-    raster = None  # set by {open}
 
 
 # end of file

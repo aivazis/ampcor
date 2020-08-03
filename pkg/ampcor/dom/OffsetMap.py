@@ -10,12 +10,11 @@
 import ampcor
 # the extension
 from ampcor.ext import ampcor as libampcor
-# my protocol
-from .Raster import Raster
 
 
 # declaration
-class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implements=Raster):
+class OffsetMap(ampcor.flow.product,
+                family="ampcor.products.offsets.offsets", implements=ampcor.specs.offsets):
     """
     Access to the data of an offset map
     """
@@ -59,14 +58,9 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
 
 
     # meta-methods
-    def __init__(self, shape, layout=None, **kwds):
+    def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
-        # storage
-        self.domain = []
-        self.codomain = []
-        # access as a Cartesian map
-        self.tile = ampcor.grid.tile(shape=shape, layout=layout)
         # all done
         return
 
@@ -75,36 +69,12 @@ class OffsetMap(ampcor.component, family="ampcor.dom.rasters.offsets", implement
         """
         Return the pair of correlated points stored at {index}
         """
-        # ask my tile for the offset
-        offset = self.tile.offset(index)
-        # pull the corresponding points
-        ref = self.domain[offset]
-        sec = self.codomain[offset]
-        # and return them
-        return (ref, sec)
 
 
     def __setitem__(self, index, points):
         """
         Establish a correlation between the reference and secondary {points} at {index}
         """
-        # ask my tile for the offset
-        offset = self.tile.offset(index)
-        # unpack the points
-        ref, sec = points
-        # store them
-        self.domain[offset] = ref
-        self.codomain[offset] = sec
-        # all done
-        return
-
-
-    def __len__(self):
-        """
-        Compute my length
-        """
-        # delegate to the corresponding property
-        return self.cells
 
 
 # end of file
