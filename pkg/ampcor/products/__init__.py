@@ -11,7 +11,8 @@ import ampcor
 
 
 # data product foundries; these get used by the framework during component binding
-@ampcor.foundry(implements=raster, tip="an SLC raster image")
+@ampcor.foundry(implements=ampcor.specs.slc,
+                tip="an SLC raster image")
 def slc():
     # get the component
     from .SLC import SLC
@@ -21,7 +22,8 @@ def slc():
     return SLC
 
 
-@ampcor.foundry(implements=raster, tip="an offset map from a reference to a secondary raster")
+@ampcor.foundry(implements=ampcor.specs.offsets,
+                tip="an offset map from a reference to a secondary raster")
 def offsets():
     # get the component
     from .OffsetMap import OffsetMap
