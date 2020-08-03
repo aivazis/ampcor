@@ -18,6 +18,8 @@ from pyre import (
     nexus,
     # support for multidimensional containers
     grid,
+    # workflow products and fatories
+    flow,
     # miscellaneous
     primitives, tracking, units
     )
