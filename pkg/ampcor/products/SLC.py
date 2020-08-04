@@ -65,4 +65,20 @@ class SLC(ampcor.flow.product,
         return
 
 
+    # implementation details
+    def show(self, indent, margin):
+        """
+        Generate a report of my configuration
+        """
+        # my info
+        yield f"{margin}name: {self.pyre_name}"
+        yield f"{margin}family: {self.pyre_family()}"
+        yield f"{margin}data: {self.data}"
+        yield f"{margin}shape: {self.shape}"
+        yield f"{margin}pixels: {self.cells()}"
+        yield f"{margin}footprint: {self.bytes()} bytes"
+        # all done
+        return
+
+
 # end of file
