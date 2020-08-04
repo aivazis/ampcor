@@ -38,6 +38,7 @@ from . import shells         # the supported application shells
 from . import cli            # the command line interface
 from . import specs          # the product specifications
 from . import products       # the product implementations
+from . import workflows      # the package workflows
 from . import correlators    # the image correlators
 
 
