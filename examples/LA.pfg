@@ -5,6 +5,18 @@
 ;
 
 
+; workflow configuration
+LA:
+    ; reference raster
+    reference = slc#20061231
+    ; secondary raster
+    secondary = slc#20070215
+    ; the output of this process, configured above
+    offsetMap = offsets#dense
+    ; the factory
+    correlator = mga#tiles.tiny
+
+
 ; inputs
 ; the reference raster
 20061231:
@@ -36,23 +48,6 @@ ampcor.plexus:
         hosts = 1 ; number of hosts
         tasks = 1 ; number of tasks per host
         gpus = 0  ; number of gpus per task
-
-    ; workflow
-    offsets.flow = #la-basin
-
-
-; configuration for the offset estimator action
-la-basin:
-    ; reference image: an SLC instance named {ref}, configured above
-    ; the setting below is equivalent to
-    ;    reference = ampcor.dom.rasters.slc#ref
-    reference = slc#20061231
-    ; secondary image: an SLC instance named {sec}, configured above
-    secondary = slc#20070215
-    ; the output of this process, configured above
-    offsetMap = offsets#dense
-    ; correlator: see further below for configuration details
-    correlator = mga#tiles.tiny
 
 
 ; correlator that uses large chips
