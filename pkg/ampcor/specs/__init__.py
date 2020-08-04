@@ -10,9 +10,11 @@
 from .SLC import SLC as slc
 from .OffsetMap import OffsetMap as offsets
 
-
 # publish the factory specs
 from .Correlator import Correlator as correlator
+
+# publish the workflow
+from .Ampcor import Ampcor as ampcor
 
 
 # end of file
