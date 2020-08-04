@@ -20,23 +20,7 @@ class MGA(ampcor.flow.factory,
     MGA's implementation of the offset field estimator
     """
 
-
-    # input data products
-    reference = ampcor.specs.slc()
-    reference.doc = "the reference raster image"
-
-    secondary = ampcor.specs.slc()
-    secondary.doc = "the secondary raster image"
-
-    # the output data product
-    offsets = ampcor.specs.offsets()
-    offsets.doc = "the offset map from the reference to the secondary raster"
-
-
     # user configurable state
-    coarse = ampcor.correlators.offsets()
-    coarse.doc = "the initial guess for the offset map"
-
     # control over the correlation plan
     chip = ampcor.properties.tuple(schema=ampcor.properties.int())
     chip.default = 128, 128
@@ -56,9 +40,20 @@ class MGA(ampcor.flow.factory,
     zoomFactor.doc = "refinement factor for the fine correlation hyper-matrix"
 
 
+    # inputs
+    reference = ampcor.specs.slc.input()
+    reference.doc = "the reference raster"
+
+    secondary = ampcor.specs.slc.input()
+    secondary.doc = "the secondary raster"
+
+    # output
+    offsets = ampcor.specs.offsets.output()
+    offsets.doc = "the offset map from the reference to the secondary raster"
+
+
     # types
     from .Plan import Plan as newPlan
-
 
     # protocol obligations
     @ampcor.provides
@@ -175,11 +170,11 @@ class MGA(ampcor.flow.factory,
         # and the search window padding
         yield f"{margin}{indent}padding: {self.padding}"
 
-        # describe my coarse map strategy
-        yield from self.coarse.show(indent, margin=margin+indent)
-
         # MGA: mark
         return
+
+        # describe my coarse map strategy
+        yield from self.coarse.show(indent, margin=margin+indent)
 
         # make a plan
         plan = self.makePlan()
