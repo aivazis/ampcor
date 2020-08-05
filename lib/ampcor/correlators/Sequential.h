@@ -28,14 +28,14 @@ public:
     using const_pointer = const value_type *;
 
     // tile shape
-    using shape_type = typename spec_type::shape_type;
-    using shape_const_reference = const shape_type &;
+    using shape_type = typename product_type::shape_type;
+    using shape_const_reference = typename product_type::shape_const_reference;
     // tile layout
     using layout_type = typename spec_type::layout_type;
-    using layout_const_reference = const layout_type &;
+    using layout_const_reference = typename spec_type::layout_const_reference;
     // indices
-    using index_type = typename spec_type::index_type;
-    using index_const_reference = const index_type &;
+    using index_type = typename product_type::index_type;
+    using index_const_reference = typename product_type::index_const_reference;
 
     // the size of things
     using size_type = size_t;
