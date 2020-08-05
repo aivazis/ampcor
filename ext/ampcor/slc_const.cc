@@ -106,17 +106,6 @@ slc_const(py::module &m) {
              // the docstring
              "access the data at the given offset"
              )
-
-        // the static interface
-        // the size of a pixel in bytes
-        .def_property_readonly_static("bytesPerCell",
-                                      // the getter
-                                      [] (py::object) -> size_t {
-                                          return slc_t::bytesPerCell();
-                                      },
-                                      // the docstring
-                                      "the size of an SLC pixel"
-                                      )
         // done
         ;
 
@@ -134,9 +123,11 @@ slc_const_constructor(py::tuple pyShape, py::object pyURI) -> unique_pointer<slc
     int lines = py::int_(pyShape[0]);
     int samples = py::int_(pyShape[1]);
     // make a shape
-    slc_t::spec_type::shape_type shape {lines, samples};
-    // make a product specification out of the shape
-    slc_t::spec_type spec { shape };
+    slc_t::shape_type shape {lines, samples};
+    // turn it into a layout
+    slc_t::spec_type::layout_type layout { shape };
+    // make a product specification out of the layout
+    slc_t::spec_type spec { layout };
 
     // convert the path-like object into a string
     // get {os.fspath}
