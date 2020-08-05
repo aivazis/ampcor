@@ -90,17 +90,6 @@ offsets(py::module &m) {
              // the docstring
              "access the data at the given offset"
              )
-
-        // the static interface
-        // the size of a pixel in bytes
-        .def_property_readonly_static("bytesPerCell",
-                                      // the getter
-                                      [] (py::object) -> size_t {
-                                          return offsets_t::bytesPerCell();
-                                      },
-                                      // the docstring
-                                      "the size of an offset map pixel"
-                                      )
         // done
         ;
 
@@ -118,9 +107,11 @@ offsets_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique
     int lines = py::int_(pyShape[0]);
     int samples = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::spec_type::shape_type shape {lines, samples};
-    // make a product specification out of the shape
-    offsets_t::spec_type spec { shape };
+    offsets_t::shape_type shape {lines, samples};
+    // turn it into a layout
+    offsets_t::layout_type layout { shape };
+    // make a product specification out of the layout
+    offsets_t::spec_type spec { layout };
 
     // convert the path-like object into a string
     // get {os.fspath}
