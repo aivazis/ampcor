@@ -39,7 +39,8 @@ namespace ampcor::dom {
 
     // pull {pyre::grid:grid_t}, with a twist
     template <class specT, template <typename, bool> class storageT, bool isReadOnly = true>
-    using grid_t = pyre::grid::grid_t<specT, storageT<typename specT::pixel_type, isReadOnly>>;
+    using grid_t = pyre::grid::grid_t<typename specT::layout_type,
+                                      storageT<typename specT::pixel_type, isReadOnly>>;
 }
 
 #endif
