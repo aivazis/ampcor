@@ -33,4 +33,15 @@ def offsets():
     return OffsetMap
 
 
+# factories
+def newSLC(**kwds):
+    """
+    Build a new SLC
+    """
+    # get the product
+    from .SLC import SLC
+    # build one and return it
+    return SLC(**kwds)
+
+
 # end of file
