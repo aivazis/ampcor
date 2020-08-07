@@ -8,8 +8,6 @@
 #include "external.h"
 // namespace setup
 #include "forward.h"
-
-
 // libampcor
 #include <ampcor/dom.h>
 #include <ampcor/correlators.h>
