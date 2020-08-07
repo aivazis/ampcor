@@ -17,7 +17,7 @@
 #include <ampcor/correlators.h>
 
 // type aliases
-using slc_t = ampcor::dom::slc_const_t;
+using slc_t = ampcor::dom::slc_const_raster_t;
 using sequential_t = ampcor::correlators::sequential_t<slc_t>;
 using sequential_reference = sequential_t &;
 
