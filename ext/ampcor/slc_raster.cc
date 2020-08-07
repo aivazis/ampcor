@@ -17,7 +17,7 @@
 
 
 // type aliases
-using slc_t = ampcor::dom::slc_t;
+using slc_t = ampcor::dom::slc_raster_t;
 
 // helpers
 namespace ampcor::py {
@@ -32,7 +32,7 @@ void
 ampcor::py::
 slc(py::module &m) {
     // the SLC interface
-    py::class_<dom::slc_t>(m, "SLC")
+    py::class_<slc_t>(m, "SLCRaster")
         // constructor
         .def(
              // the constructor wrapper
