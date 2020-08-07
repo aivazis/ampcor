@@ -28,7 +28,7 @@ namespace ampcor::py {
 // add bindings to SLC rasters
 void
 ampcor::py::
-slc(py::module &m) {
+slc_raster(py::module &m) {
     // the SLC interface
     py::class_<slc_t>(m, "SLCRaster")
         // constructor

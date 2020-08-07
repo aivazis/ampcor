@@ -21,8 +21,8 @@ PYBIND11_MODULE(ampcor, m) {
     ampcor::py::exceptions(m);
 
     // slc products
-    ampcor::py::slc(m);
-    ampcor::py::slc_const(m);
+    ampcor::py::slc_raster(m);
+    ampcor::py::slc_const_raster(m);
 
     // offset maps
     ampcor::py::offsets(m);
