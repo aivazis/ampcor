@@ -10,8 +10,6 @@
 #include "forward.h"
 
 
-// grid + memory
-#include <p2/grid.h>
 // libampcor
 #include <ampcor/dom.h>
 
