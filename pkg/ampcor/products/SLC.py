@@ -8,8 +8,6 @@
 
 # the framework
 import ampcor
-# the extension
-from ampcor.ext import ampcor as libampcor
 
 
 # declaration
@@ -22,6 +20,7 @@ class SLC(ampcor.flow.product,
 
     # public data
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
+    shape.default = (0,0)
     shape.doc = "the shape of the raster in pixels"
 
     data = ampcor.properties.path()
@@ -34,6 +33,8 @@ class SLC(ampcor.flow.product,
         """
         Compute the number of pixels
         """
+        # ask my spec; it knows
+        return self.spec.cells
 
 
     @ampcor.export
@@ -41,6 +42,8 @@ class SLC(ampcor.flow.product,
         """
         Compute my memory footprint, in bytes
         """
+        # ask my spec; it knows
+        return self.spec.bytes
 
 
     @ampcor.export
@@ -61,6 +64,10 @@ class SLC(ampcor.flow.product,
     def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
+        # load my product spec
+        self.spec = ampcor.libampcor.SLC(shape=self.shape)
+        # i get a raster when i'm attached to a file
+        self.raster = None
         # all done
         return
 
