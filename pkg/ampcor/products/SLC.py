@@ -58,6 +58,37 @@ class SLC(ampcor.flow.product,
         """
         Map me over the contents of my {data} file
         """
+        # if we are opening in read-only mode
+        if mode == "r":
+            # make a const raster
+            raster = ampcor.libampcor.SLCConstRaster(shape=self.shape, uri=self.data)
+        # if we are opening an existing one in read/write mode
+        elif mode == "w":
+            # make a modifiable raster
+            raster = ampcor.libampcor.SLCRaster(shape=self.shape, uri=self.data, new=False)
+        # if we are creating one
+        elif mode == "n":
+            # make a new raster; careful: this deletes existing products
+            raster = ampcor.libampcor.SLCRaster(shape=self.shape, uri=self.data, new=True)
+        # otherwise
+        else:
+            # grab the journal
+            import journal
+            # make a channel
+            channel = journal.error("ampcor.products.slc")
+            # and complain
+            channel.line(f"unknown mode '{mode}'")
+            channel.line(f"  while opening '{self.data}'")
+            channel.line(f"  in ampcor.products.SLC.open();")
+            channel.line(f"  valid modes are: 'r', 'w', 'n'")
+            channel.log()
+            # just in case errors are non-fatal
+            raster = None
+
+        # make the raster and attach it
+        self.raster = raster
+        # all done
+        return self
 
 
     # metamethods
