@@ -26,7 +26,7 @@ def test():
     # journal.debug("ampcor.slc").activate()
 
     # create an SLC
-    slc = ampcor.dom.newSLC(name="ref")
+    slc = ampcor.products.newSLC(name="ref")
     # load the data
     slc.open()
 

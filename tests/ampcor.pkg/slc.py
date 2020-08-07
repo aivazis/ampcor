@@ -17,7 +17,7 @@ def test():
     import ampcor
 
     # create a boring SLC
-    slc = ampcor.dom.slc()
+    slc = ampcor.products.newSLC(name="ref")
 
     # all done
     return 0

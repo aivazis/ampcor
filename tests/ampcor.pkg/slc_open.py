@@ -18,23 +18,34 @@ def test():
     # and the journal
     import journal
 
+    # make a channel
+    channel = journal.debug("ampcor.slc")
+
     # activate some channels
+    # channel.activate()
     # journal.debug("pyre.memory.direct").activate()
 
-    # make one
-    channel = journal.debug("ampcor.slc")#.activate()
-
     # create an SLC
-    slc = ampcor.dom.newSLC(name="ref")
+    slc = ampcor.products.newSLC(name="ref")
 
     # verify the configuration
     assert slc.shape == (36864, 10344)
     assert slc.data == ampcor.primitives.path("../../data/20061231.slc")
 
-    # show me its size
-    channel.log(f"slc: {slc.cells()} cells, in {slc.bytes()/1024**3:.3f} Gb")
+    # show me
+    channel.line(f"slc:")
+    for line in slc.show(indent=" "*2, margin=" "*2):
+        channel.line(line)
+    channel.log()
+
+    # verify the raster is trivial before opening the payload
+    assert slc.raster is None
     # load some real data
     slc.open()
+    # verify the raster is now non-trivial
+    assert slc.raster is not None
+    # and in fact it is an instance of the slc raster object from {libampcor}
+    assert isinstance(slc.raster, ampcor.libampcor.SLCConstRaster)
 
     # all done
     return 0
