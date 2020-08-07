@@ -41,6 +41,9 @@ from . import products       # the product implementations
 from . import workflows      # the package workflows
 from . import correlators    # the image correlators
 
+# get the bindings
+from .ext import libampcor
+from .ext import libampcor_cuda
 
 # administrivia
 def copyright():
