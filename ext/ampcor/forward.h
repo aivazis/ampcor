@@ -15,9 +15,10 @@ namespace ampcor::py {
     // exceptions
     void exceptions(py::module &);
 
-    // access to SLC instances
+    // SLC
     void slc(py::module &);
-    void slc_const(py::module &);
+    void slc_raster(py::module &);
+    void slc_const_raster(py::module &);
 
     // offset maps
     void offsets(py::module &);

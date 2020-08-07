@@ -20,7 +20,8 @@ PYBIND11_MODULE(ampcor, m) {
     // register the exception types
     ampcor::py::exceptions(m);
 
-    // slc products
+    // slc
+    ampcor::py::slc(m);
     ampcor::py::slc_raster(m);
     ampcor::py::slc_const_raster(m);
 
