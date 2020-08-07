@@ -11,7 +11,10 @@
 
 // publicly visible types
 namespace ampcor::dom {
-    // slc products
+    // slc
+    // the spec
+    using slc_t = SLC;
+    // the rasters
     using slc_raster_t = Product<SLC, false>;       // read/write
     using slc_const_raster_t = Product<SLC, true>;  // read only
 
