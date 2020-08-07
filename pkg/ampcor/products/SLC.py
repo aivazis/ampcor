@@ -103,6 +103,18 @@ class SLC(ampcor.flow.product,
         return
 
 
+    def __getitem__(self, idx):
+        # ask the raster
+        return self.raster[idx]
+
+
+    def __setitem__(self, idx, pixel):
+        # delegate to the raster
+        self.raster[idx] = pixel
+        # all done
+        return
+
+
     # implementation details
     def show(self, indent, margin):
         """
