@@ -19,7 +19,7 @@ using slc_t = ampcor::dom::slc_raster_t;
 namespace ampcor::py {
     // the constructor
     inline auto
-    slc_constructor(py::tuple, py::object, size_t) -> unique_pointer<slc_t>;
+    slc_constructor(py::tuple, py::object, bool) -> unique_pointer<slc_t>;
 }
 
 
@@ -32,12 +32,12 @@ slc_raster(py::module &m) {
         // constructor
         .def(
              // the constructor wrapper
-             py::init([](py::tuple shape, py::object uri, size_t cells) {
+             py::init([](py::tuple shape, py::object uri, bool create) {
                           // ask the helper
-                          return slc_constructor(shape, uri, cells);
+                          return slc_constructor(shape, uri, create);
                       }),
              // the signature
-             "shape"_a, "uri"_a, "cells"_a
+             "shape"_a, "uri"_a, "new"_a
              )
 
         // accessors
@@ -116,7 +116,7 @@ slc_raster(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-slc_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique_pointer<slc_t>
+slc_constructor(py::tuple pyShape, py::object pyURI, bool create) -> unique_pointer<slc_t>
 {
     // extract the shape
     int lines = py::int_(pyShape[0]);
@@ -134,8 +134,16 @@ slc_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique_poi
     // call it and convert its return value into a string
     string_t filename = py::str(fspath(pyURI));
 
-    // build the product and return it
-    return std::unique_ptr<slc_t>(new slc_t(spec, filename, cells));
+    // if we are supposed to create a new one
+    if (create) {
+        // compute the number of cells
+        size_t cells = lines*samples;
+        // build the product and return it
+        return std::unique_ptr<slc_t>(new slc_t(spec, filename, cells));
+    }
+
+    // otherwise, just open an existing one in read/write mode
+    return std::unique_ptr<slc_t>(new slc_t(spec, filename, true));
 }
 
 
