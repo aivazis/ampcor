@@ -22,6 +22,10 @@ class MGA(ampcor.flow.factory,
 
 
     # user configurable state
+    # control over the placement of the initial guesses
+    cover = ampcor.correlators.cover()
+    cover.doc = "the strategy for generating the initial guesses"
+
     # control over the correlation plan
     chip = ampcor.properties.tuple(schema=ampcor.properties.int())
     chip.default = 128, 128
@@ -165,7 +169,9 @@ class MGA(ampcor.flow.factory,
         Generate a report of my configuration
         """
         # show who i am
-        yield f"{margin}estimator: {self.pyre_family()}"
+        yield f"{margin}estimator:"
+        yield f"{margin}{indent}name: {self.pyre_name}"
+        yield f"{margin}{indent}family: {self.pyre_family()}"
         # display the reference chip size
         yield f"{margin}{indent}chip: {self.chip}"
         # the search window padding
@@ -177,12 +183,11 @@ class MGA(ampcor.flow.factory,
         # the zoom factor
         yield f"{margin}{indent}zoom factor: {self.zoomFactor}"
 
+        # describe my coarse map strategy
+        yield from self.cover.show(indent, margin=margin+indent)
+
         # MGA: mark
         return
-
-        # describe my coarse map strategy
-        yield from self.coarse.show(indent, margin=margin+indent)
-
         # make a plan
         plan = self.makePlan()
         # and show me the plan details
