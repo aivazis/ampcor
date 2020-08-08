@@ -16,6 +16,14 @@
 using slc_t = ampcor::dom::slc_t;
 
 
+// helpers
+namespace ampcor::py {
+    // the constructor
+    inline auto
+    slc_constructor(py::tuple) -> slc_t;
+}
+
+
 // add bindings to the SLC product spec
 void
 ampcor::py::
@@ -26,15 +34,8 @@ slc(py::module &m) {
         .def(
              // the constructor wrapper
              py::init([](py::tuple pyShape) {
-                          // extract the shape
-                          int lines = py::int_(pyShape[0]);
-                          int samples = py::int_(pyShape[1]);
-                          // make a shape
-                          slc_t::layout_type::shape_type shape {lines, samples};
-                          // turn it into a layout
-                          slc_t::layout_type layout { shape };
-                          // make a product specification out of the layout and return it
-                          return slc_t { layout };
+                          // get the helper to do its thing
+                          return slc_constructor(pyShape);
                       }),
              // the signature
              "shape"_a
@@ -60,6 +61,23 @@ slc(py::module &m) {
 
     // all done
     return;
+}
+
+
+// helper definitions
+auto
+ampcor::py::
+slc_constructor(py::tuple pyShape) -> slc_t
+{
+    // extract the shape
+    int lines = py::int_(pyShape[0]);
+    int samples = py::int_(pyShape[1]);
+    // make a shape
+    slc_t::layout_type::shape_type shape {lines, samples};
+    // turn it into a layout
+    slc_t::layout_type layout { shape };
+    // make a product specification out of the layout and return it
+    return slc_t { layout };
 }
 
 
