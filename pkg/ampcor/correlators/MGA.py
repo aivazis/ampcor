@@ -20,6 +20,7 @@ class MGA(ampcor.flow.factory,
     MGA's implementation of the offset field estimator
     """
 
+
     # user configurable state
     # control over the correlation plan
     chip = ampcor.properties.tuple(schema=ampcor.properties.int())
@@ -39,7 +40,6 @@ class MGA(ampcor.flow.factory,
     zoomFactor = ampcor.properties.int(default=8)
     zoomFactor.doc = "refinement factor for the fine correlation hyper-matrix"
 
-
     # inputs
     reference = ampcor.specs.slc.input()
     reference.doc = "the reference raster"
@@ -54,6 +54,7 @@ class MGA(ampcor.flow.factory,
 
     # types
     from .Plan import Plan as newPlan
+
 
     # protocol obligations
     @ampcor.provides
@@ -167,8 +168,14 @@ class MGA(ampcor.flow.factory,
         yield f"{margin}estimator: {self.pyre_family()}"
         # display the reference chip size
         yield f"{margin}{indent}chip: {self.chip}"
-        # and the search window padding
+        # the search window padding
         yield f"{margin}{indent}padding: {self.padding}"
+        # the refinement factor
+        yield f"{margin}{indent}refinement factor: {self.refineFactor}"
+        # the refinement margin
+        yield f"{margin}{indent}refinement margin: {self.refineMargin}"
+        # the zoom factor
+        yield f"{margin}{indent}zoom factor: {self.zoomFactor}"
 
         # MGA: mark
         return
