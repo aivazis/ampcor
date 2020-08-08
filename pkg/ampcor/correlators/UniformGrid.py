@@ -22,20 +22,12 @@ class UniformGrid(ampcor.component,
     """
 
 
-    # user configurable state
-    shape = ampcor.properties.tuple(schema=ampcor.properties.int())
-    shape.default = (1,1)
-    shape.doc = "the shape of the grid of points to generate"
-
-
     # protocol requirements
     @ampcor.export
-    def points(self, bounds, **kwds):
+    def points(self, shape, bounds, **kwds):
         """
         Generate a cloud of points within {bounds} where reference tiles will be placed
         """
-        # get my shape
-        shape = self.shape
         # split {bounds} into evenly spaced tiles
         tile = tuple(b//s for b,s in zip(bounds, shape))
         # compute the unallocated border around the raster
@@ -59,8 +51,9 @@ class UniformGrid(ampcor.component,
         Display my configuration
         """
         # show who i am
-        yield f"{margin}domain: {self.pyre_family()}"
-        yield f"{margin}{indent}shape: {self.shape}"
+        yield f"{margin}domain:"
+        yield f"{margin}{indent}name: {self.pyre_name}"
+        yield f"{margin}{indent}family: {self.pyre_family()}"
         # all done
         return
 
