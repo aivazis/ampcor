@@ -10,12 +10,11 @@
 import itertools
 # framework
 import ampcor
-# my protocol
-from .Offsets import Offsets
 
 
 # declaration
-class Grid(ampcor.component, family="ampcor.correlators.offsets.grid", implements=Offsets):
+class Grid(ampcor.component,
+           family="ampcor.correlators.covers.grid", implements=ampcor.correlators.cover):
     """
     A generator of a Cartesian grid of initial guesses for the offset map
     """

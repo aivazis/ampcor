@@ -13,7 +13,7 @@ import ampcor
 # the protocols
 from .Domain import Domain as domain
 from .Functor import Functor as functor
-from .Offsets import Offsets as offsets
+from .Cover import Cover as cover
 
 
 # correlation strategies
@@ -29,7 +29,7 @@ def mga():
 
 
 # strategies for placing tiles on the reference and secondary rasters
-@ampcor.foundry(implements=offsets, tip="a grid based generator of a coarse offset map")
+@ampcor.foundry(implements=cover, tip="a grid based generator of a coarse offset map")
 def grid():
     # get the action
     from .Grid import Grid
@@ -51,7 +51,7 @@ def uniform():
 
 
 # generators of points on the secondary raster
-@ampcor.foundry(implements=offsets, tip="a functor that applies a constant shift")
+@ampcor.foundry(implements=functor, tip="a functor that applies a constant shift")
 def constant():
     # get the action
     from .Constant import Constant

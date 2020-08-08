@@ -11,7 +11,7 @@ import ampcor
 
 
 # declaration
-class Offsets(ampcor.protocol, family="ampcor.correlators.offsets"):
+class Cover(ampcor.protocol, family="ampcor.correlators.covers"):
     """
     The protocol for initial guesses for the offset map
     """
