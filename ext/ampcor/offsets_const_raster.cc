@@ -29,7 +29,7 @@ void
 ampcor::py::
 offsets_const_raster(py::module &m) {
     // the Offsets interface
-    py::class_<offsets_t>(m, "ConstOffsets")
+    py::class_<offsets_t>(m, "OffsetsConstRaster")
         // constructor
         .def(
              // the constructor wrapper

@@ -21,7 +21,7 @@ using offsets_t = ampcor::dom::offsets_raster_t;
 namespace ampcor::py {
     // the constructor
     inline auto
-    offsets_constructor(py::tuple, py::object, size_t) -> unique_pointer<offsets_t>;
+    offsets_constructor(py::tuple, py::object, bool) -> unique_pointer<offsets_t>;
 }
 
 
@@ -30,16 +30,16 @@ void
 ampcor::py::
 offsets_raster(py::module &m) {
     // the Offsets interface
-    py::class_<offsets_t>(m, "Offsets")
+    py::class_<offsets_t>(m, "OffsetsRaster")
         // constructor
         .def(
              // the constructor wrapper
-             py::init([](py::tuple shape, py::object uri, size_t cells) {
+             py::init([](py::tuple shape, py::object uri, bool create) {
                           // ask the helper
-                          return offsets_constructor(shape, uri, cells);
+                          return offsets_constructor(shape, uri, create);
                       }),
              // the signature
-             "shape"_a, "uri"_a, "cells"_a
+             "shape"_a, "uri"_a, "new"_a
              )
 
         // accessors
@@ -99,13 +99,13 @@ offsets_raster(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-offsets_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique_pointer<offsets_t>
+offsets_constructor(py::tuple pyShape, py::object pyURI, bool create) -> unique_pointer<offsets_t>
 {
     // extract the shape
-    int lines = py::int_(pyShape[0]);
-    int samples = py::int_(pyShape[1]);
+    int rows = py::int_(pyShape[0]);
+    int cols = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::shape_type shape {lines, samples};
+    offsets_t::shape_type shape {rows, cols};
     // turn it into a layout
     offsets_t::layout_type layout { shape };
     // make a product specification out of the layout
@@ -117,8 +117,14 @@ offsets_constructor(py::tuple pyShape, py::object pyURI, size_t cells) -> unique
     // call it and convert its return value into a string
     string_t filename = py::str(fspath(pyURI));
 
-    // build the product and return it
-    return std::unique_ptr<offsets_t>(new offsets_t(spec, filename, cells));
+    // if we are supposed to create a new one
+    if (create) {
+        // build the product and return it
+        return std::unique_ptr<offsets_t>(new offsets_t(spec, filename, spec.cells()));
+    }
+
+    // otherwise, just open an existing one in read/write mode
+    return std::unique_ptr<offsets_t>(new offsets_t(spec, filename, true));
 }
 
 
