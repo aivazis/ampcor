@@ -85,8 +85,9 @@ class SLC(ampcor.flow.product,
             # just in case errors are non-fatal
             raster = None
 
-        # make the raster and attach it
+        # attach the raster
         self.raster = raster
+
         # all done
         return self
 

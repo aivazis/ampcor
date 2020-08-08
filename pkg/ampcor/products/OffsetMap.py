@@ -23,7 +23,7 @@ class OffsetMap(ampcor.flow.product,
     # public data
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
     shape.default = (0,0)
-    shape.doc = "the shape of the raster in pixels"
+    shape.doc = "the shape of the map"
 
     data = ampcor.properties.path()
     data.doc = "the path to my binary data"
@@ -87,8 +87,9 @@ class OffsetMap(ampcor.flow.product,
             # just in case errors are non-fatal
             raster = None
 
-        # make the raster and attach it
+        # attach the raster
         self.raster = raster
+
         # all done
         return self
 
