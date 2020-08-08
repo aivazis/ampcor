@@ -136,10 +136,8 @@ slc_constructor(py::tuple pyShape, py::object pyURI, bool create) -> unique_poin
 
     // if we are supposed to create a new one
     if (create) {
-        // compute the number of cells
-        size_t cells = lines*samples;
         // build the product and return it
-        return std::unique_ptr<slc_t>(new slc_t(spec, filename, cells));
+        return std::unique_ptr<slc_t>(new slc_t(spec, filename, spec.cells()));
     }
 
     // otherwise, just open an existing one in read/write mode
