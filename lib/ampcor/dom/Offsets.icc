@@ -56,6 +56,15 @@ shape() const -> layout_type::shape_type
 }
 
 
+constexpr auto
+ampcor::dom::Offsets::
+vars() -> size_type
+{
+    // my layout knows
+    return 7;
+}
+
+
 #endif
 
 // end of file

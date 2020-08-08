@@ -30,10 +30,10 @@ public:
     //     the (line,sample) from the reference image
     //     the pixel offsets into the secondary image
     //     the confidence of the map
-    //     a pair of metrics: SNR and covariance
-    using pixel_type = std::tuple<int, int, float, float, float, float>;
+    //     room for metrics: currently, SNR and covariance
+    using pixel_type = float;
     // my layout
-    using layout_type = layout_t<2>;
+    using layout_type = layout_t<3>;
     using layout_const_reference = const layout_type &;
     // size of things
     using size_type = typename layout_type::size_type;
@@ -51,6 +51,10 @@ public:
 
     constexpr auto layout() const -> layout_type;
     constexpr auto shape() const -> layout_type::shape_type;
+
+    // constants
+public:
+    static constexpr auto vars() -> size_type;
 
     // implementation details: data
 private:
