@@ -44,4 +44,14 @@ def newSLC(**kwds):
     return SLC(**kwds)
 
 
+def newOffsets(**kwds):
+    """
+    Build a new offsets map
+    """
+    # get the product
+    from .OffsetMap import OffsetMap
+    # build one and return it
+    return OffsetMap(**kwds)
+
+
 # end of file
