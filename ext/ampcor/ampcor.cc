@@ -26,6 +26,7 @@ PYBIND11_MODULE(ampcor, m) {
     ampcor::py::slc_const_raster(m);
 
     // offset maps
+    ampcor::py::offsets(m);
     ampcor::py::offsets_raster(m);
     ampcor::py::offsets_const_raster(m);
 
