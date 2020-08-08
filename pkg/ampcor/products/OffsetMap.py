@@ -22,6 +22,7 @@ class OffsetMap(ampcor.flow.product,
 
     # public data
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
+    shape.default = (0,0)
     shape.doc = "the shape of the raster in pixels"
 
     data = ampcor.properties.path()
@@ -34,6 +35,8 @@ class OffsetMap(ampcor.flow.product,
         """
         Compute the number of points
         """
+        # ask my spec; it knows
+        return self.spec.cells
 
 
     @ampcor.export
@@ -41,6 +44,8 @@ class OffsetMap(ampcor.flow.product,
         """
         Compute my memory footprint
         """
+        # ask my spec; it knows
+        return self.spec.bytes
 
 
     @ampcor.export
@@ -55,26 +60,69 @@ class OffsetMap(ampcor.flow.product,
         """
         Map me over the contents of {filename}
         """
+        # if we are opening in read-only mode
+        if mode == "r":
+            # make a const raster
+            raster = ampcor.libampcor.OffsetsConstRaster(shape=self.shape, uri=self.data)
+        # if we are opening an existing one in read/write mode
+        elif mode == "w":
+            # make a modifiable raster
+            raster = ampcor.libampcor.OffsetsRaster(shape=self.shape, uri=self.data, new=False)
+        # if we are creating one
+        elif mode == "n":
+            # make a new raster; careful: this deletes existing products
+            raster = ampcor.libampcor.OffsetsRaster(shape=self.shape, uri=self.data, new=True)
+        # otherwise
+        else:
+            # grab the journal
+            import journal
+            # make a channel
+            channel = journal.error("ampcor.products.slc")
+            # and complain
+            channel.line(f"unknown mode '{mode}'")
+            channel.line(f"  while opening '{self.data}'")
+            channel.line(f"  in ampcor.products.OffsetMap.open();")
+            channel.line(f"  valid modes are: 'r', 'w', 'n'")
+            channel.log()
+            # just in case errors are non-fatal
+            raster = None
+
+        # make the raster and attach it
+        self.raster = raster
+        # all done
+        return self
+
+
 
 
     # meta-methods
     def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
+        # load my product spec
+        self.spec = ampcor.libampcor.Offsets(shape=self.shape)
+        # i get a raster after {open}
+        self.raster = None
         # all done
         return
 
 
-    def __getitem__(self, index):
+    def __getitem__(self, idx):
         """
         Return the pair of correlated points stored at {index}
         """
+        # ask the raster
+        return self.raster[idx]
 
 
-    def __setitem__(self, index, points):
+    def __setitem__(self, idx, points):
         """
         Establish a correlation between the reference and secondary {points} at {index}
         """
+        # delegate to the raster
+        self.raster[idx] = points
+        # all done
+        return
 
 
     # implementation details
