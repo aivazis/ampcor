@@ -15,6 +15,11 @@
 // type aliases
 using offsets_t = ampcor::dom::offsets_t;
 
+// helpers
+namespace ampcor::py {
+    // the spec constructor
+    inline auto offsets_constructor(py::tuple) -> offsets_t;
+}
 
 // add bindings to the Offsets product spec
 void
@@ -26,15 +31,7 @@ offsets(py::module &m) {
         .def(
              // the constructor wrapper
              py::init([](py::tuple pyShape) {
-                          // extract the shape
-                          int lines = py::int_(pyShape[0]);
-                          int samples = py::int_(pyShape[1]);
-                          // make a shape
-                          offsets_t::layout_type::shape_type shape {lines, samples};
-                          // turn it into a layout
-                          offsets_t::layout_type layout { shape };
-                          // make a product specification out of the layout and return it
-                          return offsets_t { layout };
+                          return offsets_constructor(pyShape);
                       }),
              // the signature
              "shape"_a
@@ -60,6 +57,24 @@ offsets(py::module &m) {
 
     // all done
     return;
+}
+
+
+// helper definitions
+auto
+ampcor::py::
+offsets_constructor(py::tuple pyShape)
+    -> offsets_t
+{
+    // extract the shape
+    int rows = py::int_(pyShape[0]);
+    int cols = py::int_(pyShape[1]);
+    // make a shape
+    offsets_t::layout_type::shape_type shape {rows, cols, offsets_t::vars()};
+    // turn it into a layout
+    offsets_t::layout_type layout { shape };
+    // make a product specification out of the layout and return it
+    return offsets_t { layout };
 }
 
 
