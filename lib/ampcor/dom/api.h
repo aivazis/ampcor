@@ -15,12 +15,15 @@ namespace ampcor::dom {
     // the spec
     using slc_t = SLC;
     // the rasters
-    using slc_raster_t = Product<SLC, false>;       // read/write
-    using slc_const_raster_t = Product<SLC, true>;  // read only
+    using slc_raster_t = Product<SLC, false>;              // read/write
+    using slc_const_raster_t = Product<SLC, true>;         // read only
 
     // offset maps
-    using offsets_t = Product<Offsets, false>;      // read/write
-    using offsets_const_t = Product<Offsets, true>; // read only
+    // the spec
+    using offsets_t = Offsets;
+    // the rasters
+    using offsets_raster_t = Product<Offsets, false>;      // read/write
+    using offsets_const_raster_t = Product<Offsets, true>; // read only
 }
 
 #endif
