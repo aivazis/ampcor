@@ -14,7 +14,7 @@
 #include <ampcor/dom.h>
 
 // type aliases
-using offsets_t = ampcor::dom::offsets_const_t;
+using offsets_t = ampcor::dom::offsets_const_raster_t;
 
 // helpers
 namespace ampcor::py {
@@ -27,7 +27,7 @@ namespace ampcor::py {
 // add bindings to offset maps
 void
 ampcor::py::
-offsets_const(py::module &m) {
+offsets_const_raster(py::module &m) {
     // the Offsets interface
     py::class_<offsets_t>(m, "ConstOffsets")
         // constructor

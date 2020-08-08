@@ -21,8 +21,8 @@ namespace ampcor::py {
     void slc_const_raster(py::module &);
 
     // offset maps
-    void offsets(py::module &);
-    void offsets_const(py::module &);
+    void offsets_raster(py::module &);
+    void offsets_const_raster(py::module &);
 
     // access to the correlators
     void sequential(py::module &);

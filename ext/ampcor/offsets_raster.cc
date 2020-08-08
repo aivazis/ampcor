@@ -15,7 +15,7 @@
 
 
 // type aliases
-using offsets_t = ampcor::dom::offsets_t;
+using offsets_t = ampcor::dom::offsets_raster_t;
 
 // helpers
 namespace ampcor::py {
@@ -28,9 +28,9 @@ namespace ampcor::py {
 // add bindings to offset maps
 void
 ampcor::py::
-offsets(py::module &m) {
+offsets_raster(py::module &m) {
     // the Offsets interface
-    py::class_<dom::offsets_t>(m, "Offsets")
+    py::class_<offsets_t>(m, "Offsets")
         // constructor
         .def(
              // the constructor wrapper
