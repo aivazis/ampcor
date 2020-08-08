@@ -19,7 +19,7 @@ using slc_t = ampcor::dom::slc_raster_t;
 namespace ampcor::py {
     // the constructor
     inline auto
-    slc_constructor(py::tuple, py::object, bool) -> unique_pointer<slc_t>;
+    slc_raster_constructor(py::tuple, py::object, bool) -> unique_pointer<slc_t>;
 }
 
 
@@ -34,7 +34,7 @@ slc_raster(py::module &m) {
              // the constructor wrapper
              py::init([](py::tuple shape, py::object uri, bool create) {
                           // ask the helper
-                          return slc_constructor(shape, uri, create);
+                          return slc_raster_constructor(shape, uri, create);
                       }),
              // the signature
              "shape"_a, "uri"_a, "new"_a
@@ -116,7 +116,7 @@ slc_raster(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-slc_constructor(py::tuple pyShape, py::object pyURI, bool create) -> unique_pointer<slc_t>
+slc_raster_constructor(py::tuple pyShape, py::object pyURI, bool create) -> unique_pointer<slc_t>
 {
     // extract the shape
     int lines = py::int_(pyShape[0]);

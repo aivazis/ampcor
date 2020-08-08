@@ -20,7 +20,7 @@ using offsets_t = ampcor::dom::offsets_const_raster_t;
 namespace ampcor::py {
     // the constructor
     inline auto
-    offsets_const_constructor(py::tuple, py::object) -> unique_pointer<offsets_t>;
+    offsets_const_raster_constructor(py::tuple, py::object) -> unique_pointer<offsets_t>;
 }
 
 
@@ -34,7 +34,7 @@ offsets_const_raster(py::module &m) {
         .def(
              // the constructor wrapper
              py::init([](py::tuple shape, py::object uri) {
-                          return offsets_const_constructor(shape, uri);
+                          return offsets_const_raster_constructor(shape, uri);
                       }),
             // the signature
             "shape"_a, "uri"_a
@@ -97,13 +97,13 @@ offsets_const_raster(py::module &m) {
 // helper definitions
 auto
 ampcor::py::
-offsets_const_constructor(py::tuple pyShape, py::object pyURI) -> unique_pointer<offsets_t>
+offsets_const_raster_constructor(py::tuple pyShape, py::object pyURI) -> unique_pointer<offsets_t>
 {
     // extract the shape
-    int lines = py::int_(pyShape[0]);
-    int samples = py::int_(pyShape[1]);
+    int rows = py::int_(pyShape[0]);
+    int cols = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::shape_type shape {lines, samples};
+    offsets_t::shape_type shape {rows, cols, offsets_t::spec_type::vars()};
     // turn it into a layout
     offsets_t::layout_type layout { shape };
     // make a product specification out of the shape
