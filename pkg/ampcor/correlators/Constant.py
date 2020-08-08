@@ -49,6 +49,8 @@ class Constant(ampcor.component,
         """
         # show who i am
         yield f"{margin}functor: {self.pyre_family()}"
+        yield f"{margin}{indent}name: {self.pyre_name}"
+        yield f"{margin}{indent}family: {self.pyre_family()}"
         yield f"{margin}{indent}shift: {self.shift}"
         # all done
         return

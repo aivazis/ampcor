@@ -54,7 +54,9 @@ class Grid(ampcor.component,
         Display my configuration
         """
         # show who i am
-        yield f"{margin}offsets: {self.pyre_family()}"
+        yield f"{margin}initial cover generator:"
+        yield f"{margin}{indent}name: {self.pyre_name}"
+        yield f"{margin}{indent}family: {self.pyre_family()}"
         # show my domain
         yield from self.domain.show(indent=indent, margin=margin+indent)
         # and my codomain generator
