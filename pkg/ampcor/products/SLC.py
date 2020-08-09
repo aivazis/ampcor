@@ -18,13 +18,23 @@ class SLC(ampcor.flow.product,
     """
 
 
-    # public data
+    # user configurable state
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
     shape.default = (0,0)
     shape.doc = "the shape of the raster in pixels"
 
     data = ampcor.properties.path()
     data.doc = "the path to my binary data"
+
+
+    # public data
+    @property
+    def layout(self):
+        """
+        Get my layout
+        """
+        # ask the spec
+        return self.spec.layout
 
 
     # protocol obligations
@@ -51,6 +61,8 @@ class SLC(ampcor.flow.product,
         """
         Grant access to a slice of data of the given {shape} starting at {origin}
         """
+        # ask my spec
+        return self.spec.slice(origin, shape)
 
 
     @ampcor.export
