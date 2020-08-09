@@ -15,6 +15,8 @@ class Plan:
     """
     Encapsulation of the computational work necessary to refine an offset map between a
     {reference} and a {secondary} image
+
+    Plan builds two matching container of tiles that will be correlated against each other
     """
 
 
@@ -61,13 +63,14 @@ class Plan:
     def __init__(self, correlator, regmap, rasters, **kwds):
         # chain up
         super().__init__(**kwds)
-        # save my tile
-        self.tile = regmap.tile
 
         # get the reference tile size
         self.chip = correlator.chip
         # and the search window padding
         self.padding = correlator.padding
+        # make me tile so i can behave like a grid
+        self.tile = ampcor.grid.tile(shape=correlator.offsets.shape)
+
         # compute the secondary window shape
         self.window = tuple(c+2*p for c,p in zip(self.chip, self.padding))
 
@@ -117,7 +120,7 @@ class Plan:
         secondaryTiles = []
 
         # go through matching pairs of points in the initial guess
-        for ref, sec in zip(regmap.domain, regmap.codomain):
+        for ref, sec in zip(*regmap):
             # form the upper left hand corner of the reference tile
             origin = tuple(r - c//2 for r,c in zip(ref, chip))
             # attempt to make a slice; invalid specs get rejected by the slice factory
@@ -171,10 +174,12 @@ class Plan:
                 yield f"{margin}{indent}pair: {index}"
                 # show me the reference slice
                 yield f"{margin}{indent*2}ref:"
-                yield from ref.show(indent, margin=margin+3*indent)
+                yield f"{margin}{indent*3}origin: {tuple(ref.origin)}"
+                yield f"{margin}{indent*3}shape: {tuple(ref.shape)}"
                 # and the secondary slice
                 yield f"{margin}{indent*2}sec:"
-                yield from sec.show(indent, margin=margin+3*indent)
+                yield f"{margin}{indent*3}origin: {tuple(sec.origin)}"
+                yield f"{margin}{indent*3}shape: {tuple(sec.shape)}"
             # otherwise
             else:
                 # identify the pair as invalid

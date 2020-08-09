@@ -153,13 +153,9 @@ class MGA(ampcor.flow.factory,
         # pair up the rasters
         rasters = reference, secondary
         # get the coarse map
-        coarse = self.coarse.map(reference=reference)
-
-        # mark
-        raise NotImplementedError("must use the {offsets} product")
-
+        map = self.cover.map(bounds=reference.shape, shape=offsets.shape)
         # make a plan
-        plan = self.newPlan(correlator=self, regmap=coarse, rasters=rasters)
+        plan = self.newPlan(correlator=self, regmap=map, rasters=rasters)
         # and return it
         return plan
 
@@ -186,15 +182,13 @@ class MGA(ampcor.flow.factory,
         # describe my coarse map strategy
         yield from self.cover.show(indent, margin=margin+indent)
 
-        # MGA: mark
-        return
         # make a plan
         plan = self.makePlan()
         # and show me the plan details
         yield from plan.show(indent=indent, margin=margin+indent)
 
         # all done
-        return self
+        return
 
 
     # private data
