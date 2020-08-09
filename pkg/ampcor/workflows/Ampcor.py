@@ -70,7 +70,7 @@ class Ampcor(ampcor.flow.workflow,
         # bind
         cor.reference = ref
         cor.secondary = sec
-        cor.offsetMap = map
+        cor.offsets = map
 
         # all done
         return
