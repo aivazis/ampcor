@@ -30,22 +30,16 @@ class Grid(ampcor.component,
 
     # requirements
     @ampcor.export
-    def map(self, reference, **kwds):
+    def map(self, bounds, shape, **kwds):
         """
         Build an offset map between {reference} and {secondary}
         """
-        # get my domain
-        domain = self.domain
-        # and the functor that generates the codomain
-        functor = self.functor
-        # make a map
-        offmap = ampcor.dom.newOffsetMap(shape=domain.shape)
-        # generate the reference points and attach them as the domain of the offset map
-        offmap.domain = tuple(domain.points(bounds=reference.shape))
-        # invoke the map to generate the corresponding points on the secondary image
-        offmap.codomain = tuple(functor.codomain(domain=offmap.domain))
-        # all done
-        return offmap
+        # generate the set of points in the domain
+        p = tuple(self.domain.points(bounds=bounds, shape=shape))
+        # map them
+        q = tuple(self.functor.eval(points=p))
+        # pack and ship
+        return p, q
 
 
     # interface
