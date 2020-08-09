@@ -28,14 +28,14 @@ class Constant(ampcor.component,
 
     # protocol obligations
     @ampcor.export
-    def codomain(self, domain, **kwds):
+    def eval(self, points, **kwds):
         """
-        Given a sequence of points in {domain}, generate their images
+        Map the given set of {points} to their images under my transformation
         """
         # grab my {shift}
         shift = self.shift
         # go through the points
-        for point in domain:
+        for point in points:
             # apply the shift and yield the point
             yield tuple(p+s for p,s in zip(point, shift))
         # all done

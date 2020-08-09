@@ -19,9 +19,9 @@ class Functor(ampcor.protocol, family="ampcor.correlators.functors"):
 
     # requirements
     @ampcor.provides
-    def codomain(self, domain, **kwds):
+    def eval(self, points, **kwds):
         """
-        Given points on the {reference} raster in {domain}, generate their images in {secondary}
+        Map the given set of {points} to their images under my transformation
         """
 
 
