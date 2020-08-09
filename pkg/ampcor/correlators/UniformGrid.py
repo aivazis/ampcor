@@ -18,7 +18,7 @@ from .Domain import Domain as domain
 class UniformGrid(ampcor.component,
                   family="ampcor.correlators.domains.uniform", implements=domain):
     """
-    A domain that generates domain points on a uniform grid
+    A strategy that generates a uniform grid
     """
 
 
@@ -26,23 +26,23 @@ class UniformGrid(ampcor.component,
     @ampcor.export
     def points(self, shape, bounds, **kwds):
         """
-        Generate a cloud of points within {bounds} where reference tiles will be placed
+        Cover {bounds} with a grid of uniformly spaced points of the given {shape}
         """
         # split {bounds} into evenly spaced tiles
-        tile = tuple(b//s for b,s in zip(bounds, shape))
+        tile = (b//(s+1) for b,s in zip(bounds, shape))
         # compute the unallocated border around the raster
-        margin = tuple(b%s for b,s in zip(bounds, shape))
+        margin = (b%(s+1) for b,s in zip(bounds, shape))
         # build the sequences of coordinates for tile centers along each axis
-        ticks = tuple(
+        ticks = (
             # by generating the locations
-            tuple(m//2 + n*t + t//2 for n in range(g))
+            tuple(m//2 + (n+1)*t for n in range(g))
             # given the layout of each axis
             for g, m, t in zip(shape, margin, tile)
         )
         # their cartesian product generates the centers of all the tiles in the grid
-        centers = tuple(itertools.product(*ticks))
+        yield from itertools.product(*ticks)
         # all done
-        return centers
+        return
 
 
     # interface
