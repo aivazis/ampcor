@@ -28,11 +28,11 @@ namespace ampcor::py {
     // add a reference tile
     static inline auto
     addReferenceTile(sequential_t &, const slc_t &,
-                     size_t, py::tuple, py::tuple) -> sequential_reference;
+                     size_t, const slc_t::layout_type &) -> sequential_reference;
     // add a secondary tile
     static inline auto
     addSecondaryTile(sequential_t &, const slc_t &,
-                     size_t, py::tuple, py::tuple) -> sequential_reference;
+                     size_t, const slc_t::layout_type &) -> sequential_reference;
 }
 
 
@@ -55,12 +55,12 @@ sequential(py::module &m) {
         // add a reference tile
         .def("addReferenceTile",
              addReferenceTile,
-             "raster"_a, "tid"_a, "origin"_a, "shape"_a
+             "raster"_a, "tid"_a, "tile"_a
              )
         // add a secondary tile
         .def("addSecondaryTile",
              addSecondaryTile,
-             "raster"_a, "tid"_a, "origin"_a, "shape"_a
+             "raster"_a, "tid"_a, "tile"_a
              )
         // done
         ;
@@ -100,24 +100,10 @@ auto
 ampcor::py::
 addReferenceTile(sequential_t & worker,
                  const slc_t & raster,
-                 size_t tid, py::tuple pyOrigin, py::tuple pyShape) -> sequential_reference
+                 size_t tid, const slc_t::layout_type & chip) -> sequential_reference
 {
-    // alias for the index
-    using idx_t = slc_t::index_type;
-    // and the type of its ranks
-    using idx_rank_t = idx_t::value_type;
-    // make an index out of the origin
-    slc_t::index_type origin { pyOrigin[0].cast<idx_rank_t>(), pyOrigin[1].cast<idx_rank_t>() };
-
-    // alias for the shape
-    using shp_t = slc_t::shape_type;
-    // and the type of its ranks
-    using shp_rank_t = shp_t::value_type;
-    // make a shape out of the extent
-    slc_t::shape_type shape { pyShape[0].cast<shp_rank_t>(), pyShape[1].cast<shp_rank_t>() };
-
     // make the tile
-    auto tile = raster.tile(origin, shape);
+    auto tile = raster.tile(chip.origin(), chip.shape());
 
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.reference");
@@ -128,8 +114,8 @@ addReferenceTile(sequential_t & worker,
         << "    shape: " << raster.layout().shape() << pyre::journal::newline
         << "    data: " << raster.data().get() << pyre::journal::newline
         << "  spec: " << pyre::journal::newline
-        << "    origin: " << origin << pyre::journal::newline
-        << "    shape: " << shape << pyre::journal::newline
+        << "    origin: " << chip.origin() << pyre::journal::newline
+        << "    shape: " << chip.shape() << pyre::journal::newline
         << "  tile: " << pyre::journal::newline
         << "    origin: " << tile.layout().origin() << pyre::journal::newline
         << "    shape: " << tile.layout().shape() << pyre::journal::newline
@@ -149,24 +135,10 @@ auto
 ampcor::py::
 addSecondaryTile(sequential_t & worker,
                  const slc_t & raster,
-                 size_t tid, py::tuple pyOrigin, py::tuple pyShape) -> sequential_reference
+                 size_t tid, const slc_t::layout_type & chip) -> sequential_reference
 {
-    // alias for the index
-    using idx_t = slc_t::index_type;
-    // and the type of its ranks
-    using idx_rank_t = idx_t::value_type;
-    // make an index out of the origin
-    slc_t::index_type origin { pyOrigin[0].cast<idx_rank_t>(), pyOrigin[1].cast<idx_rank_t>() };
-
-    // alias for the shape
-    using shp_t = slc_t::shape_type;
-    // and the type of its ranks
-    using shp_rank_t = shp_t::value_type;
-    // make a shape out of the extent
-    slc_t::shape_type shape { pyShape[0].cast<shp_rank_t>(), pyShape[1].cast<shp_rank_t>() };
-
     // make the tile
-    auto tile = raster.tile(origin, shape);
+    auto tile = raster.tile(chip.origin(), chip.shape());
 
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.reference");
@@ -177,8 +149,8 @@ addSecondaryTile(sequential_t & worker,
         << "    shape: " << raster.layout().shape() << pyre::journal::newline
         << "    data: " << raster.data().get() << pyre::journal::newline
         << "  spec: " << pyre::journal::newline
-        << "    origin: " << origin << pyre::journal::newline
-        << "    shape: " << shape << pyre::journal::newline
+        << "    origin: " << chip.origin() << pyre::journal::newline
+        << "    shape: " << chip.shape() << pyre::journal::newline
         << "  tile: " << pyre::journal::newline
         << "    origin: " << tile.layout().origin() << pyre::journal::newline
         << "    shape: " << tile.layout().shape() << pyre::journal::newline
