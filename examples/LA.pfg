@@ -12,7 +12,7 @@ LA:
     ; secondary raster
     secondary = slc#20070215
     ; the output of this process, configured above
-    offsetMap = offsets#sparse
+    offsetMap = offsets#single
     ; the factory
     correlator = mga#tiles.tiny
 
@@ -33,7 +33,7 @@ LA:
     data = ../data/20070215.slc
 
 ; output
-; the offset map
+; a dense tiling
 dense:
     ; shape
     shape = 120, 40
@@ -41,7 +41,7 @@ dense:
     data = offsets_dense.dat
 
 
-; the offset map
+; a sparse tiling
 sparse:
     ; shape
     shape = 3,3
@@ -49,45 +49,16 @@ sparse:
     data = offsets_sparse.dat
 
 
-; overall application configuration
-ampcor.plexus:
-    ; machine layout
-    shell:
-        hosts = 1 ; number of hosts
-        tasks = 1 ; number of tasks per host
-        gpus = 0  ; number of gpus per task
+; a single tile
+single:
+    ; shape
+    shape = 1,1
+    ; pfs path to the file; currently left in the working directory
+    data = offsets_single.dat
 
 
 ; correlator that uses large chips
 tiles.large:
-    ; reference chip size
-    chip = 128, 128
-    ; padding used to form the search window in the secondary raster
-    padding = 32, 32
-    ; the refinement factor
-    refineFactor = 2
-    ; the refinement margin
-    refineMargin = 8
-    ; the zoom factor
-    zoomFactor = 8
-
-
-; correlator that uses large chips but a smaller grid
-tiles.medium:
-    ; reference chip size
-    chip = 128, 128
-    ; padding used to form the search window in the secondary raster
-    padding = 32, 32
-    ; the refinement factor
-    refineFactor = 2
-    ; the refinement margin
-    refineMargin = 8
-    ; the zoom factor
-    zoomFactor = 8
-
-
-; correlator that uses large chips and a huge grid
-tiles.huge:
     ; reference chip size
     chip = 128, 128
     ; padding used to form the search window in the secondary raster
@@ -105,7 +76,7 @@ tiles.small:
     ; reference chip size
     chip = 32, 32
     ; padding used to form the search window in the secondary raster
-    padding = 8, 8
+    padding = 4, 4
     ; the refinement factor
     refineFactor = 2
     ; the refinement margin
@@ -123,9 +94,18 @@ tiles.tiny:
     ; the refinement factor
     refineFactor = 2
     ; the refinement margin
-    refineMargin = 1
+    refineMargin = 0
     ; the zoom factor
     zoomFactor = 1
+
+
+; overall application configuration
+ampcor.plexus:
+    ; machine layout
+    shell:
+        hosts = 1 ; number of hosts
+        tasks = 1 ; number of tasks per host
+        gpus = 0  ; number of gpus per task
 
 
 ; end of file
