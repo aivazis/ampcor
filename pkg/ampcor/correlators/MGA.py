@@ -191,6 +191,17 @@ class MGA(ampcor.flow.factory,
         return
 
 
+    # flow hooks
+    @ampcor.export
+    def pyre_make(self, **kwds):
+        """
+        Build my outputs
+        """
+        # invoke me
+        # NYI: automate this
+        return self.estimate(**kwds)
+
+
     # private data
     timer = ampcor.executive.newTimer(name="ampcor.mga")
 
