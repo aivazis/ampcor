@@ -29,11 +29,8 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Produce an offset map between the {reference} and {secondary} images
         """
-        raise NotImplementedError("NYI!")
-        # set up the workflow
-        correlator = self.flow()
-        # and ask it to do its thing; {plexus} carries the runtime context, so pass it along
-        return correlator.estimate(plexus=plexus)
+        # invoke the workflow and return the execution status
+        return self.flow.pyre_make(plexus=plexus)
 
 
     @ampcor.export(tip="display my configuration")
