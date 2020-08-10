@@ -84,7 +84,7 @@ Sequential(size_type pairs,
     _offsets{ new value_type [2 * _pairs] }
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential");
+    pyre::journal::debug_t channel("ampcor.sequential.setup");
     // show me
     channel
         << pyre::journal::at(__HERE__)
@@ -200,7 +200,7 @@ ampcor::correlators::Sequential<productT>::
 addReferenceTile(size_t pid, product_const_reference ref)
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential");
+    pyre::journal::debug_t channel("ampcor.sequential.transfer");
     // sign on
     channel
         << "adding reference tile #" << pid << " to the arena"
@@ -219,8 +219,8 @@ addReferenceTile(size_t pid, product_const_reference ref)
 
     // tell me
     channel
-        << "copied " << ref.bytes() << " bytes from (" << *ref.layout().begin()
-        << ") to " << support
+        << "read+transformed+stored " << ref.cells() << " cells from (" << *ref.layout().begin()
+        << ") into " << ref.bytes()/2 << " bytes at "<< support
         << pyre::journal::endl(__HERE__);
 
     // all done
@@ -235,7 +235,7 @@ ampcor::correlators::Sequential<productT>::
 addSecondaryTile(size_t pid, product_const_reference sec)
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential");
+    pyre::journal::debug_t channel("ampcor.sequential.transfer");
     // sign on
     channel
         << "adding secondary tile #" << pid << " to the arena"
@@ -253,8 +253,8 @@ addSecondaryTile(size_t pid, product_const_reference sec)
 
     // tell me
     channel
-        << "copied " << sec.bytes() << " bytes from (" << *sec.layout().begin()
-        << ") to " << support
+        << "read+transformed+stored " << sec.cells() << " cells from (" << *sec.layout().begin()
+        << ") into " << sec.bytes()/2 << " bytes at "<< support
         << pyre::journal::endl(__HERE__);
 
     // all done
