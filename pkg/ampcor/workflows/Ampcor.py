@@ -34,17 +34,6 @@ class Ampcor(ampcor.flow.workflow,
     correlator.doc = "the calculator of the offset field"
 
 
-    # flow hooks
-    @ampcor.export
-    def pyre_make(self, **kwds):
-        """
-        Execute the workflow
-        """
-        raise NotImplementedError("NYI!")
-        # all done
-        return
-
-
     # metamethods
     def __init__(self, **kwds):
         # chain up
