@@ -66,9 +66,9 @@ class Sequential:
         # go through the valid (reference,secondary) tile pairs
         for idx, (r,s) in enumerate(plan.pairs):
             # load the reference tile
-            worker.addReferenceTile(raster=ref, tid=idx, origin=r.begin, shape=r.shape)
+            worker.addReferenceTile(raster=ref, tid=idx, tile=r)
             # load the secondary tile
-            worker.addReferenceTile(raster=sec, tid=idx, origin=s.begin, shape=s.shape)
+            worker.addSecondaryTile(raster=sec, tid=idx, tile=s)
         # stop the timer
         timer.stop()
         # show me
