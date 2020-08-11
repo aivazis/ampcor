@@ -97,6 +97,8 @@ tiles.tiny:
     refineMargin = 0
     ; the zoom factor
     zoomFactor = 1
+    ; configure the cover generator
+    cover.functor.shift = 1,2
 
 
 ; overall application configuration
