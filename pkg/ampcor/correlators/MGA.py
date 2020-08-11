@@ -81,8 +81,16 @@ class MGA(ampcor.flow.factory,
         # outputs
         offsets = self.offsets
 
+        # start the timer
+        timer.reset().start()
         # get the coarse map
         map = self.cover.map(bounds=reference.shape, shape=offsets.shape)
+        # initialize the output product
+        self.primeOffsets(map=map)
+        # stop the timer
+        timer.stop()
+        # show me
+        channel.log(f"  primed the offset map: {1e3 * timer.read():.3f} ms")
 
         # start the timer
         timer.reset().start()
@@ -119,6 +127,32 @@ class MGA(ampcor.flow.factory,
 
 
     # interface
+    def primeOffsets(self, map):
+        """
+        Initialize the offset map by recording the initial guesses
+        """
+        # get the output product and create its raster
+        offsets = self.offsets.open(mode="n")
+
+        # go through the pairs of corresponding points in tandem
+        for pair, (p, q) in enumerate(zip(*map)):
+            # form the shift that takes {p} into {q}
+            delta = q[0]-p[0], q[1]-p[1]
+            # get the entry
+            rec = offsets[pair]
+            # store the original point
+            rec.ref = p
+            # store the shift
+            rec.delta = delta
+            # zero out the other fields
+            rec.confidence = 0
+            rec.snr = 0
+            rec.covariance =0
+
+        # all done
+        return
+
+
     def makeWorker(self, layout):
         """
         Deduce the correlator implementation strategy
