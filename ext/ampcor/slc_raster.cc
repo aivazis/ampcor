@@ -79,7 +79,7 @@ slc_raster(py::module &m) {
         // data read access given an index
         .def("__getitem__",
              // convert the incoming tuple into an index and fetch the data
-             [](const slc_t & slc, py::tuple pyIdx) {
+             [](slc_t & slc, py::tuple pyIdx) -> slc_t::pixel_type & {
                  // type aliases
                  using index_t = slc_t::index_type;
                  using rank_t = slc_t::index_type::rank_type;
@@ -91,19 +91,23 @@ slc_raster(py::module &m) {
              // the signature
              "index"_a,
              // the docstring
-             "access the data at the given index"
+             "access the data at the given index",
+             // grant write access
+             py::return_value_policy::reference
              )
         // data read access given an offset
         .def("__getitem__",
              // delegate directly to the {slc_t}
-             [](const slc_t & slc, size_t offset) {
+             [](slc_t & slc, size_t offset) -> slc_t::pixel_type & {
                  // easy enough
                  return slc[offset];
              },
              // the signature
              "offset"_a,
              // the docstring
-             "access the data at the given offset"
+             "access the data at the given offset",
+             // grant write access
+             py::return_value_policy::reference
              )
         // done
         ;
