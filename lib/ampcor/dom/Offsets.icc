@@ -9,6 +9,15 @@
 #else
 
 
+// the definition of the map info
+struct ampcor::dom::Offsets::pixel_type {
+    std::pair<float, float> ref;
+    std::pair<float, float> shift;
+    float confidence;
+    float snr;
+    float covariance;
+};
+
 
 // metamethods
 // whole raster constructor
@@ -53,15 +62,6 @@ shape() const -> layout_type::shape_type
 {
     // my layout knows
     return _layout.shape();
-}
-
-
-constexpr auto
-ampcor::dom::Offsets::
-vars() -> size_type
-{
-    // my layout knows
-    return 7;
 }
 
 
