@@ -20,5 +20,12 @@ sec:
     ; shape
     shape = 36864,10344
 
+; offset map
+offsets:
+    ; pfs path to the data file
+    data = offsets.dat
+    ; shape
+    shape = 2,2
+
 
 ; end of file
