@@ -44,7 +44,7 @@ dense:
 ; a sparse tiling
 sparse:
     ; shape
-    shape = 3,3
+    shape = 5,3
     ; pfs path to the file; currently left in the working directory
     data = offsets_sparse.dat
 
