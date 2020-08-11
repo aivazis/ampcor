@@ -14,6 +14,9 @@
 
 // type aliases
 using slc_t = ampcor::dom::slc_t;
+using layout_t = slc_t::layout_type;
+using index_t = slc_t::layout_type::index_type;
+using shape_t = slc_t::layout_type::shape_type;
 
 
 // helpers
@@ -28,11 +31,6 @@ namespace ampcor::py {
 void
 ampcor::py::
 slc(py::module &m) {
-    // type aliases
-    using layout_t = slc_t::layout_type;
-    using index_t = slc_t::layout_type::index_type;
-    using shape_t = slc_t::layout_type::shape_type;
-
     // declare the product specification class
     auto pySLC = py::class_<slc_t>(m, "SLC");
     // embed its layout
