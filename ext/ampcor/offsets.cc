@@ -14,6 +14,8 @@
 
 // type aliases
 using offsets_t = ampcor::dom::offsets_t;
+using pixel_t = offsets_t::pixel_type;
+
 
 // helpers
 namespace ampcor::py {
@@ -25,8 +27,83 @@ namespace ampcor::py {
 void
 ampcor::py::
 offsets(py::module &m) {
-    // the Offsets interface
-    py::class_<offsets_t>(m, "Offsets")
+    // the product spec
+    py::class_<offsets_t> pyOffsets(m, "Offsets");
+    // its pixel type
+    py::class_<pixel_t> pyPixel(pyOffsets, "Pixel");
+
+    // the pixel definition
+    pyPixel
+        // the reference index
+        .def_property("ref",
+                      // the getter
+                      [](const pixel_t & pxl) {
+                          return pxl.ref;
+                      },
+                      // the setter
+                      [](pixel_t & pxl, std::pair<float, float> ref) {
+                          pxl.ref = ref;
+                      },
+                      // the docstring
+                      "the reference pixel indices"
+                      )
+        // the shift
+        .def_property("delta",
+                      // the getter
+                      [](const pixel_t & pxl) {
+                          return pxl.shift;
+                      },
+                      // the setter
+                      [](pixel_t & pxl, std::pair<float, float> delta) {
+                         pxl.shift = delta;
+                      },
+                      // the docstring
+                      "the offset to the matching pixel in the secondary raster"
+                      )
+        // the level of confidence in the mapping
+        .def_property("confidence",
+                      // the getter
+                      [](const pixel_t & pxl) {
+                          return pxl.confidence;
+                      },
+                      // the setter
+                      [](pixel_t & pxl, float confidence) {
+                         pxl.confidence = confidence;
+                      },
+                      // the docstring
+                      "the level of confidence in the mapping"
+                      )
+        // the signal to noise ration
+        .def_property("snr",
+                      // the getter
+                      [](const pixel_t & pxl) {
+                          return pxl.snr;
+                      },
+                      // the setter
+                      [](pixel_t & pxl, float snr) {
+                         pxl.snr = snr;
+                      },
+                      // the docstring
+                      "the signal to noise ratio"
+                      )
+        // the covariance
+        .def_property("covariance",
+                      // the getter
+                      [](const pixel_t & pxl) {
+                          return pxl.covariance;
+                      },
+                      // the setter
+                      [](pixel_t & pxl, float covariance) {
+                         pxl.covariance = covariance;
+                      },
+                      // the docstring
+                      "the covariance"
+                      )
+        // done
+        ;
+
+    // the offsets interface
+    pyOffsets
         // constructor
         .def(
              // the constructor wrapper
@@ -70,7 +147,7 @@ offsets_constructor(py::tuple pyShape)
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::layout_type::shape_type shape {rows, cols, offsets_t::vars()};
+    offsets_t::layout_type::shape_type shape {rows, cols};
     // turn it into a layout
     offsets_t::layout_type layout { shape };
     // make a product specification out of the layout and return it
