@@ -103,7 +103,7 @@ offsets_const_raster_constructor(py::tuple pyShape, py::object pyURI) -> unique_
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::shape_type shape {rows, cols, offsets_t::spec_type::vars()};
+    offsets_t::shape_type shape {rows, cols};
     // turn it into a layout
     offsets_t::layout_type layout { shape };
     // make a product specification out of the shape

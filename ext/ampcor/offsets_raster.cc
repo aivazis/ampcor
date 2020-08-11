@@ -62,7 +62,7 @@ offsets_raster(py::module &m) {
         // data read access given an index
         .def("__getitem__",
              // convert the incoming tuple into an index and fetch the data
-             [](const offsets_t & map, py::tuple pyIdx) {
+             [](offsets_t & map, py::tuple pyIdx) {
                  // type aliases
                  using index_t = offsets_t::index_type;
                  using rank_t = offsets_t::index_type::rank_type;
@@ -79,7 +79,7 @@ offsets_raster(py::module &m) {
         // data read access given an offset
         .def("__getitem__",
              // delegate directly to the {offsets_t}
-             [](const offsets_t & map, size_t offset) {
+             [](offsets_t & map, size_t offset) {
                  // easy enough
                  return map[offset];
              },
@@ -106,7 +106,7 @@ offsets_raster_constructor(py::tuple pyShape, py::object pyURI, bool create)
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
     // make a shape
-    offsets_t::shape_type shape {rows, cols, offsets_t::spec_type::vars()};
+    offsets_t::shape_type shape {rows, cols};
     // turn it into a layout
     offsets_t::layout_type layout { shape };
     // make a product specification out of the layout
@@ -120,7 +120,7 @@ offsets_raster_constructor(py::tuple pyShape, py::object pyURI, bool create)
 
     // if we are supposed to create a new one
     if (create) {
-        // build the product and return it
+        // make a product, wrap it and return it
         return std::unique_ptr<offsets_t>(new offsets_t(spec, filename, spec.cells()));
     }
 
