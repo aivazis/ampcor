@@ -17,9 +17,9 @@ ampcor::correlators::Sequential<productT>::
 ~Sequential()
 {
     // clean up
-    delete [] _offsets;
     delete [] _refinedArena;
     delete [] _coarseArena;
+    delete [] _pids;
 }
 
 
@@ -78,10 +78,9 @@ Sequential(size_type pairs,
     _coarseArenaBytes { _coarseArenaCells * sizeof(value_type) },
     _refinedArenaBytes { _refinedArenaCells * sizeof(value_type) },
     // scratch space
+    _pids{ new size_type [_pairs] },
     _coarseArena{ new value_type [_coarseArenaCells] },
-    _refinedArena{ new value_type [_refinedArenaCells] },
-    // storage for the offset fields: two floats per tile pair
-    _offsets{ new value_type [2 * _pairs] }
+    _refinedArena{ new value_type [_refinedArenaCells] }
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.setup");
@@ -193,21 +192,35 @@ fillCoarseArena(value_type value) const
 }
 
 
+// record the sequence number of this pairing in the original plan
+template <class productT>
+void
+ampcor::correlators::Sequential<productT>::
+addPair(size_type tid, size_type pid)
+{
+    // easy enough
+    _pids[tid] = pid;
+    // all done
+    return;
+}
+
+
 // add a reference tile to the coarse arena
 template <class productT>
 void
 ampcor::correlators::Sequential<productT>::
-addReferenceTile(size_t pid, product_const_reference ref)
+addReferenceTile(size_type tid, product_const_reference ref)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
     // sign on
     channel
-        << "adding reference tile #" << pid << " to the arena"
+        << "adding reference tile #" << tid << "(" << _pids[tid] << ")"
+        << " to the arena"
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    value_type * support = _coarseArena + pid * _coarseStride;
+    value_type * support = _coarseArena + tid * _coarseStride;
 
     // the lambda that does the detection
     auto detect = [](cell_type cell) -> value_type {
@@ -232,17 +245,18 @@ addReferenceTile(size_t pid, product_const_reference ref)
 template <class productT>
 void
 ampcor::correlators::Sequential<productT>::
-addSecondaryTile(size_t pid, product_const_reference sec)
+addSecondaryTile(size_type tid, product_const_reference sec)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
     // sign on
     channel
-        << "adding secondary tile #" << pid << " to the arena"
+        << "adding secondary tile #" << tid << "(" << _pids[tid] << ")"
+        << " to the arena"
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    value_type * support = _coarseArena + pid * _coarseStride + _refCells;
+    value_type * support = _coarseArena + tid * _coarseStride + _refCells;
     // the lambda that does the detection
     auto detect = [](cell_type cell) -> value_type {
                       // compute the magnitude and return

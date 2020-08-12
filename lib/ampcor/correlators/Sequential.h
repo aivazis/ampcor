@@ -63,9 +63,13 @@ public:
 
     // interface
 public:
+    // record the id of a given pairing; note that {tid} tracks the pairings that were assigned
+    // to me, while {pid} remembers the sequence number of this pairing in the original plan,
+    // which may have involved invalid tiles so there may be gaps
+    inline void addPair(size_type tid, size_type pid);
     // transfer and detect data from the incoming rasters
-    inline void addReferenceTile(size_type pid, product_const_reference ref);
-    inline void addSecondaryTile(size_type pid, product_const_reference ref);
+    inline void addReferenceTile(size_type tid, product_const_reference ref);
+    inline void addSecondaryTile(size_type tid, product_const_reference sec);
 
     // initializer; useful for debugging
     inline void fillCoarseArena(value_type = 0) const;
@@ -120,12 +124,11 @@ private:
     // scratch space memory footprint
     const size_type _coarseArenaBytes;
     const size_type _refinedArenaBytes;
+
     // scratch space
+    size_type * _pids;
     value_type * _coarseArena;
     value_type * _refinedArena;
-
-    // storage for the offset field
-    value_type * _offsets;
 
     // disabled metamethods
 public:
