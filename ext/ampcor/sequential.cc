@@ -52,6 +52,11 @@ sequential(py::module &m) {
              "pairs"_a, "ref"_a, "sec"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
+        // record the original collation number of this pairing
+        .def("addPair",
+             &sequential_t::addPair,
+             "tid"_a, "pid"_a
+             )
         // add a reference tile
         .def("addReferenceTile",
              addReferenceTile,
