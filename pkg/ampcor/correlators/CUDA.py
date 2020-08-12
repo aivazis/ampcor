@@ -20,12 +20,14 @@ class CUDA:
     # interface
     def adjust(self, manager, rasters, plan, channel):
         """
-        Correlate a pair rasters given a plan
+        Correlate a pair of {rasters} given a collection of {tiles}
         """
         # unpack the rasters
         ref, sec = rasters
-        # ask the plan for the total number of points on the map
-        points = len(plan)
+        # realize the {tiles}, just in case what came in was a generator
+        tiles = plan.tiles
+        # because we need to know how many pairs there are
+        pairs = len(tiles)
         # the shape of the reference chips
         chip = plan.chip
         # and the shape of the search windows
@@ -41,20 +43,26 @@ class CUDA:
         # get the bindings
         libampcor = ampcor.ext.libampcor_cuda
         # make a worker
-        worker = libampcor.sequential(points, chip, window, refineMargin, refineFactor, zoomFactor)
+        worker = libampcor.Sequential(pairs=pairs,
+                                      ref=chip, sec=window,
+                                      refineFactor=refineFactor, refineMargin=refineMargin,
+                                      zoomFactor=zoomFactor
+                                      )
 
         # show me
         channel.log("loading tiles")
         # go through the valid pairs of reference and secondary tiles
-        for idx, (r, t) in enumerate(plan.pairs):
-            # load the reference slice
-            libampcor.addReference(worker, ref, idx, r.begin, r.end)
-            # load the secondary slice
-            libampcor.addSecondary(worker, sec, idx, t.begin, t.end)
+        for idx, (pid, r, s) in enumerate(tiles):
+            # save the pair id
+            worker.addPair(tid=idx, pid=pid)
+            # load the reference tile
+            worker.addReferenceTile(tid=idx, raster=ref, tile=r)
+            # load the secondary tile
+            worker.addSecondaryTile(tid=idx, raster=sec, tile=s)
 
         channel.log("adjusting the offset map")
         # ask the worker to perform pixel level adjustments
-        offsets = libampcor.adjust(worker)
+        worker.adjust(offsets)
 
         # all done
         return offsets
@@ -69,7 +77,7 @@ class CUDA:
         # get the cuda device manager
         manager = cuda.manager
         # grab a device
-        manager.device(did=4)
+        # manager.device(did=4)
         # all done
         return
 
