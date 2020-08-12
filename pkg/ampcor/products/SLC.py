@@ -61,6 +61,11 @@ class SLC(ampcor.flow.product,
         """
         Grant access to a slice of data of the given {shape} starting at {origin}
         """
+        # go through each rank
+        for o,s, l in zip(origin, shape, self.shape):
+            # and check
+            if o < 0 : return
+            if o+s >= l: return
         # ask my spec
         return self.spec.slice(origin, shape)
 
