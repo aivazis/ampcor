@@ -15,8 +15,6 @@ class Plan:
     """
     Encapsulation of the computational work necessary to refine an offset map between a
     {reference} and a {secondary} image
-
-    Plan builds two matching container of tiles that will be correlated against each other
     """
 
 
@@ -32,29 +30,18 @@ class Plan:
 
 
     @property
-    def pairs(self):
-        """
-        Yield valid pairs of reference and secondary tiles
-        """
-        # go through my tile containers
-        for ref, sec in zip(self.reference, self.secondary):
-            # invariant: either both are good, or both are bad
-            if ref and sec:
-                # yield them
-                yield ref, sec
-        # all done
-        return
-
-
-    @property
     def bytes(self):
         """
         Compute the total amount of memory required to store the reference and secondary tiles
         """
-        # the reference footprint
-        ref = sum(tile.bytes for tile in filter(None, self.reference))
-        # the secondary footprint
-        sec = sum(tile.bytes for tile in filter(None, self.secondary))
+        # initialize the footprints
+        ref = 0
+        sec = 0
+        # go through the tiles
+        for _, refTile, secTile in self.tiles:
+            # compute their footprints and update the counters
+            ref += refTile.bytes
+            sec += secTile.bytes
         # all done
         return ref, sec
 
@@ -74,8 +61,8 @@ class Plan:
         # compute the secondary window shape
         self.window = tuple(c+2*p for c,p in zip(self.chip, self.padding))
 
-        # initialize my containers
-        self.reference, self.secondary = self.assemble(regmap=regmap, rasters=rasters)
+        # initialize my container
+        self.tiles = tuple(self.assemble(regmap=regmap, rasters=rasters))
 
         # all done
         return
@@ -86,20 +73,7 @@ class Plan:
         By definition, my length is the number of valid tile pairs
         """
         # invariant: either both tiles are good, or both are bad
-        return len(tuple(filter(None, self.reference)))
-
-
-    def __getitem__(self, index):
-        """
-        Behave like a grid
-        """
-        # ask my shape tile to resolve the index
-        offset = self.tile.offset(index)
-        # grab the corresponding tiles
-        ref = self.reference[offset]
-        sec = self.secondary[offset]
-        # and return them
-        return ref, sec
+        return len(self.tiles)
 
 
     # implementation details
@@ -115,16 +89,16 @@ class Plan:
         # and the search window padding
         padding = self.padding
 
-        # initialize the tile containers
-        referenceTiles = []
-        secondaryTiles = []
-
         # go through matching pairs of points in the initial guess
-        for ref, sec in zip(*regmap):
+        for pid, (ref, sec) in enumerate(zip(*regmap)):
             # form the upper left hand corner of the reference tile
             origin = tuple(r - c//2 for r,c in zip(ref, chip))
             # attempt to make a slice; invalid specs get rejected by the slice factory
             refSlice = reference.slice(origin=origin, shape=chip)
+            # if the slice is not a good one
+            if not refSlice:
+                # move on
+                continue
 
             # the upper left hand corner of the secondary tile
             origin = tuple(t - c//2 - p for t,c,p in zip(sec, chip, padding))
@@ -132,20 +106,16 @@ class Plan:
             shape = tuple(c + 2*p for c,p in zip(chip, padding))
             # try to turn this into a slice
             secSlice = secondary.slice(origin=origin, shape=shape)
+            # if either slice is invalid
+            if not secSlice:
+                # move on
+                continue
 
-            # if both slices are valid
-            if refSlice and secSlice:
-                # push them into their respective containers
-                referenceTiles.append(refSlice)
-                secondaryTiles.append(secSlice)
-            # otherwise
-            else:
-                # push invalid slices for both of them
-                referenceTiles.append(None)
-                secondaryTiles.append(None)
+            # if both are good, mark them and publish them
+            yield pid, refSlice, secSlice
 
         # all done
-        return referenceTiles, secondaryTiles
+        return
 
 
     # interface
@@ -165,7 +135,7 @@ class Plan:
         yield f"{margin}{indent*2}secondary: {secBytes} bytes"
 
         # go through the pairs
-        for offset, (ref,sec) in enumerate(zip(self.reference, self.secondary)):
+        for offset, ref,sec in self.tiles:
             # compute the index of this pair
             index = self.tile.index(offset)
             # if this is a valid pair
