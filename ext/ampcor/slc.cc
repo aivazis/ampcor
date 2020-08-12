@@ -13,10 +13,14 @@
 
 
 // type aliases
-using slc_t = ampcor::dom::slc_t;
-using layout_t = slc_t::layout_type;
-using index_t = slc_t::layout_type::index_type;
-using shape_t = slc_t::layout_type::shape_type;
+namespace ampcor::py {
+    // the product spec
+    using slc_t = ampcor::dom::slc_t;
+    // and its parts
+    using slc_layout_t = slc_t::layout_type;
+    using slc_index_t = slc_t::layout_type::index_type;
+    using slc_shape_t = slc_t::layout_type::shape_type;
+}
 
 
 // helpers
@@ -34,24 +38,24 @@ slc(py::module &m) {
     // declare the product specification class
     auto pySLC = py::class_<slc_t>(m, "SLC");
     // embed its layout
-    auto pySLCLayout = py::class_<layout_t>(pySLC, "Layout");
+    auto pySLCLayout = py::class_<slc_layout_t>(pySLC, "Layout", py::module_local());
     // its index
-    auto pySLCIndex = py::class_<index_t>(pySLC, "Index");
+    auto pySLCIndex = py::class_<slc_index_t>(pySLC, "Index", py::module_local());
     // and its shape
-    auto pySLCShape = py::class_<shape_t>(pySLCLayout, "Shape");
+    auto pySLCShape = py::class_<slc_shape_t>(pySLCLayout, "Shape", py::module_local());
 
     // add the SLC layout interface
     pySLCLayout
         .def_property_readonly("origin",
                                // the getter
-                               &layout_t::origin,
+                               &slc_layout_t::origin,
                                // the docstring
                                "the origin of the SLC layout"
                                )
 
         .def_property_readonly("shape",
                                // the getter
-                               &layout_t::shape,
+                               &slc_layout_t::shape,
                                // the docstring
                                "the shape of the SLC layout"
                                )
@@ -59,19 +63,19 @@ slc(py::module &m) {
         // sizes of things: number of pixels
         .def_property_readonly("cells",
                                // the getter
-                               &layout_t::cells,
+                               &slc_layout_t::cells,
                                // the docstring
                                "the number of pixels in the SLC"
                                )
         // and number of bytes
         .def_property_readonly("bytes",
                                // the getter
-                               [](const layout_t & layout) {
+                               [](const slc_layout_t & layout) {
                                    // easy enough
                                    return layout.cells() * sizeof(slc_t::pixel_type);
                                },
                                // the docstring
-                               "the number of pixels in the SLC"
+                               "the memory footprint of the SLC, in bytes"
                                )
         // done
         ;
@@ -81,14 +85,18 @@ slc(py::module &m) {
         // access to individual ranks
         .def("__getitem__",
              // return the value of the requested rank
-             [](const index_t & index, int rank) { return index[rank]; },
+             [](const slc_index_t & index, int rank) {
+                 return index[rank];
+             },
              // signature
              "rank"_a
              )
         // iteration support
         .def("__iter__",
              // make an iterator and return it
-             [](const index_t & index) { return py::make_iterator(index.begin(), index.end()); },
+             [](const slc_index_t & index) {
+                 return py::make_iterator(index.begin(), index.end());
+             },
              // make sure the index lives long enough
              py::keep_alive<0,1>()
              )
@@ -100,21 +108,25 @@ slc(py::module &m) {
         // sizes of things: number of pixels
         .def_property_readonly("cells",
                                // the getter
-                               &shape_t::cells,
+                               &slc_shape_t::cells,
                                // the docstring
                                "the number of pixels in the SLC"
                                )
         // access to individual ranks
         .def("__getitem__",
              // return the value of the requested rank
-             [](const shape_t & shape, int idx) { return shape[idx]; },
+             [](const slc_shape_t & shape, int idx) {
+                 return shape[idx];
+             },
              // signature
              "index"_a
              )
         // iteration support
         .def("__iter__",
              // make an iterator and return it
-             [](const shape_t & shape) { return py::make_iterator(shape.begin(), shape.end()); },
+             [](const slc_shape_t & shape) {
+                 return py::make_iterator(shape.begin(), shape.end());
+             },
              // make sure the shape lives long enough
              py::keep_alive<0,1>()
              )
