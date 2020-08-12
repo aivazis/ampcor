@@ -23,7 +23,7 @@ class Sequential:
 
 
     # interface
-    def adjust(self, manager, plan, rasters, offsets, **kwds):
+    def adjust(self, manager, rasters, offsets, plan, **kwds):
         """
         Compute the offset map between a pair of {rasters} given a correlation {plan}
         """
@@ -34,8 +34,10 @@ class Sequential:
 
         # unpack the rasters
         ref, sec = rasters
-        # ask the plan for the number of valid tile pairs
-        pairs = len(plan)
+        # get the tile pairings
+        tiles = plan.tiles
+        # because we need to know how many there are
+        pairs = len(tiles)
         # get the shape of the reference chip
         chip = plan.chip
         # and the shape of the search windows
@@ -63,12 +65,14 @@ class Sequential:
 
         # start the timer
         timer.reset().start()
-        # go through the valid (reference,secondary) tile pairs
-        for idx, (r,s) in enumerate(plan.pairs):
+        # go through the tile pairs
+        for idx, (pid, r,s) in enumerate(tiles):
+            # save the pair id
+            worker.addPair(tid=idx, pid=pid)
             # load the reference tile
-            worker.addReferenceTile(raster=ref, tid=idx, tile=r)
+            worker.addReferenceTile(tid=idx, raster=ref, tile=r)
             # load the secondary tile
-            worker.addSecondaryTile(raster=sec, tid=idx, tile=s)
+            worker.addSecondaryTile(tid=idx, raster=sec, tile=s)
         # stop the timer
         timer.stop()
         # show me
