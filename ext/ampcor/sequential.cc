@@ -12,10 +12,17 @@
 #include <ampcor/dom.h>
 #include <ampcor/correlators.h>
 
+
 // type aliases
-using slc_t = ampcor::dom::slc_const_raster_t;
-using sequential_t = ampcor::correlators::sequential_t<slc_t>;
-using sequential_reference = sequential_t &;
+namespace ampcor::py {
+    // the rasters
+    using slc_raster_t = ampcor::dom::slc_const_raster_t;
+    using offsets_raster_t = ampcor::dom::offsets_raster_t;
+
+    // the worker
+    using sequential_t = ampcor::correlators::sequential_t<slc_raster_t>;
+    using sequential_reference = sequential_t &;
+}
 
 
 // helpers
@@ -27,12 +34,12 @@ namespace ampcor::py {
 
     // add a reference tile
     static inline auto
-    addReferenceTile(sequential_t &, const slc_t &,
-                     size_t, const slc_t::layout_type &) -> sequential_reference;
+    addReferenceTile(sequential_t &, const slc_raster_t &,
+                     size_t, const slc_raster_t::layout_type &) -> sequential_reference;
     // add a secondary tile
     static inline auto
-    addSecondaryTile(sequential_t &, const slc_t &,
-                     size_t, const slc_t::layout_type &) -> sequential_reference;
+    addSecondaryTile(sequential_t &, const slc_raster_t &,
+                     size_t, const slc_raster_t::layout_type &) -> sequential_reference;
 }
 
 
@@ -55,17 +62,37 @@ sequential(py::module &m) {
         // record the original collation number of this pairing
         .def("addPair",
              &sequential_t::addPair,
-             "tid"_a, "pid"_a
+             // the signature
+             "tid"_a, "pid"_a,
+             // the docstring
+             "record the collation number of this pair"
              )
         // add a reference tile
         .def("addReferenceTile",
              addReferenceTile,
-             "raster"_a, "tid"_a, "tile"_a
+             // the signature
+             "raster"_a, "tid"_a, "tile"_a,
+             // the docstring
+             "detect and trasfer a reference tile to the coarse arena"
              )
         // add a secondary tile
         .def("addSecondaryTile",
              addSecondaryTile,
-             "raster"_a, "tid"_a, "tile"_a
+             // the signature
+             "raster"_a, "tid"_a, "tile"_a,
+             // the docstring
+             "detect and trasfer a secondary tile to the coarse arena"
+             )
+        // execute the correlation plan and adjust the offset map
+        .def("adjust",
+             [](sequential_t & worker, offsets_raster_t & map) {
+                 // all done
+                 return;
+             },
+             // the signature
+             "map"_a,
+             // the docstring
+             "execute the correlation plan and adjust the {offsets} map"
              )
         // done
         ;
@@ -84,14 +111,14 @@ constructor(size_t pairs, py::tuple ref, py::tuple sec,
     -> unique_pointer<sequential_t>
 {
     // extract the shape of the reference tile
-    slc_t::shape_type refShape { ref[0].cast<int>(), ref[1].cast<int>() };
+    slc_raster_t::shape_type refShape { ref[0].cast<int>(), ref[1].cast<int>() };
     // and the shape of the secondary tile
-    slc_t::shape_type secShape { sec[0].cast<int>(), sec[1].cast<int>() };
+    slc_raster_t::shape_type secShape { sec[0].cast<int>(), sec[1].cast<int>() };
 
     // build the layout of the reference tile
-    slc_t::packing_type refLayout { refShape };
+    slc_raster_t::packing_type refLayout { refShape };
     // and the layout of the secondary tile
-    slc_t::packing_type secLayout { secShape };
+    slc_raster_t::packing_type secLayout { secShape };
 
     // build the worker and return it
     return std::unique_ptr<sequential_t>(new sequential_t(pairs,
@@ -104,8 +131,8 @@ constructor(size_t pairs, py::tuple ref, py::tuple sec,
 auto
 ampcor::py::
 addReferenceTile(sequential_t & worker,
-                 const slc_t & raster,
-                 size_t tid, const slc_t::layout_type & chip) -> sequential_reference
+                 const slc_raster_t & raster,
+                 size_t tid, const slc_raster_t::layout_type & chip) -> sequential_reference
 {
     // make the tile
     auto tile = raster.tile(chip.origin(), chip.shape());
@@ -139,8 +166,8 @@ addReferenceTile(sequential_t & worker,
 auto
 ampcor::py::
 addSecondaryTile(sequential_t & worker,
-                 const slc_t & raster,
-                 size_t tid, const slc_t::layout_type & chip) -> sequential_reference
+                 const slc_raster_t & raster,
+                 size_t tid, const slc_raster_t::layout_type & chip) -> sequential_reference
 {
     // make the tile
     auto tile = raster.tile(chip.origin(), chip.shape());

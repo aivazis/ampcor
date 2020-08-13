@@ -116,7 +116,7 @@ class MGA(ampcor.flow.factory,
         # choose the correlator implementation
         worker = self.makeWorker(layout=plexus.shell)
         # compute the offsets
-        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
+        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets.raster, plan=plan)
         # stop the timer
         timer.stop()
         # show me
