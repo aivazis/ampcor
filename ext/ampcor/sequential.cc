@@ -89,11 +89,7 @@ sequential(py::module &m) {
         // execute the correlation plan and adjust the offset map
         .def("adjust",
              // the handler
-             // &sequential_t::adjust,
-             [](sequential_t & worker, offsets_raster_t & map) {
-                 // all done
-                 return;
-             },
+             &sequential_t::adjust,
              // the signature
              "map"_a,
              // the docstring

@@ -75,7 +75,11 @@ public:
     // transfer and detect data from the incoming rasters
     inline void addReferenceTile(size_type tid, input_const_reference ref);
     inline void addSecondaryTile(size_type tid, input_const_reference sec);
+    // execute the correlation plan and adjust the offset map
+    void adjust(output_reference);
 
+    // debugging support
+public:
     // initializer; useful for debugging
     inline void fillCoarseArena(value_type = 0) const;
 

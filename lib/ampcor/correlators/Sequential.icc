@@ -276,6 +276,17 @@ addSecondaryTile(size_type tid, input_const_reference sec)
 }
 
 
+// execute the correlation plan
+template <class inputT, class outputT>
+void
+ampcor::correlators::Sequential<inputT, outputT>::
+adjust(output_reference)
+{
+    // all done
+    return;
+}
+
+
 # endif
 
 // end of file
