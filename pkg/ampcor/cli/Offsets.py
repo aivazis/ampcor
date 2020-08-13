@@ -56,6 +56,9 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Display the contents of the offsets product
         """
+        # make a channel
+        channel = journal.info("ampcor.offsets.dump")
+
         # get the output
         offsets = self.flow.offsetMap
         # open its raster
@@ -66,12 +69,13 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             # get the cell
             p = offsets[idx]
             # show me
-            print(f"offsets[{idx}]:")
-            print(f"  ref: {p.ref}")
-            print(f"  delta: {p.delta}")
-            print(f"  confidence: {p.confidence}")
-            print(f"  snr: {p.snr}")
-            print(f"  covariance: {p.covariance}")
+            channel.line(f"offsets[{idx}]:")
+            channel.line(f"  ref: {p.ref}")
+            channel.line(f"  delta: {p.delta}")
+            channel.line(f"  confidence: {p.confidence}")
+            channel.line(f"  snr: {p.snr}")
+            channel.log(f"  covariance: {p.covariance}")
+
         # all done
         return 0
 
