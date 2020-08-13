@@ -116,7 +116,7 @@ class MGA(ampcor.flow.factory,
         # choose the correlator implementation
         worker = self.makeWorker(layout=plexus.shell)
         # compute the offsets
-        regmap = worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
+        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
         # stop the timer
         timer.stop()
         # show me
@@ -147,7 +147,7 @@ class MGA(ampcor.flow.factory,
             # zero out the other fields
             rec.confidence = 0
             rec.snr = 0
-            rec.covariance =0
+            rec.covariance = 0
 
         # all done
         return
