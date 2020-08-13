@@ -7,8 +7,9 @@
 
 
 # externals
-import journal
 import ampcor
+import itertools
+import journal
 
 
 # declaration
@@ -47,6 +48,31 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         # and print it
         channel.log(doc)
         # all done; indicate success
+        return 0
+
+
+    @ampcor.export(tip="display the contents of the offsets product")
+    def dump(self, plexus, **kwds):
+        """
+        Display the contents of the offsets product
+        """
+        # get the output
+        offsets = self.flow.offsetMap
+        # open its raster
+        offsets.open(mode="r")
+
+        # build a set of indices that visit the map in layout order
+        for idx in itertools.product(*map(range, offsets.shape)):
+            # get the cell
+            p = offsets[idx]
+            # show me
+            print(f"offsets[{idx}]:")
+            print(f"  ref: {p.ref}")
+            print(f"  delta: {p.delta}")
+            print(f"  confidence: {p.confidence}")
+            print(f"  snr: {p.snr}")
+            print(f"  covariance: {p.covariance}")
+        # all done
         return 0
 
 
