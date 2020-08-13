@@ -37,6 +37,15 @@ class SLC(ampcor.flow.product,
         return self.spec.layout
 
 
+    @property
+    def bytesPerPixel(self):
+        """
+        Get the memory footprint of my pixel
+        """
+        # ask the spec
+        return self.spec.bytesPerPixel
+
+
     # protocol obligations
     @ampcor.export
     def cells(self):

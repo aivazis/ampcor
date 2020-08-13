@@ -48,6 +48,18 @@ slc(py::module &m) {
              )
 
         // accessors
+        // the size of a pixel
+        .def_property_readonly("bytesPerPixel",
+                               // the getter
+                               [](const slc_t &) {
+                                   // easy enough
+                                   return sizeof(slc_t::pixel_type);
+                               },
+                               // the docstring
+                               "memory footprint of an SLC pixel, in bytes"
+                               )
+
+        // access to the layout
         .def_property_readonly("layout",
                                // the getter
                                &slc_t::layout,
@@ -55,6 +67,7 @@ slc(py::module &m) {
                                "the layout of the SLC raster"
                                )
 
+        // and the shape
         .def_property_readonly("shape",
                                // the getter
                                &slc_t::shape,
