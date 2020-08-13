@@ -15,6 +15,9 @@ namespace ampcor::py {
     // exceptions
     void exceptions(py::module &);
 
+    // the raster layout
+    void raster_layout(py::module &);
+
     // SLC
     void slc(py::module &);
     void slc_raster(py::module &);

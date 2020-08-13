@@ -20,6 +20,9 @@ PYBIND11_MODULE(ampcor, m) {
     // register the exception types
     ampcor::py::exceptions(m);
 
+    // raster layout
+    ampcor::py::raster_layout(m);
+
     // slc
     ampcor::py::slc(m);
     ampcor::py::slc_raster(m);
