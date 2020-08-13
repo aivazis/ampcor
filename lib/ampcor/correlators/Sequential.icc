@@ -12,8 +12,8 @@
 
 // metamethods
 // destructor
-template <class productT>
-ampcor::correlators::Sequential<productT>::
+template <class inputT, class outputT>
+ampcor::correlators::Sequential<inputT, outputT>::
 ~Sequential()
 {
     // clean up
@@ -24,8 +24,8 @@ ampcor::correlators::Sequential<productT>::
 
 
 // constructor
-template <class productT>
-ampcor::correlators::Sequential<productT>::
+template <class inputT, class outputT>
+ampcor::correlators::Sequential<inputT, outputT>::
 Sequential(size_type pairs,
            layout_const_reference ref, layout_const_reference sec,
            size_type refineFactor, size_type refineMargin,
@@ -128,9 +128,9 @@ Sequential(size_type pairs,
 
 
 // accessors
-template <class productT>
+template <class inputT, class outputT>
 auto
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 pairs() const -> size_type
 {
     // easy enough
@@ -138,19 +138,19 @@ pairs() const -> size_type
 }
 
 
-template <class productT>
+template <class inputT, class outputT>
 auto
-ampcor::correlators::Sequential<productT>::
-coarseArena() const -> const value_type *
+ampcor::correlators::Sequential<inputT, outputT>::
+coarseArena() const -> const_pointer
 {
     // easy enough
     return _coarseArena;
 }
 
 
-template <class productT>
+template <class inputT, class outputT>
 auto
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 coarseArenaCells() const -> size_type
 {
     // easy enough
@@ -158,9 +158,9 @@ coarseArenaCells() const -> size_type
 }
 
 
-template <class productT>
+template <class inputT, class outputT>
 auto
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 coarseArenaBytes() const -> size_type
 {
     // easy enough
@@ -168,9 +168,9 @@ coarseArenaBytes() const -> size_type
 }
 
 
-template <class productT>
+template <class inputT, class outputT>
 auto
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 coarseArenaStride() const -> size_type
 {
     // easy enough
@@ -180,9 +180,9 @@ coarseArenaStride() const -> size_type
 
 // interface
 // zero out the coarse arena
-template <class productT>
+template <class inputT, class outputT>
 void
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 fillCoarseArena(value_type value) const
 {
     // easy enough
@@ -193,9 +193,9 @@ fillCoarseArena(value_type value) const
 
 
 // record the sequence number of this pairing in the original plan
-template <class productT>
+template <class inputT, class outputT>
 void
-ampcor::correlators::Sequential<productT>::
+ampcor::correlators::Sequential<inputT, outputT>::
 addPair(size_type tid, size_type pid)
 {
     // easy enough
@@ -206,10 +206,10 @@ addPair(size_type tid, size_type pid)
 
 
 // add a reference tile to the coarse arena
-template <class productT>
+template <class inputT, class outputT>
 void
-ampcor::correlators::Sequential<productT>::
-addReferenceTile(size_type tid, product_const_reference ref)
+ampcor::correlators::Sequential<inputT, outputT>::
+addReferenceTile(size_type tid, input_const_reference ref)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
@@ -220,7 +220,7 @@ addReferenceTile(size_type tid, product_const_reference ref)
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    value_type * support = _coarseArena + tid * _coarseStride;
+    pointer support = _coarseArena + tid * _coarseStride;
 
     // the lambda that does the detection
     auto detect = [](cell_type cell) -> value_type {
@@ -242,10 +242,10 @@ addReferenceTile(size_type tid, product_const_reference ref)
 
 
 // add a secondary tile to the coarse arena
-template <class productT>
+template <class inputT, class outputT>
 void
-ampcor::correlators::Sequential<productT>::
-addSecondaryTile(size_type tid, product_const_reference sec)
+ampcor::correlators::Sequential<inputT, outputT>::
+addSecondaryTile(size_type tid, input_const_reference sec)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
@@ -256,7 +256,7 @@ addSecondaryTile(size_type tid, product_const_reference sec)
         << pyre::journal::newline;
 
     // figure out the starting address of this tile in the arena given its pair id
-    value_type * support = _coarseArena + tid * _coarseStride + _refCells;
+    pointer support = _coarseArena + tid * _coarseStride + _refCells;
     // the lambda that does the detection
     auto detect = [](cell_type cell) -> value_type {
                       // compute the magnitude and return

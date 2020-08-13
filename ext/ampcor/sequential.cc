@@ -20,7 +20,7 @@ namespace ampcor::py {
     using offsets_raster_t = ampcor::dom::offsets_raster_t;
 
     // the worker
-    using sequential_t = ampcor::correlators::sequential_t<slc_raster_t>;
+    using sequential_t = ampcor::correlators::sequential_t<slc_raster_t, offsets_raster_t>;
     using sequential_reference = sequential_t &;
 }
 
@@ -61,6 +61,7 @@ sequential(py::module &m) {
              )
         // record the original collation number of this pairing
         .def("addPair",
+             // the handler
              &sequential_t::addPair,
              // the signature
              "tid"_a, "pid"_a,
@@ -69,6 +70,7 @@ sequential(py::module &m) {
              )
         // add a reference tile
         .def("addReferenceTile",
+             // the handler
              addReferenceTile,
              // the signature
              "raster"_a, "tid"_a, "tile"_a,
@@ -77,6 +79,7 @@ sequential(py::module &m) {
              )
         // add a secondary tile
         .def("addSecondaryTile",
+             // the handler
              addSecondaryTile,
              // the signature
              "raster"_a, "tid"_a, "tile"_a,
@@ -85,6 +88,8 @@ sequential(py::module &m) {
              )
         // execute the correlation plan and adjust the offset map
         .def("adjust",
+             // the handler
+             // &sequential_t::adjust,
              [](sequential_t & worker, offsets_raster_t & map) {
                  // all done
                  return;

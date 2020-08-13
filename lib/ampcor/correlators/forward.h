@@ -12,7 +12,7 @@
 // set up the namespace
 namespace ampcor::correlators {
     // the sequential worker
-    template <class productT>
+    template <class inputT, class outputT>
     class Sequential;
 
     // the threaded worker

@@ -10,32 +10,37 @@
 
 
 // a worker that executes a correlation plan one tile at a time
-template <class productT>
+template <class inputT, class outputT>
 class ampcor::correlators::Sequential {
     // types
 public:
-    // my template parameter
-    using product_type = productT;
-    using product_const_reference = const product_type &;
+    // my template parameters
+    using input_type = inputT;
+    using input_const_reference = const input_type &;
+    using output_type = outputT;
+    using output_reference = output_type &;
+
     // the product spec
-    using spec_type = typename product_type::spec_type;
+    using spec_type = typename input_type::spec_type;
 
     // the product pixel type
     using cell_type = typename spec_type::pixel_type;
     // and its underlying support
     using value_type = typename spec_type::value_type;
+    // pointer to values
+    using pointer = value_type *;
     // const pointer to values
     using const_pointer = const value_type *;
 
     // tile shape
-    using shape_type = typename product_type::shape_type;
-    using shape_const_reference = typename product_type::shape_const_reference;
+    using shape_type = typename input_type::shape_type;
+    using shape_const_reference = typename input_type::shape_const_reference;
     // tile layout
     using layout_type = typename spec_type::layout_type;
     using layout_const_reference = typename spec_type::layout_const_reference;
     // indices
-    using index_type = typename product_type::index_type;
-    using index_const_reference = typename product_type::index_const_reference;
+    using index_type = typename input_type::index_type;
+    using index_const_reference = typename input_type::index_const_reference;
 
     // the size of things
     using size_type = size_t;
@@ -56,7 +61,7 @@ public:
 public:
     inline auto pairs() const -> size_type;
 
-    inline auto coarseArena() const -> const value_type *;
+    inline auto coarseArena() const -> const_pointer;
     inline auto coarseArenaCells() const -> size_type;
     inline auto coarseArenaBytes() const -> size_type;
     inline auto coarseArenaStride() const -> size_type;
@@ -68,8 +73,8 @@ public:
     // which may have involved invalid tiles so there may be gaps
     inline void addPair(size_type tid, size_type pid);
     // transfer and detect data from the incoming rasters
-    inline void addReferenceTile(size_type tid, product_const_reference ref);
-    inline void addSecondaryTile(size_type tid, product_const_reference sec);
+    inline void addReferenceTile(size_type tid, input_const_reference ref);
+    inline void addSecondaryTile(size_type tid, input_const_reference sec);
 
     // initializer; useful for debugging
     inline void fillCoarseArena(value_type = 0) const;
@@ -127,8 +132,8 @@ private:
 
     // scratch space
     size_type * _pids;
-    value_type * _coarseArena;
-    value_type * _refinedArena;
+    pointer _coarseArena;
+    pointer _refinedArena;
 
     // disabled metamethods
 public:
