@@ -30,9 +30,9 @@ class Plan:
 
 
     @property
-    def bytes(self):
+    def cells(self):
         """
-        Compute the total amount of memory required to store the reference and secondary tiles
+        Compute the total number of cells required to store the reference and secondary tiles
         """
         # initialize the footprints
         ref = 0
@@ -40,8 +40,8 @@ class Plan:
         # go through the tiles
         for _, refTile, secTile in self.tiles:
             # compute their footprints and update the counters
-            ref += refTile.bytes
-            sec += secTile.bytes
+            ref += refTile.cells
+            sec += secTile.cells
         # all done
         return ref, sec
 
@@ -123,16 +123,23 @@ class Plan:
         """
         Display details about this plan
         """
+        # get the slc product spec
+        slc = ampcor.products.slc()
+        # so we can ask it for its size
+        slcPixel = slc.bytesPerPixel
+
         # sign on
         yield f"{margin}plan:"
         # tile info
         yield f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}"
         yield f"{margin}{indent}pairs: {len(self)} out of {self.tile.size}"
         # memory footprint
-        refBytes, secBytes = self.bytes
+        refCells, secCells = self.cells
+        refBytes = refCells * 8
+        secBytes = secCells * 8
         yield f"{margin}{indent}footprint:"
-        yield f"{margin}{indent*2}reference: {refBytes} bytes"
-        yield f"{margin}{indent*2}secondary: {secBytes} bytes"
+        yield f"{margin}{indent*2}reference: {refCells} cells in {refBytes} bytes"
+        yield f"{margin}{indent*2}secondary: {secCells} cells in {secBytes} bytes"
 
         # go through the pairs
         for offset, ref,sec in self.tiles:
