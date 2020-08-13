@@ -28,6 +28,24 @@ class OffsetMap(ampcor.flow.product,
     data = ampcor.properties.path()
     data.doc = "the path to my binary data"
 
+    # public data
+    @property
+    def layout(self):
+        """
+        Get my layout
+        """
+        # ask the spec
+        return self.spec.layout
+
+
+    @property
+    def bytesPerCell(self):
+        """
+        Get the memory footprint of my cell
+        """
+        # ask the spec
+        return self.spec.bytesPerCell
+
 
     # protocol obligations
     @ampcor.export

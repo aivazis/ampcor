@@ -15,7 +15,7 @@
 // type aliases
 namespace ampcor::py {
     using offsets_t = ampcor::dom::offsets_t;
-    using offsets_pixel_t = offsets_t::pixel_type;
+    using offsets_cell_t = offsets_t::pixel_type;
 }
 
 
@@ -32,18 +32,18 @@ offsets(py::module &m) {
     // the product spec
     py::class_<offsets_t> pyOffsets(m, "Offsets");
     // its pixel type
-    py::class_<offsets_pixel_t> pyPixel(pyOffsets, "Pixel");
+    py::class_<offsets_cell_t> pyCell(pyOffsets, "Cell");
 
     // the pixel definition
-    pyPixel
+    pyCell
         // the reference index
         .def_property("ref",
                       // the getter
-                      [](const offsets_pixel_t & pxl) {
+                      [](const offsets_cell_t & pxl) {
                           return pxl.ref;
                       },
                       // the setter
-                      [](offsets_pixel_t & pxl, std::pair<float, float> ref) {
+                      [](offsets_cell_t & pxl, std::pair<float, float> ref) {
                           pxl.ref = ref;
                       },
                       // the docstring
@@ -52,11 +52,11 @@ offsets(py::module &m) {
         // the shift
         .def_property("delta",
                       // the getter
-                      [](const offsets_pixel_t & pxl) {
+                      [](const offsets_cell_t & pxl) {
                           return pxl.shift;
                       },
                       // the setter
-                      [](offsets_pixel_t & pxl, std::pair<float, float> delta) {
+                      [](offsets_cell_t & pxl, std::pair<float, float> delta) {
                          pxl.shift = delta;
                       },
                       // the docstring
@@ -65,11 +65,11 @@ offsets(py::module &m) {
         // the level of confidence in the mapping
         .def_property("confidence",
                       // the getter
-                      [](const offsets_pixel_t & pxl) {
+                      [](const offsets_cell_t & pxl) {
                           return pxl.confidence;
                       },
                       // the setter
-                      [](offsets_pixel_t & pxl, float confidence) {
+                      [](offsets_cell_t & pxl, float confidence) {
                          pxl.confidence = confidence;
                       },
                       // the docstring
@@ -78,11 +78,11 @@ offsets(py::module &m) {
         // the signal to noise ration
         .def_property("snr",
                       // the getter
-                      [](const offsets_pixel_t & pxl) {
+                      [](const offsets_cell_t & pxl) {
                           return pxl.snr;
                       },
                       // the setter
-                      [](offsets_pixel_t & pxl, float snr) {
+                      [](offsets_cell_t & pxl, float snr) {
                          pxl.snr = snr;
                       },
                       // the docstring
@@ -91,11 +91,11 @@ offsets(py::module &m) {
         // the covariance
         .def_property("covariance",
                       // the getter
-                      [](const offsets_pixel_t & pxl) {
+                      [](const offsets_cell_t & pxl) {
                           return pxl.covariance;
                       },
                       // the setter
-                      [](offsets_pixel_t & pxl, float covariance) {
+                      [](offsets_cell_t & pxl, float covariance) {
                          pxl.covariance = covariance;
                       },
                       // the docstring
@@ -117,6 +117,32 @@ offsets(py::module &m) {
              )
 
         // accessors
+        // the size of a pixel
+        .def_property_readonly("bytesPerCell",
+                               // the getter
+                               [](const offsets_t &) {
+                                   // easy enough
+                                   return sizeof(offsets_t::pixel_type);
+                               },
+                               // the docstring
+                               "memory footprint of a map cell, in bytes"
+                               )
+
+        // access to the layout
+        .def_property_readonly("layout",
+                               // the getter
+                               &offsets_t::layout,
+                               // the docstring
+                               "the layout of the map raster"
+                               )
+
+        .def_property_readonly("shape",
+                               // the getter
+                               &offsets_t::shape,
+                               // the docstring
+                               "the shape of the map raster"
+                               )
+
         // sizes of things: number of cells
         .def_property_readonly("cells",
                       // the getter
