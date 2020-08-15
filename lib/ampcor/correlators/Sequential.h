@@ -10,18 +10,18 @@
 
 
 // a worker that executes a correlation plan one tile at a time
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 class ampcor::correlators::Sequential {
     // types
 public:
     // my template parameters
-    using input_type = inputT;
-    using input_const_reference = const input_type &;
-    using output_type = outputT;
-    using output_reference = output_type &;
+    using slc_type = slcT;
+    using slc_const_reference = const slc_type &;
+    using offsets_type = offsetsT;
+    using offsets_reference = offsets_type &;
 
     // the product spec
-    using spec_type = typename input_type::spec_type;
+    using spec_type = typename slc_type::spec_type;
 
     // the product pixel type
     using cell_type = typename spec_type::pixel_type;
@@ -33,14 +33,14 @@ public:
     using const_pointer = const value_type *;
 
     // tile shape
-    using shape_type = typename input_type::shape_type;
-    using shape_const_reference = typename input_type::shape_const_reference;
+    using shape_type = typename slc_type::shape_type;
+    using shape_const_reference = typename slc_type::shape_const_reference;
     // tile layout
     using layout_type = typename spec_type::layout_type;
     using layout_const_reference = typename spec_type::layout_const_reference;
     // indices
-    using index_type = typename input_type::index_type;
-    using index_const_reference = typename input_type::index_const_reference;
+    using index_type = typename slc_type::index_type;
+    using index_const_reference = typename slc_type::index_const_reference;
 
     // the size of things
     using size_type = size_t;
@@ -73,10 +73,10 @@ public:
     // which may have involved invalid tiles so there may be gaps
     inline void addPair(size_type tid, size_type pid);
     // transfer and detect data from the incoming rasters
-    inline void addReferenceTile(size_type tid, input_const_reference ref);
-    inline void addSecondaryTile(size_type tid, input_const_reference sec);
+    inline void addReferenceTile(size_type tid, slc_const_reference ref);
+    inline void addSecondaryTile(size_type tid, slc_const_reference sec);
     // execute the correlation plan and adjust the offset map
-    void adjust(output_reference);
+    void adjust(offsets_reference);
 
     // debugging support
 public:

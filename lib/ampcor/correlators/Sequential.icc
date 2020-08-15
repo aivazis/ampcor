@@ -12,8 +12,8 @@
 
 // metamethods
 // destructor
-template <class inputT, class outputT>
-ampcor::correlators::Sequential<inputT, outputT>::
+template <class slcT, class offsetsT>
+ampcor::correlators::Sequential<slcT, offsetsT>::
 ~Sequential()
 {
     // clean up
@@ -24,8 +24,8 @@ ampcor::correlators::Sequential<inputT, outputT>::
 
 
 // constructor
-template <class inputT, class outputT>
-ampcor::correlators::Sequential<inputT, outputT>::
+template <class slcT, class offsetsT>
+ampcor::correlators::Sequential<slcT, offsetsT>::
 Sequential(size_type pairs,
            layout_const_reference ref, layout_const_reference sec,
            size_type refineFactor, size_type refineMargin,
@@ -128,9 +128,9 @@ Sequential(size_type pairs,
 
 
 // accessors
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 auto
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 pairs() const -> size_type
 {
     // easy enough
@@ -138,9 +138,9 @@ pairs() const -> size_type
 }
 
 
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 auto
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 coarseArena() const -> const_pointer
 {
     // easy enough
@@ -148,9 +148,9 @@ coarseArena() const -> const_pointer
 }
 
 
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 auto
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 coarseArenaCells() const -> size_type
 {
     // easy enough
@@ -158,9 +158,9 @@ coarseArenaCells() const -> size_type
 }
 
 
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 auto
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 coarseArenaBytes() const -> size_type
 {
     // easy enough
@@ -168,9 +168,9 @@ coarseArenaBytes() const -> size_type
 }
 
 
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 auto
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 coarseArenaStride() const -> size_type
 {
     // easy enough
@@ -180,9 +180,9 @@ coarseArenaStride() const -> size_type
 
 // interface
 // zero out the coarse arena
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 void
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 fillCoarseArena(value_type value) const
 {
     // easy enough
@@ -193,9 +193,9 @@ fillCoarseArena(value_type value) const
 
 
 // record the sequence number of this pairing in the original plan
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 void
-ampcor::correlators::Sequential<inputT, outputT>::
+ampcor::correlators::Sequential<slcT, offsetsT>::
 addPair(size_type tid, size_type pid)
 {
     // easy enough
@@ -206,10 +206,10 @@ addPair(size_type tid, size_type pid)
 
 
 // add a reference tile to the coarse arena
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 void
-ampcor::correlators::Sequential<inputT, outputT>::
-addReferenceTile(size_type tid, input_const_reference ref)
+ampcor::correlators::Sequential<slcT, offsetsT>::
+addReferenceTile(size_type tid, slc_const_reference ref)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
@@ -242,10 +242,10 @@ addReferenceTile(size_type tid, input_const_reference ref)
 
 
 // add a secondary tile to the coarse arena
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 void
-ampcor::correlators::Sequential<inputT, outputT>::
-addSecondaryTile(size_type tid, input_const_reference sec)
+ampcor::correlators::Sequential<slcT, offsetsT>::
+addSecondaryTile(size_type tid, slc_const_reference sec)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.transfer");
@@ -277,11 +277,18 @@ addSecondaryTile(size_type tid, input_const_reference sec)
 
 
 // execute the correlation plan
-template <class inputT, class outputT>
+template <class slcT, class offsetsT>
 void
-ampcor::correlators::Sequential<inputT, outputT>::
-adjust(output_reference)
+ampcor::correlators::Sequential<slcT, offsetsT>::
+adjust(offsets_reference map)
 {
+    // step 1: initial exploration of the correlation surface
+    // adjust the reference tiles to zero mean and compute their variance
+    // build sum area tables so we can do the same to the sliding window in the secondary tiles
+    // use the sum area tables to compute mean amplitude for all possible window placements
+    // compute the correlation hyper surface
+    // find its maxima
+
     // all done
     return;
 }

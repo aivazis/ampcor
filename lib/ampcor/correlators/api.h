@@ -12,8 +12,8 @@
 // publicly visible types
 namespace ampcor::correlators {
     // the sequential worker
-    template <class inputT, class outputT>
-    using sequential_t = Sequential<inputT, outputT>;
+    template <class slcT, class offsetsT>
+    using sequential_t = Sequential<slcT, offsetsT>;
 
     // the threaded worker
     template <class sequentialT>
