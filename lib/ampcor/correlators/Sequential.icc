@@ -39,11 +39,29 @@ Sequential(size_type pairs,
     _refCoarse{ ref, "coarse-ref.dat", ref.cells() },
     _secCoarse{ sec, "coarse-sec.dat", sec.cells() }
 {
+    // we have some invariants to check: the number of pairs must match the reference and
+    // secondary grid layout
+    if (_pairs != ref.shape()[0] or _pairs != sec.shape()[0]) {
+        // we have a bug
+        pyre::journal::firewall_t channel("ampcor.sequential.setup");
+        // build a report and complain
+        channel
+            << "while instantiating the sequential worker:"
+            << pyre::journal::newline
+            << "mismatch in the tile pair counts:"
+            << pyre::journal::newline
+            << "expected: " << _pairs << " tile pairs"
+            << ", got " << ref.shape()[0] << " reference tiles"
+            << ", and " << sec.shape()[0] << " secondary tiles"
+            << pyre::journal::endl(__HERE__);
+        // UNREACHABLE
+        // unless the user has explicitly prevented firewalls from being fatal
+    }
+
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.setup");
     // show me
     channel
-        << pyre::journal::at(__HERE__)
         << "new Sequential worker:"
         << pyre::journal::newline
         << "  pairs: " << _pairs
@@ -51,7 +69,7 @@ Sequential(size_type pairs,
         << "    ref shape: {" << ref.shape() << "}, " << ref.cells() << " cells"
         << pyre::journal::newline
         << "    sec shape: {" << sec.shape() << "}, " << sec.cells() << " cells"
-        << pyre::journal::endl;
+        << pyre::journal::endl(__HERE__);
 
     // all done
     return;
@@ -75,6 +93,23 @@ void
 ampcor::correlators::Sequential<slcT, offsetsT>::
 addTilePair(size_type tid, size_type pid, slc_const_reference ref, slc_const_reference sec)
 {
+    // verify that the tile id is within bounds
+    if (tid >= _pairs) {
+        // and if not, we have a bug
+        pyre::journal::firewall_t channel("ampcor.sequential.transfer");
+        // build a report and complain
+        channel
+            << "while adding tile pairs to the coarse arena:"
+            << pyre::journal::newline
+            << "tile id is out of bounds: "
+            << pyre::journal::newline
+            << "expected a number in [0," << _pairs << ")"
+            << ", got "  << tid
+            << pyre::journal::endl(__HERE__);
+        // UNREACHABLE
+        // unless the user has explicitly prevented firewalls from being fatal
+    }
+
     // record the original collation order
     _pids[tid] = pid;
 
@@ -83,23 +118,23 @@ addTilePair(size_type tid, size_type pid, slc_const_reference ref, slc_const_ref
                       // compute the magnitude and return
                       return std::abs(cell);
                   };
-    // the destination in either tile grid
+    // form the destination index; works for either tile grid
     tile_grid_index_type origin { tid, 0, 0 };
 
-    // using the shape of the reference tile
+    // use the shape of the reference tile
     const auto & refShape = ref.layout().shape();
-    // build the shape of the reference box
+    // to build the shape of the reference box
     tile_grid_shape_type refBoxShape { 0, refShape[0], refShape[1] };
-    // and now the box itself
+    // and the box itself
     auto refBox = _refCoarse.box(origin, refBoxShape);
     // move the data and detect in transit
     std::transform(ref.begin(), ref.end(), refBox.begin(), detect);
 
-    // using the shape of the secondary tile
+    // use the shape of the secondary tile
     const auto & secShape = sec.layout().shape();
-    // build the shape of the secondary box
+    // to build the shape of the secondary box
     tile_grid_shape_type secBoxShape { 0, secShape[0], secShape[1] };
-    // and now the box itself
+    // and the box itself
     auto secBox = _secCoarse.box(origin, secBoxShape);
     // move the data and detect in transit
     std::transform(sec.begin(), sec.end(), secBox.begin(), detect);
@@ -110,21 +145,21 @@ addTilePair(size_type tid, size_type pid, slc_const_reference ref, slc_const_ref
     channel
         << "added tile pair #" << tid << " (" << pid << ") to the arena"
         << pyre::journal::newline
-
+        // reference tile info
         << "reference:"
         << pyre::journal::newline
         << "    from: (" << ref.layout().origin() << "), shape: (" << ref.layout().shape() << ")"
         << pyre::journal::newline
         << "      to: (" << refBox.layout().origin() << "), shape: " << refBox.layout().shape()
         << pyre::journal::newline
-
+        // secondary tile info
         << "secondary:"
         << pyre::journal::newline
         << "    from: (" << sec.layout().origin() << "), shape: " << sec.layout().shape()
         << pyre::journal::newline
         << "      to: (" << secBox.layout().origin() << "), shape: " << secBox.layout().shape()
         << pyre::journal::newline
-
+        // flush
         << pyre::journal::endl;
 
 
