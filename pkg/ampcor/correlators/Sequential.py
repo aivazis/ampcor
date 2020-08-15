@@ -33,7 +33,7 @@ class Sequential:
         channel = journal.info("ampcor.timings.sequential")
 
         # unpack the rasters
-        ref, sec = rasters
+        refRaster, secRaster = rasters
         # get the tile pairings
         tiles = plan.tiles
         # because we need to know how many there are
@@ -66,13 +66,11 @@ class Sequential:
         # start the timer
         timer.reset().start()
         # go through the tile pairs
-        for idx, (pid, r,s) in enumerate(tiles):
+        for idx, (pid, refTile,secTile) in enumerate(tiles):
             # save the pair id
-            worker.addPair(tid=idx, pid=pid)
-            # load the reference tile
-            worker.addReferenceTile(tid=idx, raster=ref, tile=r)
-            # load the secondary tile
-            worker.addSecondaryTile(tid=idx, raster=sec, tile=s)
+            worker.addTilePair(tid=idx, pid=pid,
+                               referenceRaster=refRaster, referenceTile=refTile,
+                               secondaryRaster=secRaster, secondaryTile=secTile)
         # stop the timer
         timer.stop()
         # show me
