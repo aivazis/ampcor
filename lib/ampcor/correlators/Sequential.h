@@ -16,31 +16,34 @@ class ampcor::correlators::Sequential {
 public:
     // my template parameters
     using slc_type = slcT;
-    using slc_const_reference = const slc_type &;
     using offsets_type = offsetsT;
+    // typical uses
+    using slc_const_reference = const slc_type &;
     using offsets_reference = offsets_type &;
+    // the product specs
+    using slc_spec = typename slc_type::spec_type;
+    using offsets_spec = typename offsets_type::spec_type;
 
-    // the product spec
-    using spec_type = typename slc_type::spec_type;
+    // the slc pixel base type
+    using slc_value_type = typename slc_spec::value_type;
+    // the slc pixel type
+    using slc_pixel_type = typename slc_spec::pixel_type;
 
-    // the product pixel type
-    using cell_type = typename spec_type::pixel_type;
-    // and its underlying support
-    using value_type = typename spec_type::value_type;
-    // pointer to values
-    using pointer = value_type *;
-    // const pointer to values
-    using const_pointer = const value_type *;
+    // my constructor depends on the layout of the incoming tiles
+    using slc_layout_type = typename slc_spec::layout_type;
+    using slc_layout_const_reference = const slc_layout_type &;
 
-    // tile shape
-    using shape_type = typename slc_type::shape_type;
-    using shape_const_reference = typename slc_type::shape_const_reference;
-    // tile layout
-    using layout_type = typename spec_type::layout_type;
-    using layout_const_reference = typename spec_type::layout_const_reference;
-    // indices
-    using index_type = typename slc_type::index_type;
-    using index_const_reference = typename slc_type::index_const_reference;
+    // my record of the original pair collation order
+    using pid_grid = size_t *;
+
+    // tile storage
+    using tile_grid_type = pyre::grid::grid_t<pyre::grid::canonical_t<3>,
+                                              pyre::memory::map_t<float>>;
+    using tile_grid_layout_type = tile_grid_type::packing_type;
+    using tile_grid_index_type = tile_grid_type::index_type;
+    using tile_grid_shape_type = tile_grid_type::shape_type;
+    // usage
+    using tile_grid_layout_const_reference = const tile_grid_layout_type &;
 
     // the size of things
     using size_type = size_t;
@@ -53,7 +56,7 @@ public:
     // constructor
     inline
     Sequential(size_type pairs,
-               layout_const_reference ref, layout_const_reference sec,
+               tile_grid_layout_const_reference ref, tile_grid_layout_const_reference sec,
                size_type refineFactor, size_type refineMargin,
                size_type zoomFactor);
 
@@ -61,31 +64,21 @@ public:
 public:
     inline auto pairs() const -> size_type;
 
-    inline auto coarseArena() const -> const_pointer;
-    inline auto coarseArenaCells() const -> size_type;
-    inline auto coarseArenaBytes() const -> size_type;
-    inline auto coarseArenaStride() const -> size_type;
-
     // interface
 public:
-    // record the id of a given pairing; note that {tid} tracks the pairings that were assigned
-    // to me, while {pid} remembers the sequence number of this pairing in the original plan,
-    // which may have involved invalid tiles so there may be gaps
-    inline void addPair(size_type tid, size_type pid);
-    // transfer and detect data from the incoming rasters
-    inline void addReferenceTile(size_type tid, slc_const_reference ref);
-    inline void addSecondaryTile(size_type tid, slc_const_reference sec);
+    // transfer, detect, and store a pair of tiles and record the id of this pairing; note that
+    // {tid} tracks the pairings that were assigned to me, while {pid} remembers the collation
+    // number of this pairing in the original plan, which may have involved invalid tiles so
+    // there may be gaps
+    inline void addTilePair(size_type tid, size_type pid,
+                            slc_const_reference ref, slc_const_reference sec
+                            );
+
     // execute the correlation plan and adjust the offset map
     void adjust(offsets_reference);
 
-    // debugging support
-public:
-    // initializer; useful for debugging
-    inline void fillCoarseArena(value_type = 0) const;
-
     // implementation details: data
 private:
-    // abbreviations: ref: reference tile, sec: secondary tile, cor: correlation matrix
     // my workload
     const size_type _pairs;
     // the correlation surface refinement parameters
@@ -93,51 +86,11 @@ private:
     const size_type _refineMargin;
     const size_type _zoomFactor;
 
-    // the shapes of things
-    // initially
-    const layout_type _refLayout;
-    const layout_type _secLayout;
-    const layout_type _corLayout;
-    // after refinement
-    const layout_type _refRefinedLayout;
-    const layout_type _secRefinedLayout;
-    const layout_type _corRefinedLayout;
-    // after zooming
-    const layout_type _corZoomedLayout;
-
-    // the number of cells
-    // initially
-    const size_type _refCells;
-    const size_type _secCells;
-    const size_type _corCells;
-    // after refinement
-    const size_type _refRefinedCells;
-    const size_type _secRefinedCells;
-
-    // the stride from one tile pair to the net
-    const size_type _coarseStride;
-    const size_type _refinedStride;
-
-    // memory footprint, in bytes
-    // initially
-    const size_type _refBytes;
-    const size_type _secBytes;
-    const size_type _corBytes;
-    // after refinement
-    const size_type _refRefinedBytes;
-    const size_type _secRefinedBytes;
-
-    // scratch space capacity
-    const size_type _coarseArenaCells;
-    const size_type _refinedArenaCells;
-    // scratch space memory footprint
-    const size_type _coarseArenaBytes;
-    const size_type _refinedArenaBytes;
-
     // scratch space
-    size_type * _pids;
-    pointer _coarseArena;
-    pointer _refinedArena;
+    pid_grid _pids;
+    // the grid of reference tiles
+    tile_grid_type _refCoarse;
+    tile_grid_type _secCoarse;
 
     // disabled metamethods
 public:
