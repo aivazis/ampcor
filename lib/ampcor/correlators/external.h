@@ -15,6 +15,8 @@
 // externals
 #include <p2/grid.h>
 
+// pull the product definitions
+#include <ampcor/dom.h>
 
 // type aliases
 namespace ampcor::correlators {

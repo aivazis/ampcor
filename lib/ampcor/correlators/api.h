@@ -12,7 +12,7 @@
 // publicly visible types
 namespace ampcor::correlators {
     // the sequential worker
-    template <class slcT, class offsetsT>
+    template <class slcT = dom::slc_const_raster_t, class offsetsT = dom::offsets_raster_t>
     using sequential_t = Sequential<slcT, offsetsT>;
 
     // the threaded worker
