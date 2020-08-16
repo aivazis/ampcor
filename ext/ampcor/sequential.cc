@@ -53,12 +53,12 @@ sequential(py::module &m) {
     py::class_<sequential_t>(m, "Sequential")
         // constructor
         .def(// the wrapper
-             py::init([](size_t pairs, py::tuple ref, py::tuple sec,
+             py::init([](size_t pairs, py::tuple chip, py::tuple padding,
                          size_t refineFactor, size_t refineMargin, size_t zoomFactor)
-                      { return constructor(pairs, ref, sec,
+                      { return constructor(pairs, chip, padding,
                                            refineFactor, refineMargin, zoomFactor);}),
              // the signature
-             "pairs"_a, "ref"_a, "sec"_a,
+             "pairs"_a, "chip"_a, "padding"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
         // add a pair of tiles
@@ -92,19 +92,28 @@ sequential(py::module &m) {
 // worker constructor
 auto
 ampcor::py::
-constructor(size_t pairs, py::tuple ref, py::tuple sec,
+constructor(size_t pairs, py::tuple chip, py::tuple padding,
             size_t refineFactor, size_t refineMargin, size_t zoomFactor )
     -> unique_pointer<sequential_t>
 {
-    // extract the shape of the reference tile
-    sequential_t::tile_grid_shape_type refShape { pairs, ref[0].cast<int>(), ref[1].cast<int>() };
-    // and the shape of the secondary tile
-    sequential_t::tile_grid_shape_type secShape { pairs, sec[0].cast<int>(), sec[1].cast<int>() };
+    // unpack the chip
+    size_t chip_0 = py::int_(chip[0]);
+    size_t chip_1 = py::int_(chip[1]);
+    // unpack the padding
+    size_t pad_0 = py::int_(padding[0]);
+    size_t pad_1 = py::int_(padding[1]);
 
-    // build the layout of the reference tile
-    sequential_t::tile_grid_layout_type refLayout { refShape };
-    // and the layout of the secondary tile
-    sequential_t::tile_grid_layout_type secLayout { secShape };
+    // build the shape of the arena with the reference tiles
+    sequential_t::arena_shape_type refShape { pairs, chip_0, chip_1 };
+    // build its layout
+    sequential_t::arena_layout_type refLayout { refShape };
+
+    // build the shape of the arena with the secondary tiles
+    sequential_t::arena_shape_type secShape { pairs, chip_0 + 2*pad_0, chip_1 + 2*pad_1 };
+    // adjust the origin
+    sequential_t::arena_index_type secOrigin { 0, -pad_0, -pad_1 };
+    // build the layout
+    sequential_t::arena_layout_type secLayout { secShape, secOrigin };
 
     // build the worker and return it
     return std::unique_ptr<sequential_t>(new sequential_t(pairs,
