@@ -25,7 +25,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 template <class slcT, class offsetsT>
 ampcor::correlators::Sequential<slcT, offsetsT>::
 Sequential(size_type pairs,
-           tile_grid_layout_const_reference ref, tile_grid_layout_const_reference sec,
+           arena_layout_const_reference ref, arena_layout_const_reference sec,
            size_type refineFactor, size_type refineMargin,
            size_type zoomFactor) :
     // workload
@@ -36,8 +36,8 @@ Sequential(size_type pairs,
     _zoomFactor{ zoomFactor },
     // scratch space
     _pids{ new size_type [_pairs] },
-    _refCoarse{ ref, "coarse-ref.dat", ref.cells() },
-    _secCoarse{ sec, "coarse-sec.dat", sec.cells() }
+    _refCoarse{ ref, "coarse_ref.dat", ref.cells() },
+    _secCoarse{ sec, "coarse_sec.dat", sec.cells() }
 {
     // we have some invariants to check: the number of pairs must match the reference and
     // secondary grid layout
@@ -119,12 +119,12 @@ addTilePair(size_type tid, size_type pid, slc_const_reference ref, slc_const_ref
                       return std::abs(cell);
                   };
     // form the destination index; works for either tile grid
-    tile_grid_index_type origin { tid, 0, 0 };
+    arena_index_type origin { tid, 0, 0 };
 
     // use the shape of the reference tile
     const auto & refShape = ref.layout().shape();
     // to build the shape of the reference box
-    tile_grid_shape_type refBoxShape { 0, refShape[0], refShape[1] };
+    arena_shape_type refBoxShape { 0, refShape[0], refShape[1] };
     // and the box itself
     auto refBox = _refCoarse.box(origin, refBoxShape);
     // move the data and detect in transit
@@ -133,7 +133,7 @@ addTilePair(size_type tid, size_type pid, slc_const_reference ref, slc_const_ref
     // use the shape of the secondary tile
     const auto & secShape = sec.layout().shape();
     // to build the shape of the secondary box
-    tile_grid_shape_type secBoxShape { 0, secShape[0], secShape[1] };
+    arena_shape_type secBoxShape { 0, secShape[0], secShape[1] };
     // and the box itself
     auto secBox = _secCoarse.box(origin, secBoxShape);
     // move the data and detect in transit

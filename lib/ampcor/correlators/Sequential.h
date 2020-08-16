@@ -37,13 +37,13 @@ public:
     using pid_grid = size_t *;
 
     // tile storage
-    using tile_grid_type = pyre::grid::grid_t<pyre::grid::canonical_t<3>,
-                                              pyre::memory::map_t<float>>;
-    using tile_grid_layout_type = tile_grid_type::packing_type;
-    using tile_grid_index_type = tile_grid_type::index_type;
-    using tile_grid_shape_type = tile_grid_type::shape_type;
+    using arena_type = pyre::grid::grid_t<pyre::grid::canonical_t<3>, pyre::memory::map_t<float>>;
+    using arena_layout_type = arena_type::packing_type;
+    using arena_index_type = arena_type::index_type;
+    using arena_shape_type = arena_type::shape_type;
     // usage
-    using tile_grid_layout_const_reference = const tile_grid_layout_type &;
+    using arena_layout_const_reference = arena_type::packing_const_reference;
+    using arena_shape_const_reference = arena_type::shape_const_reference;
 
     // the size of things
     using size_type = size_t;
@@ -56,7 +56,7 @@ public:
     // constructor
     inline
     Sequential(size_type pairs,
-               tile_grid_layout_const_reference ref, tile_grid_layout_const_reference sec,
+               arena_layout_const_reference ref, arena_layout_const_reference sec,
                size_type refineFactor, size_type refineMargin,
                size_type zoomFactor);
 
@@ -89,8 +89,8 @@ private:
     // scratch space
     pid_grid _pids;
     // the grid of reference tiles
-    tile_grid_type _refCoarse;
-    tile_grid_type _secCoarse;
+    arena_type _refCoarse;
+    arena_type _secCoarse;
 
     // disabled metamethods
 public:
