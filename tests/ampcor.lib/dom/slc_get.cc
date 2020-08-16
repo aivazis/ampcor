@@ -14,7 +14,7 @@ using namespace std::complex_literals;
 
 
 // type aliases
-using slc_t = ampcor::dom::slc_const_t;
+using slc_const_raster_t = ampcor::dom::slc_const_raster_t;
 
 
 // create an SLC
@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
     // the name of the product
     std::string name = "slc.dat";
     // make a shape
-    slc_t::shape_type shape { 256, 256 };
+    slc_const_raster_t::shape_type shape { 256, 256 };
     // build the product specification
-    slc_t::spec_type spec { shape };
+    slc_const_raster_t::spec_type spec { slc_const_raster_t::layout_type(shape) };
 
     // open the product
-    slc_t slc { spec, name };
+    slc_const_raster_t slc { spec, name };
 
     // go through it
     for (const auto & idx : slc.layout()) {

@@ -14,7 +14,7 @@ using namespace std::complex_literals;
 
 
 // type aliases
-using offsets_t = ampcor::dom::offsets_t;
+using offsets_const_raster_t = ampcor::dom::offsets_const_raster_t;
 
 
 // create an offset map
@@ -28,20 +28,31 @@ int main(int argc, char *argv[]) {
     // the name of the product
     std::string name = "offsets.dat";
     // make a shape
-    offsets_t::shape_type shape { 2, 120, 40};
+    offsets_const_raster_t::shape_type shape { 120, 40};
     // build the product specification
-    offsets_t::spec_type spec { shape };
+    offsets_const_raster_t::spec_type spec { offsets_const_raster_t::layout_type(shape) };
 
     // make the product; supplying the grid capacity is the signal to create a new one rather
     // than map over an existing product
-    offsets_t offsets { spec, name };
+    offsets_const_raster_t offsets { spec, name };
 
     // go through it
     for (const auto & idx : offsets.layout()) {
-        // convert the index into a pixel
-        offsets_t::pixel_type expected { idx[1], idx[2] };
+        // the expected values
+        float x = idx[0];
+        float y = idx[1];
+        float dx = x / 2;
+        float dy = x / 2;
+        // build a cell
+        offsets_const_raster_t::pixel_type expected { {x, y}, {dx, dy}, 0, 0, 0 };
+        // get the raster value
+        auto & value = offsets[idx];
         // verify
-        assert(( offsets[idx] == expected ));
+        assert(( value.ref == expected.ref ));
+        assert(( value.shift == expected.shift ));
+        assert(( value.confidence == expected.confidence ));
+        assert(( value.snr == expected.snr ));
+        assert(( value.covariance == expected.covariance ));
     }
 
     // all done
