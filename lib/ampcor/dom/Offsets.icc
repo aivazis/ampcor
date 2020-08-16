@@ -31,6 +31,15 @@ Offsets(layout_const_reference layout) :
 // interface
 constexpr auto
 ampcor::dom::Offsets::
+layout() const -> layout_const_reference
+{
+    // my layout knows
+    return _layout;
+}
+
+
+constexpr auto
+ampcor::dom::Offsets::
 cells() const -> size_type
 {
     // easy enough
@@ -44,24 +53,6 @@ bytes() const -> size_type
 {
     // easy enough
     return cells() * sizeof(pixel_type);
-}
-
-
-constexpr auto
-ampcor::dom::Offsets::
-layout() const -> layout_type
-{
-    // my layout knows
-    return _layout;
-}
-
-
-constexpr auto
-ampcor::dom::Offsets::
-shape() const -> layout_type::shape_type
-{
-    // my layout knows
-    return _layout.shape();
 }
 
 

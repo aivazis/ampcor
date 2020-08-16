@@ -9,7 +9,6 @@
 #else
 
 
-
 // metamethods
 constexpr
 ampcor::dom::SLC::
@@ -39,19 +38,10 @@ bytes() const -> size_type
 
 constexpr auto
 ampcor::dom::SLC::
-layout() const -> layout_type
+layout() const -> layout_const_reference
 {
     // my layout knows
     return _layout;
-}
-
-
-constexpr auto
-ampcor::dom::SLC::
-shape() const -> layout_type::shape_type
-{
-    // my layout knows
-    return _layout.shape();
 }
 
 

@@ -26,16 +26,15 @@ public:
 
     // metamethods
 public:
-    constexpr
-    SLC(layout_const_reference);
+    constexpr SLC(layout_const_reference);
 
     // interface
 public:
+    // my layout
+    constexpr auto layout() const -> layout_const_reference;
+    // my footprint
     constexpr auto cells() const -> size_type;
     constexpr auto bytes() const -> size_type;
-
-    constexpr auto layout() const -> layout_type;
-    constexpr auto shape() const -> layout_type::shape_type;
 
     // implementation details: data
 private:

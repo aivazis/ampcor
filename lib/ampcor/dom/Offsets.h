@@ -36,12 +36,11 @@ public:
 
     // interface
 public:
+    // my layout
+    constexpr auto layout() const -> layout_const_reference;
     // the memory footprint; the cell capacity is given by the inherited {cells}
     constexpr auto cells() const -> size_type;
     constexpr auto bytes() const -> size_type;
-
-    constexpr auto layout() const -> layout_type;
-    constexpr auto shape() const -> layout_type::shape_type;
 
     // implementation details: data
 private:
