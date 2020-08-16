@@ -41,7 +41,7 @@ class Sequential:
         # get the shape of the reference chip
         chip = plan.chip
         # and the shape of the search windows
-        window = plan.window
+        padding = plan.padding
 
         # the manager holds the refinement plan
         refineFactor = manager.refineFactor
@@ -54,7 +54,7 @@ class Sequential:
         timer.reset().start()
         # instantiate my worker
         worker = libampcor.Sequential(pairs=pairs,
-                                      ref=chip, sec=window,
+                                      chip=chip, padding=padding,
                                       refineFactor=refineFactor, refineMargin=refineMargin,
                                       zoomFactor=zoomFactor
                                       )
