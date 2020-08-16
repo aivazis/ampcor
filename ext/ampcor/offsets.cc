@@ -138,7 +138,10 @@ offsets(py::module &m) {
 
         .def_property_readonly("shape",
                                // the getter
-                               &offsets_t::shape,
+                               [](const offsets_t & spec) {
+                                   // easy enough
+                                   return spec.layout().shape();
+                               },
                                // the docstring
                                "the shape of the map raster"
                                )
@@ -174,12 +177,8 @@ offsets_constructor(py::tuple pyShape)
     // extract the shape
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
-    // make a shape
-    offsets_t::layout_type::shape_type shape {rows, cols};
-    // turn it into a layout
-    offsets_t::layout_type layout { shape };
-    // make a product specification out of the layout and return it
-    return offsets_t { layout };
+    // make a product specification and return it
+    return offsets_t { offsets_t::layout_type({rows, cols}) };
 }
 
 

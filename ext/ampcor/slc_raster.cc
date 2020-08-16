@@ -128,12 +128,8 @@ slc_raster_constructor(py::tuple pyShape, py::object pyURI, bool create)
     // extract the shape
     int lines = py::int_(pyShape[0]);
     int samples = py::int_(pyShape[1]);
-    // make a shape
-    slc_raster_t::shape_type shape {lines, samples};
-    // turn it into a layout
-    slc_raster_t::spec_type::layout_type layout { shape };
-    // make a product specification out of the layout
-    slc_raster_t::spec_type spec { layout };
+    // make a product specification
+    slc_raster_t::spec_type spec { slc_raster_t::layout_type({lines, samples}) };
 
     // convert the path-like object into a string
     // get {os.fspath}

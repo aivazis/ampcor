@@ -70,7 +70,10 @@ slc(py::module &m) {
         // and the shape
         .def_property_readonly("shape",
                                // the getter
-                               &slc_t::shape,
+                               [](const slc_t spec) {
+                                   // easy enough
+                                   return spec.layout().shape();
+                               },
                                // the docstring
                                "the shape of the SLC raster"
                                )
@@ -126,12 +129,8 @@ slc_constructor(py::tuple pyShape) -> slc_t
     // extract the shape
     int lines = py::int_(pyShape[0]);
     int samples = py::int_(pyShape[1]);
-    // make a shape
-    slc_t::layout_type::shape_type shape {lines, samples};
-    // turn it into a layout
-    slc_t::layout_type layout { shape };
-    // make a product specification out of the layout and return it
-    return slc_t { layout };
+    // make a product specification and return it
+    return slc_t { slc_t::layout_type({lines, samples}) };
 }
 
 
