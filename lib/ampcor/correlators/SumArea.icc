@@ -37,7 +37,7 @@ operator[] (const index_type & index) const {
 template <typename rasterT>
 const auto &
 ampcor::correlators::SumArea<rasterT>::
-operator[] (size_type offset) const {
+operator[] (int offset) const {
     // ask my grid for its number of cells a
     return _grid[offset];
 }
@@ -57,7 +57,7 @@ operator[] (const index_type & index) {
 template <typename rasterT>
 auto &
 ampcor::correlators::SumArea<rasterT>::
-operator[] (size_type offset) {
+operator[] (int offset) {
     // ask my grid for its number of cells a
     return _grid[offset];
 }

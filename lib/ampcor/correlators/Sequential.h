@@ -34,19 +34,17 @@ public:
     using slc_layout_const_reference = const slc_layout_type &;
 
     // my record of the original pair collation order
-    using pid_grid = size_t *;
+    using pid_grid = int *;
 
-    // tile storage
-    using arena_type = pyre::grid::grid_t<pyre::grid::canonical_t<3>, pyre::memory::map_t<float>>;
+    // temporary tile storage
+    using arena_type = ampcor::dom::arena_raster_t;
+    using arena_spec = arena_type::spec_type;
     using arena_layout_type = arena_type::packing_type;
     using arena_index_type = arena_type::index_type;
     using arena_shape_type = arena_type::shape_type;
     // usage
     using arena_layout_const_reference = arena_type::packing_const_reference;
     using arena_shape_const_reference = arena_type::shape_const_reference;
-
-    // the size of things
-    using size_type = size_t;
 
     // metamethods
 public:
@@ -55,14 +53,14 @@ public:
 
     // constructor
     inline
-    Sequential(size_type pairs,
+    Sequential(int pairs,
                arena_layout_const_reference ref, arena_layout_const_reference sec,
-               size_type refineFactor, size_type refineMargin,
-               size_type zoomFactor);
+               int refineFactor, int refineMargin,
+               int zoomFactor);
 
     // accessors
 public:
-    inline auto pairs() const -> size_type;
+    inline auto pairs() const -> int;
 
     // interface
 public:
@@ -70,7 +68,7 @@ public:
     // {tid} tracks the pairings that were assigned to me, while {pid} remembers the collation
     // number of this pairing in the original plan, which may have involved invalid tiles so
     // there may be gaps
-    inline void addTilePair(size_type tid, size_type pid,
+    inline void addTilePair(int tid, int pid,
                             slc_const_reference ref, slc_const_reference sec
                             );
 
@@ -80,11 +78,11 @@ public:
     // implementation details: data
 private:
     // my workload
-    const size_type _pairs;
+    const int _pairs;
     // the correlation surface refinement parameters
-    const size_type _refineFactor;
-    const size_type _refineMargin;
-    const size_type _zoomFactor;
+    const int _refineFactor;
+    const int _refineMargin;
+    const int _zoomFactor;
 
     // scratch space
     pid_grid _pids;

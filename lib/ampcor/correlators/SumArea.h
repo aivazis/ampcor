@@ -32,9 +32,6 @@ public:
     // my slice type
     using slice_type = typename grid_type::slice_type;
 
-    // for sizing things
-    using size_type = size_t; // from ampcor::dom
-
     // interface
 public:
     // access to my layout
@@ -44,10 +41,10 @@ public:
     inline auto data() const;
 
     // data access
-    inline const auto & operator[](size_type offset) const;
+    inline const auto & operator[](int offset) const;
     inline const auto & operator[](const index_type & index) const;
 
-    inline auto & operator[](size_type offset);
+    inline auto & operator[](int offset);
     inline auto & operator[](const index_type & index);
 
     // compute the sum of the values within a window; note that, in our convention, the window
