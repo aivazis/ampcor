@@ -40,7 +40,7 @@ layout() const -> layout_const_reference
 
 constexpr auto
 ampcor::dom::Offsets::
-cells() const -> size_type
+cells() const -> std::size_t
 {
     // easy enough
     return _layout.cells();
@@ -49,7 +49,7 @@ cells() const -> size_type
 
 constexpr auto
 ampcor::dom::Offsets::
-bytes() const -> size_type
+bytes() const -> std::size_t
 {
     // easy enough
     return cells() * sizeof(pixel_type);

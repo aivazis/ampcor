@@ -20,8 +20,6 @@ public:
     // my layout
     using layout_type = layout_t<3>;
     using layout_const_reference = const layout_type &;
-    // size of things
-    using size_type = typename layout_type::size_type;
 
     // metamethods
 public:
@@ -32,8 +30,8 @@ public:
     // my layout
     constexpr auto layout() const -> layout_const_reference;
     // my footprint
-    constexpr auto cells() const -> size_type;
-    constexpr auto bytes() const -> size_type;
+    constexpr auto cells() const -> std::size_t;
+    constexpr auto bytes() const -> std::size_t;
 
     // implementation details: data
 private:

@@ -23,7 +23,7 @@ Product(spec_const_reference spec, Args&&... args) :
 template <class specT, bool isReadOnly>
 constexpr auto
 ampcor::dom::Product<specT, isReadOnly>::
-cells() const -> size_type
+cells() const -> std::size_t
 {
     // my grid knows
     return this->layout().cells();
@@ -33,7 +33,7 @@ cells() const -> size_type
 template <class specT, bool isReadOnly>
 constexpr auto
 ampcor::dom::Product<specT, isReadOnly>::
-bytes() const -> size_type
+bytes() const -> std::size_t
 {
     // easy enough
     return this->layout().cells() * sizeof(pixel_type);

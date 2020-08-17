@@ -20,7 +20,7 @@ Arena(layout_const_reference layout):
 // interface
 constexpr auto
 ampcor::dom::Arena::
-cells() const -> size_type
+cells() const -> std::size_t
 {
     // easy enough
     return _layout.cells();
@@ -29,7 +29,7 @@ cells() const -> size_type
 
 constexpr auto
 ampcor::dom::Arena::
-bytes() const -> size_type
+bytes() const -> std::size_t
 {
     // easy enough
     return cells() * sizeof(pixel_type);

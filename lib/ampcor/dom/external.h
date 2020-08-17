@@ -18,9 +18,6 @@
 
 // type aliases
 namespace ampcor::dom {
-    // sizes of things
-    using size_t = std::size_t;
-
     // complex numbers
     template <typename T>
     using complex_t = std::complex<T>;
@@ -34,7 +31,7 @@ namespace ampcor::dom {
                                       >;
 
     // most products are {lines}x{samples} packed in row-major order
-    template <size_t N>
+    template <int N>
     using layout_t = pyre::grid::canonical_t<N>;
 
     // pull {pyre::grid:grid_t}, with a twist

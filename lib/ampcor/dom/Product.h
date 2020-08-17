@@ -37,9 +37,6 @@ public:
     using layout_type = typename grid_type::packing_type;
     using layout_const_reference = const layout_type &;
 
-    // sizes of things
-    using size_type = typename spec_type::size_type;
-
     // metamethods
 public:
     // constructor that passes its extra arguments to the storage strategy
@@ -50,8 +47,8 @@ public:
 public:
     // {size} is too overloaded, so we use {cells} to denote the number of cells in the
     // product layout, and {bytes} for its memory requirements
-    constexpr auto cells() const -> size_type;
-    constexpr auto bytes() const -> size_type;
+    constexpr auto cells() const -> std::size_t;
+    constexpr auto bytes() const -> std::size_t;
 
     // tile factory
 public:
