@@ -18,13 +18,15 @@
 // this is the file you are looking for
 #include "api.h"
 
-
 // the local entities
 // product specifications
 #include "SLC.h"
 #include "Offsets.h"
+// intermediate products
+#include "Arena.h"
 // product gives specifications their storage strategy
 #include "Product.h"
+
 
 # endif
 

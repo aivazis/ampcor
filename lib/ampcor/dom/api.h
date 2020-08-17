@@ -24,6 +24,14 @@ namespace ampcor::dom {
     // the rasters
     using offsets_raster_t = Product<Offsets, false>;      // read/write
     using offsets_const_raster_t = Product<Offsets, true>; // read only
+
+    // intermediate data products
+    // tile arenas
+    // the spec
+    using arena_t = Arena;
+    // the rasters
+    using arena_raster_t = Product<Arena, false>;          // read-write
+    using arena_const_raster_t = Product<Arena, false>;    // read only
 }
 
 #endif

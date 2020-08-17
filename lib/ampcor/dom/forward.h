@@ -12,8 +12,11 @@
 // set up the namespace
 namespace ampcor::dom {
     // the layout specification for the various product types
+    // inputs and outputs
     class SLC;
     class Offsets;
+    // intermediate
+    class Arena;
 
     // turning specs into actual products
     template <class specT, bool isReadOnly>

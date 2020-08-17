@@ -1,0 +1,50 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_dom_Arena_icc)
+#error this file contains implementation details for ampcor::dom::Arena
+#else
+
+
+// metamethods
+constexpr
+ampcor::dom::Arena::
+Arena(layout_const_reference layout):
+    _layout { layout }
+{}
+
+
+// interface
+constexpr auto
+ampcor::dom::Arena::
+cells() const -> size_type
+{
+    // easy enough
+    return _layout.cells();
+}
+
+
+constexpr auto
+ampcor::dom::Arena::
+bytes() const -> size_type
+{
+    // easy enough
+    return cells() * sizeof(pixel_type);
+}
+
+
+constexpr auto
+ampcor::dom::Arena::
+layout() const -> layout_const_reference
+{
+    // my layout knows
+    return _layout;
+}
+
+
+#endif
+
+// end of file
