@@ -33,7 +33,6 @@ def test():
 
     # make sure we get the same information from the {layout} as from the spec
     assert slc.cells() == layout.cells
-    assert slc.bytes() == layout.bytes
 
     # all done
     return 0
