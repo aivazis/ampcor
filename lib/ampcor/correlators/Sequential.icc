@@ -276,7 +276,6 @@ sat(arena_reference arena, string_type tag)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.stats");
-    channel.activate();
 
     // get the arena layout
     const auto & layout = arena.layout();
