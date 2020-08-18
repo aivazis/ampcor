@@ -29,7 +29,7 @@ using seq_t = ampcor::correlators::sequential_t<slc_const_raster_t, offsets_rast
 int main(int argc, char *argv[]) {
     // initialize the journal
     pyre::journal::init(argc, argv);
-    pyre::journal::application("seq_transfer_tiles");
+    pyre::journal::application("seq_adjust");
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.seq");
 
