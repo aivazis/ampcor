@@ -16,7 +16,9 @@ ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 
 # global clean up
 tests.ampcor.lib.dom.clean += slc.dat offsets.dat
-tests.ampcor.lib.correlators.clean += slc_ref.dat slc_sec.dat coarse_ref.dat coarse_sec.dat
+tests.ampcor.lib.correlators.clean += \
+    slc_ref.dat slc_sec.dat offsets.dat \
+    coarse_ref.dat coarse_sec.dat coarse_sat.dat
 
 # the {slc_t} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
@@ -30,10 +32,18 @@ tests.ampcor.lib.correlators.seq_transfer_tiles.pre := \
     tests.ampcor.lib.correlators.slc_ref \
     tests.ampcor.lib.correlators.slc_sec
 
-tests.ampcor.lib.correlators.arena_ref_coarse.pre :=\
-    tests.ampcor.lib.correlators.seq_transfer_tiles
+tests.ampcor.lib.correlators.seq_adjust.pre := \
+    tests.ampcor.lib.correlators.slc_ref \
+    tests.ampcor.lib.correlators.slc_sec
+
+tests.ampcor.lib.correlators.arena_ref_coarse.pre := \
+    tests.ampcor.lib.correlators.seq_adjust
 
 tests.ampcor.lib.correlators.arena_sec_coarse.pre := \
-    tests.ampcor.lib.correlators.seq_transfer_tiles
+    tests.ampcor.lib.correlators.seq_adjust
+
+tests.ampcor.lib.correlators.coarse_sat.pre := \
+    tests.ampcor.lib.correlators.seq_adjust
+
 
 # end of file
