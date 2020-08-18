@@ -38,13 +38,23 @@ public:
 
     // temporary tile storage
     using arena_type = ampcor::dom::arena_raster_t;
+    using const_arena_type = ampcor::dom::arena_const_raster_t;
+    using arena_reference = arena_type &;
     using arena_spec = arena_type::spec_type;
+    using arena_value_type = arena_type::value_type;
     using arena_layout_type = arena_type::packing_type;
     using arena_index_type = arena_type::index_type;
     using arena_shape_type = arena_type::shape_type;
     // usage
     using arena_layout_const_reference = arena_type::packing_const_reference;
     using arena_shape_const_reference = arena_type::shape_const_reference;
+
+    // 1d vectors
+    using vector_type = std::valarray<arena_value_type>;
+    using vector_pointer = std::unique_ptr<vector_type>;
+
+    // mish
+    using string_type = string_t;
 
     // metamethods
 public:
@@ -73,7 +83,14 @@ public:
                             );
 
     // execute the correlation plan and adjust the offset map
-    void adjust(offsets_reference);
+    auto adjust(offsets_reference);
+
+    // implementation details: methods
+public:
+    // reduce the tiles in {arena} to zero mean, and compute their variances
+    auto stats(arena_reference) -> vector_pointer;
+    // build sum tables for the tiles in {arena}
+    auto sat(arena_reference, string_type);
 
     // implementation details: data
 private:

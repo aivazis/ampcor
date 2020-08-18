@@ -12,6 +12,7 @@
 // STL
 #include <complex>
 #include <algorithm>
+#include <valarray>
 // externals
 #include <p2/grid.h>
 
@@ -20,6 +21,9 @@
 
 // type aliases
 namespace ampcor::correlators {
+    // strings
+    using string_t = std::string;
+
     // complex numbers
     template <typename T>
     using complex_t = std::complex<T>;

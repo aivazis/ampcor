@@ -186,16 +186,174 @@ addTilePair(int tid, int pid, slc_const_reference ref, slc_const_reference sec)
 
 // execute the correlation plan
 template <class slcT, class offsetsT>
-void
+auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
 adjust(offsets_reference map)
 {
     // step 1: initial exploration of the correlation surface
     // adjust the reference tiles to zero mean and compute their variance
+    stats(_refCoarse);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
+    sat(_secCoarse, "coarse");
     // use the sum area tables to compute mean amplitude for all possible window placements
     // compute the correlation hyper surface
     // find its maxima
+
+    // all done
+    return;
+}
+
+
+// implementation details
+// reduce the tiles in {arena} to zero mean and compute their variances
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+stats(arena_reference arena) -> vector_pointer
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.stats");
+
+    // allocate storage for the variances
+    auto variance = new vector_type(_pairs);
+
+    // the shape of the arena contains the shape of its tiles
+    const auto & shape = arena.layout().shape();
+    // the origin of the arena contains the origin of its tiles
+    const auto & origin = arena.layout().origin();
+
+    // go through each tile
+    for (auto tid = 0; tid < _pairs; ++tid) {
+        // isolate the tile
+        channel << "tile " << tid << pyre::journal::newline;
+        // the origin of the tile
+        arena_index_type tileOrigin { tid, origin[1], origin[2] };
+        // the shape of the tile
+        arena_shape_type tileShape { 1, shape[1], shape[2] };
+        // make the tile
+        auto tile = arena.box(tileOrigin, tileShape);
+
+        // compute the sum of its elements
+        auto sum = std::accumulate(tile.begin(), tile.end(), 0.0);
+        channel << "  sum: " << sum << pyre::journal::newline;
+        // compute the mean
+        auto mean = sum / tile.layout().cells();
+        channel << "  mean: " << mean << pyre::journal::newline;
+
+        // subtract it from all elements and store
+        std::transform(tile.begin(), tile.end(), tile.begin(),
+                       [mean](arena_value_type in) -> arena_value_type {
+                           return in - mean;
+                       });
+
+        // the accumulator of square
+        auto sumsq = [](arena_value_type partial, arena_value_type in) {
+            // easy enough
+            return partial + in*in;
+        };
+        // compute the sum of the squares of all new elements
+        auto var2 = std::accumulate(tile.begin(), tile.end(), 0.0, sumsq);
+        channel << "  sum of squares: " << var2 << pyre::journal::newline;
+        // compute the variance
+        auto var = std::sqrt(var2);
+        channel << "  variance: " << var << pyre::journal::newline;
+
+        (*variance)[tid] = var;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // return the variances
+    return vector_pointer(variance);
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+sat(arena_reference arena, string_type tag)
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.stats");
+    channel.activate();
+
+    // get the arena layout
+    const auto & layout = arena.layout();
+    // the shape of the arena contains the shape of its tiles
+    const auto & shape = layout.shape();
+    // the origin of the arena contains the origin of its tiles
+    const auto & origin = layout.origin();
+
+    // make a SAT table
+    arena_type sat(layout, tag+"_sat.dat", layout.cells());
+
+    // index shifts
+    arena_index_type up { 0, -1, 0 };
+    arena_index_type down { 0, 1, 0 };
+    arena_index_type left { 0, 0, -1 };
+    arena_index_type right { 0, 0, 1 };
+
+    // go through each tile
+    for (auto tid = 0; tid < _pairs; ++tid) {
+        // show me
+        channel << "tile " << tid << pyre::journal::newline;
+
+        // the top left corner of the rile
+        arena_index_type iTopLeft { tid, origin[1], origin[2] };
+        // show me
+        channel << "  top left: " << iTopLeft << pyre::journal::newline;
+
+        // the top left corner of the sat table is just the entry in the tile
+        sat[iTopLeft] = arena[iTopLeft];
+
+        // describe the top row, excluding the top left corner
+        arena_index_type iTopRow = iTopLeft + right;
+        arena_shape_type sTopRow { 1, 1, shape[2]-1};
+        // show me
+        channel
+            << "  top row: at: (" << iTopRow << "), shape: (" << sTopRow << ")"
+            << pyre::journal::newline;
+        // visit the top row
+        for (auto idx : layout.box(iTopRow, sTopRow)) {
+            // show me
+            channel << "    (" << idx << ")" << pyre::journal::newline;
+            // skip the term that would cause out of bounds access
+            sat[idx] = arena[idx] + sat[idx+left];
+        }
+
+        // describe the left column, excluding the top left corner
+        arena_index_type iLeftCol = iTopLeft + down;
+        arena_shape_type sLeftCol { 1, shape[1]-1, 1};
+        // show me
+        channel
+            << "  left column: at: (" << iLeftCol << "), shape: (" << sLeftCol << ")"
+            << pyre::journal::newline;
+        // visit the left column
+        for (auto idx : layout.box(iLeftCol, sLeftCol)) {
+            // show me
+            channel << "    (" << idx << ")" << pyre::journal::newline;
+            // skip the term that would cause out of bounds access
+            sat[idx] = arena[idx] + sat[idx+up];
+        }
+
+        // the interior
+        arena_index_type iBody = iTopLeft + down + right;
+        arena_shape_type sBody { 1, shape[1]-1, shape[2]-1};
+        // show me
+        channel
+            << "  interior: at: (" << iBody << "), shape: (" << sBody << ")"
+            << pyre::journal::newline;
+        // visit the interior
+        for (auto idx : layout.box(iBody, sBody)) {
+            // show me
+            channel << "    (" << idx << ")" << pyre::journal::newline;
+            // this is the general form
+            sat[idx] = arena[idx] + sat[idx+up] + sat[idx+left] - sat[idx+up+left];
+        }
+    }
+    // flush
+    channel << pyre::journal::endl(__HERE__);
 
     // all done
     return;
