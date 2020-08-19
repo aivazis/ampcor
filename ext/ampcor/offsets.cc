@@ -177,8 +177,14 @@ offsets_constructor(py::tuple pyShape)
     // extract the shape
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
+
+    // make a shape
+    offsets_t::layout_type::shape_type shape { rows, cols };
+    // use it to build a layout
+    offsets_t::layout_type layout { shape };
+
     // make a product specification and return it
-    return offsets_t { offsets_t::layout_type({rows, cols}) };
+    return offsets_t { layout };
 }
 
 

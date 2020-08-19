@@ -111,8 +111,12 @@ offsets_raster_constructor(py::tuple pyShape, py::object pyURI, bool create)
     // extract the shape
     int rows = py::int_(pyShape[0]);
     int cols = py::int_(pyShape[1]);
+    // make a shape
+    offsets_raster_t::shape_type shape { rows, cols };
+    // turn it into a layout
+    offsets_raster_t::layout_type layout { shape };
     // make a product specification
-    offsets_raster_t::spec_type spec { offsets_raster_t::layout_type({rows, cols}) };
+    offsets_raster_t::spec_type spec { layout };
 
     // convert the path-like object into a string
     // get {os.fspath}
