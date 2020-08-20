@@ -36,10 +36,10 @@ tests.ampcor.lib.correlators.seq_adjust.pre := \
     tests.ampcor.lib.correlators.slc_ref \
     tests.ampcor.lib.correlators.slc_sec
 
-tests.ampcor.lib.correlators.arena_ref_coarse.pre := \
+tests.ampcor.lib.correlators.coarse_ref.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
-tests.ampcor.lib.correlators.arena_sec_coarse.pre := \
+tests.ampcor.lib.correlators.coarse_sec.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
 tests.ampcor.lib.correlators.coarse_sat.pre := \
