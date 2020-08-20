@@ -278,73 +278,38 @@ sat(arena_reference arena, string_type tag)
     pyre::journal::debug_t channel("ampcor.sequential.stats");
 
     // get the arena layout
-    const auto & layout = arena.layout();
+    const auto & arenaLayout = arena.layout();
     // the shape of the arena contains the shape of its tiles
-    const auto & shape = layout.shape();
+    const auto & arenaShape = arenaLayout.shape();
     // the origin of the arena contains the origin of its tiles
-    const auto & origin = layout.origin();
+    const auto & arenaOrigin = arenaLayout.origin();
 
-    // make a SAT table
-    arena_type sat(layout, tag+"_sat.dat", layout.cells());
+    // the SAT has a border of zeroes as the leftmost column and topmost row
+    // so the origin is up and to the left relative to the arena tiles
+    arena_index_type satOrigin { arenaOrigin[0], arenaOrigin[1]-1, arenaOrigin[2]-1 };
+    // and the shape is one longer within each tile
+    arena_shape_type satShape { arenaShape[0], arenaShape[1]+1, arenaShape[2]+1 };
+    // put them together to form the layout
+    arena_layout_type satLayout { satShape, satOrigin };
+    // and the spec
+    arena_spec satSpec { satLayout };
+    // and make the SAT; memory mapped grids are zero initialized automatically, so don't
+    // forget to initialize the left column and top row if the grid storage strategy changes
+    arena_type sat(satSpec, tag+"_sat.dat", satLayout.cells());
 
     // index shifts
     arena_index_type up { 0, -1, 0 };
-    arena_index_type down { 0, 1, 0 };
     arena_index_type left { 0, 0, -1 };
-    arena_index_type right { 0, 0, 1 };
 
     // go through each tile
     for (auto tid = 0; tid < _pairs; ++tid) {
         // show me
-        channel << "tile " << tid << pyre::journal::newline;
-
-        // the top left corner of the rile
-        arena_index_type iTopLeft { tid, origin[1], origin[2] };
-        // show me
-        channel << "  top left: " << iTopLeft << pyre::journal::newline;
-
-        // the top left corner of the sat table is just the entry in the tile
-        sat[iTopLeft] = arena[iTopLeft];
-
-        // describe the top row, excluding the top left corner
-        arena_index_type iTopRow = iTopLeft + right;
-        arena_shape_type sTopRow { 1, 1, shape[2]-1};
-        // show me
         channel
-            << "  top row: at: (" << iTopRow << "), shape: (" << sTopRow << ")"
+            << "SAT for tile " << tid << pyre::journal::newline
+            << "  interior: at: (" << arenaOrigin << "), shape: (" << arenaShape << ")"
             << pyre::journal::newline;
-        // visit the top row
-        for (auto idx : layout.box(iTopRow, sTopRow)) {
-            // show me
-            channel << "    (" << idx << ")" << pyre::journal::newline;
-            // skip the term that would cause out of bounds access
-            sat[idx] = arena[idx] + sat[idx+left];
-        }
-
-        // describe the left column, excluding the top left corner
-        arena_index_type iLeftCol = iTopLeft + down;
-        arena_shape_type sLeftCol { 1, shape[1]-1, 1};
-        // show me
-        channel
-            << "  left column: at: (" << iLeftCol << "), shape: (" << sLeftCol << ")"
-            << pyre::journal::newline;
-        // visit the left column
-        for (auto idx : layout.box(iLeftCol, sLeftCol)) {
-            // show me
-            channel << "    (" << idx << ")" << pyre::journal::newline;
-            // skip the term that would cause out of bounds access
-            sat[idx] = arena[idx] + sat[idx+up];
-        }
-
-        // the interior
-        arena_index_type iBody = iTopLeft + down + right;
-        arena_shape_type sBody { 1, shape[1]-1, shape[2]-1};
-        // show me
-        channel
-            << "  interior: at: (" << iBody << "), shape: (" << sBody << ")"
-            << pyre::journal::newline;
-        // visit the interior
-        for (auto idx : layout.box(iBody, sBody)) {
+        // visit the interior of the SAT
+        for (auto idx : arenaLayout) {
             // show me
             channel << "    (" << idx << ")" << pyre::journal::newline;
             // this is the general form
