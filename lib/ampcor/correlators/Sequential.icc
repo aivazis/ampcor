@@ -192,9 +192,9 @@ adjust(offsets_reference map)
 {
     // step 1: initial exploration of the correlation surface
     // adjust the reference tiles to zero mean and compute their variance
-    stats(_refCoarse);
+    auto refVariance = _referenceVariance(_refCoarse);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
-    sat(_secCoarse, "coarse");
+    auto secSAT = _secondarySumAreaTable(_secCoarse, "coarse");
     // use the sum area tables to compute mean amplitude for all possible window placements
     // compute the correlation hyper surface
     // find its maxima
@@ -209,7 +209,7 @@ adjust(offsets_reference map)
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-stats(arena_reference arena) -> vector_pointer
+_referenceVariance(arena_reference arena) -> vector_pointer
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.stats");
@@ -272,7 +272,7 @@ stats(arena_reference arena) -> vector_pointer
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-sat(arena_reference arena, string_type tag)
+_secondarySumAreaTable(arena_reference arena, string_type tag) -> arena_type
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.stats");
@@ -320,7 +320,7 @@ sat(arena_reference arena, string_type tag)
     channel << pyre::journal::endl(__HERE__);
 
     // all done
-    return;
+    return sat;
 }
 
 

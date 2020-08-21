@@ -88,9 +88,11 @@ public:
     // implementation details: methods
 public:
     // reduce the tiles in {arena} to zero mean, and compute their variances
-    auto stats(arena_reference) -> vector_pointer;
+    auto _referenceVariance(arena_reference) -> vector_pointer;
+
     // build sum tables for the tiles in {arena}
-    auto sat(arena_reference, string_type);
+    auto _secondarySumAreaTable(arena_reference, string_type) -> arena_type;
+
 
     // implementation details: data
 private:
