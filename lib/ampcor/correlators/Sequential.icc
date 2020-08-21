@@ -192,9 +192,9 @@ adjust(offsets_reference map)
 {
     // step 1: initial exploration of the correlation surface
     // adjust the reference tiles to zero mean and compute their variance
-    auto refVariance = _referenceVariance(_refCoarse);
+    auto refVariances = _referenceStatistics(_refCoarse);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
-    auto secSAT = _secondarySumAreaTable(_secCoarse, "coarse");
+    auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
     // use the sum area tables to compute mean amplitude for all possible window placements
     // compute the correlation hyper surface
     // find its maxima
@@ -206,10 +206,12 @@ adjust(offsets_reference map)
 
 // implementation details
 // reduce the tiles in {arena} to zero mean and compute their variances
+// invoked only for reference tiles; the mean value of secondary tiles is a bit more
+// complicated since it involves all possible placements of reference chips within their bounds
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_referenceVariance(arena_reference arena) -> vector_pointer
+_referenceStatistics(arena_reference arena) -> vector_pointer
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.stats");
@@ -269,13 +271,17 @@ _referenceVariance(arena_reference arena) -> vector_pointer
 }
 
 
+// build an arena of SATs for all secondary tiles
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_secondarySumAreaTable(arena_reference arena, string_type tag) -> arena_type
+_secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_type
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.stats");
+
+    // build the name of the product
+    auto satName = tag + "_sat.dat";
 
     // get the arena layout
     const auto & arenaLayout = arena.layout();
@@ -295,7 +301,7 @@ _secondarySumAreaTable(arena_reference arena, string_type tag) -> arena_type
     arena_spec satSpec { satLayout };
     // and make the SAT; memory mapped grids are zero initialized automatically, so don't
     // forget to initialize the left column and top row if the grid storage strategy changes
-    arena_type sat(satSpec, tag+"_sat.dat", satLayout.cells());
+    arena_type sat(satSpec, satName, satLayout.cells());
 
     // index shifts
     arena_index_type up { 0, -1, 0 };
@@ -319,8 +325,8 @@ _secondarySumAreaTable(arena_reference arena, string_type tag) -> arena_type
     // flush
     channel << pyre::journal::endl(__HERE__);
 
-    // all done
-    return sat;
+    // all done; reopen the product in read-only mode and hand it off
+    return const_arena_type(satSpec, satName);;
 }
 
 

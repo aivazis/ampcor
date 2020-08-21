@@ -46,6 +46,7 @@ public:
     using arena_index_type = arena_type::index_type;
     using arena_shape_type = arena_type::shape_type;
     // usage
+    using const_arena_const_reference = const const_arena_type &;
     using arena_layout_const_reference = arena_type::packing_const_reference;
     using arena_shape_const_reference = arena_type::shape_const_reference;
 
@@ -53,7 +54,7 @@ public:
     using vector_type = std::valarray<arena_value_type>;
     using vector_pointer = std::unique_ptr<vector_type>;
 
-    // mish
+    // miscellaneous
     using string_type = string_t;
 
     // metamethods
@@ -79,8 +80,7 @@ public:
     // number of this pairing in the original plan, which may have involved invalid tiles so
     // there may be gaps
     inline void addTilePair(int tid, int pid,
-                            slc_const_reference ref, slc_const_reference sec
-                            );
+                            slc_const_reference ref, slc_const_reference sec);
 
     // execute the correlation plan and adjust the offset map
     auto adjust(offsets_reference);
@@ -88,11 +88,10 @@ public:
     // implementation details: methods
 public:
     // reduce the tiles in {arena} to zero mean, and compute their variances
-    auto _referenceVariance(arena_reference) -> vector_pointer;
+    auto _referenceStatistics(arena_reference) -> vector_pointer;
 
     // build sum tables for the tiles in {arena}
-    auto _secondarySumAreaTable(arena_reference, string_type) -> arena_type;
-
+    auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
 
     // implementation details: data
 private:
