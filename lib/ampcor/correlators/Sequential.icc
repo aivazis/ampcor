@@ -191,7 +191,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 adjust(offsets_reference map)
 {
     // make a channel
-    pyre::journal::warning_t channel("ampcor.sequential.adjust");
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
     channel << "  adjusting the offset map" << pyre::journal::endl(__HERE__);
 
     // step 1: initial exploration of the correlation surface
@@ -412,7 +412,7 @@ _secondaryStatistics(string_type tag,
     // go through all placements
     for (auto idx : meanLayout) {
         // compute the sum of the elements of this placement
-        auto sum = sat[idx+dNE] + sat[idx+dSE] - sat[idx+dSW] - sat[idx+dNE];
+        auto sum = sat[idx+dSE] - sat[idx+dSW] - sat[idx+dNE] + sat[idx+dNW];
         // form the mean and store it
         mean[idx] = sum / refCells;
         // show me
