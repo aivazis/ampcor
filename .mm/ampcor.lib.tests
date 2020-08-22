@@ -45,5 +45,8 @@ tests.ampcor.lib.correlators.coarse_sec.pre := \
 tests.ampcor.lib.correlators.coarse_sat.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
+tests.ampcor.lib.correlators.coarse_mean.pre := \
+    tests.ampcor.lib.correlators.seq_adjust
+
 
 # end of file
