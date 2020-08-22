@@ -33,6 +33,9 @@ int main(int argc, char *argv[]) {
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.seq");
 
+    // silence the {sequential_t} info channel
+    pyre::journal::info_t("ampcor.sequential.adjust").deactivate();
+
     // the base dimension
     auto dim = 8;
     // the number of tile pairs
