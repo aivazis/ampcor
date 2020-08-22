@@ -7,6 +7,7 @@
 
 // support
 #include <cassert>
+#include <algorithm>
 // get the header
 #include <ampcor/dom.h>
 
@@ -26,26 +27,37 @@ int main(int argc, char *argv[]) {
     pyre::journal::init(argc, argv);
     pyre::journal::application("coarse_sat");
     // make a channel
-    pyre::journal::debug_t channel("ampcor.correlators.arena");
+    pyre::journal::debug_t channel("ampcor.correlators.sat");
 
     // the number of pairs
     auto pairs = 4;
     // the base dimension
     auto dim = 8;
-    // a useful index shift
-    index_t deltaUL = { 0, -1, -1 };
 
     // the name of the product with the secondary arena
     std::string arenaName = "coarse_sec.dat";
     // the name of the product with the SAT table
     std::string satName = "coarse_sat.dat";
 
+    // the shape of a reference tile in its arena
+    shape_t refShape { 1, dim/4, dim/4 };
+    // the shape of a secondary tile in its arena
+    shape_t secShape { 1, dim/2, dim/2 };
+    // the shape of all possible placements of a {ref} tile within a {sec} tile
+    shape_t plcShape {
+        pairs, secShape[1] - refShape[1] + 1, secShape[2] - refShape[2] + 1 };
+
+    // a useful index shift
+    index_t deltaUL = { 0, -1, -1 };
+
     // arena: the origin
     index_t arenaOrigin { 0, -dim/8, -dim/8 };
     // the shape
     shape_t arenaShape { pairs, dim/2, dim/2 };
+    // build the layout
+    layout_t arenaLayout { arenaShape, arenaOrigin };
     // the product specification
-    spec_t arenaSpec { spec_t::layout_type(arenaShape, arenaOrigin) };
+    spec_t arenaSpec { arenaLayout };
 
     // SAT: the origin
     index_t satOrigin = arenaOrigin + deltaUL;
@@ -86,66 +98,79 @@ int main(int argc, char *argv[]) {
             channel << pyre::journal::newline;
         }
     }
-    // flush
-    channel << pyre::journal::endl(__HERE__);
-
     // verify: slide chips around the arena and verify that the sum of its elements can be
     // obtained by using the sat table
-    // make a shape that describes our sliding chip
-    shape_t chipShape { 1, dim/4, dim/4 };
 
-    // for each index that describes the placement of the chip with the secondary tile, we need
-    // the four indices in the SAT that are used in the computation of the sum
+    // for each index that describes the origin of a placement of the chip with the secondary
+    // tile, we need the four indices in the SAT that are used in the computation of the sum
     // project the chip shape on the tile axes
-    index_t chip_1 = { 0, chipShape[1], 0 };
-    index_t chip_2 = { 0, 0, chipShape[2] };
+    index_t chip_1 = { 0, refShape[1], 0 };
+    index_t chip_2 = { 0, 0, refShape[2] };
     // compute them as shift relative to the chip origin
     index_t deltaUR = deltaUL + chip_2;
     index_t deltaLL = deltaUL + chip_1;
     index_t deltaLR = deltaUL + chip_1 + chip_2;
 
-    // we do some floating point comparisons, so...
+    // initializer of the accumulator
     pixel_t zero = 0;
+#if VERIFY
+    // a small float
+    auto epsilon = std::numeric_limits<pixel_t>::epsilon();
+#endif
 
-    // go through all the tiles
-    for (auto tid = arenaOrigin[0]; tid < arenaOrigin[0] + arenaShape[0]; ++tid) {
-        // build a layout that will give me all the possible placements of a chip inside the
-        // arena tile
-        channel << "tile #" << tid << pyre::journal::newline;
-        // the origin
-        index_t plOrigin { tid, arenaOrigin[1], arenaOrigin[2] };
-        // the shape
-        shape_t plShape { tid, arenaShape[1]-chipShape[1]+1, arenaShape[2]-chipShape[2]+1 };
-        // the layout
-        layout_t pl { plShape , plOrigin };
+    // go through all possible placements of ref tiles within secondary tiles in the arena
+    for (auto idx : arenaLayout.box(arenaOrigin, plcShape)) {
+        // form a ref chip at this location
+        auto chip = arena.box(idx, refShape);
+        // compute the sum of its elements directly
+        auto expected = std::accumulate(chip.begin(), chip.end(), zero);
+        // get the sum using the SAT
+        auto deduced = sat[idx+deltaUL] + sat[idx+deltaLR] - sat[idx+deltaUR] - sat[idx+deltaLL];
 
-        // go through all placements
-        for (auto chipOrigin : pl ) {
-            // form the tile
-            auto tile = arena.box(chipOrigin, chipShape);
-            // compute the sum by visiting the tile slots
-            auto expected = std::accumulate(tile.begin(), tile.end(), zero);
-            // compute the sum by indexing the SAT
-            auto actual =
-                sat[chipOrigin+deltaUL] + sat[chipOrigin+deltaLR]
-                - sat[chipOrigin+deltaUR] - sat[chipOrigin+deltaLL];
-
-            // show me; this is a good example of the need for level of detail in channel output
-            channel
-                << chipOrigin << ": " << pyre::journal::newline
-                << "  expected = " << expected << pyre::journal::newline
-                << "  actual = " << actual
-                << " = " << sat[chipOrigin+deltaUL]
-                << " + " << sat[chipOrigin+deltaLR]
-                << " - " << sat[chipOrigin+deltaUR]
-                << " - " << sat[chipOrigin+deltaLL]
-                << pyre::journal::newline;
+        // show me
+        channel
+            << "sum[" << idx << "]: "
+            << pyre::journal::newline
+            // the direct computation
+            << "    expected: " << expected
+            << pyre::journal::newline
+            // form the SAT
+            << "     deduced: " << deduced
+            << pyre::journal::newline
+            // here is the expression
+            << "              = sat[" << idx+deltaUL << "]"
+            << " + sat[" << idx+deltaLR << "]"
+            << " - sat[" << idx+deltaUR << "]"
+            << " - sat[" << idx+deltaLL << "]"
+            << pyre::journal::newline
+            // and the values
+            << "              = " << sat[idx+deltaUL]
+            << " + " << sat[idx+deltaLR]
+            << " - " << sat[idx+deltaUR]
+            << " - " << sat[idx+deltaLL]
+            << pyre::journal::newline;
+#if VERIFY
+        // all this, and still not good enough
+        // verify; tricky with floating point numbers...
+        // use the mean actual value as an indicator of the dynamic range of the values
+        auto mean = expected / refShape.cells();
+        // for small numbers
+        if (std::abs(expected) < 1 or std::abs(deduced) < 1) {
+            // verify that they are within a few epsilon
+            assert(( std::abs(expected-deduced) <= mean*epsilon ));
+        } else {
+            // otherwise, get the larger one
+            auto base = std::max(std::abs(expected), std::abs(deduced));
+            // compute the relative error
+            auto delta = std::abs(expected-deduced) / base;
+            // and check that it is a few epsilon
+            assert(( delta <= mean*epsilon ));
         }
-
-        // flush
-        channel << pyre::journal::endl(__HERE__);
+#endif
     }
 
+    // flush
+    channel << pyre::journal::endl(__HERE__);
     // all done
     return 0;
 }
