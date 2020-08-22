@@ -31,7 +31,7 @@ ampcor.ext.capsule :=
 # intra-project dependencies
 ampcor.ext.prerequisites := ampcor.lib
 # dependencies
-ampcor.ext.extern := ampcor.lib p2 pybind11 python
+ampcor.ext.extern := ampcor.lib pyre p2 pybind11 python
 # compiler control
 ampcor.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 
