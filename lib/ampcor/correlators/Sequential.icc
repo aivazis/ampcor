@@ -190,15 +190,26 @@ auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
 adjust(offsets_reference map)
 {
+    // make a channel
+    pyre::journal::warning_t channel("ampcor.sequential.adjust");
+    channel << "  adjusting the offset map" << pyre::journal::endl(__HERE__);
+
     // step 1: initial exploration of the correlation surface
     // adjust the reference tiles to zero mean and compute their variance
+    channel << "    computing reference statistics" << pyre::journal::endl(__HERE__);
     auto refVariances = _referenceStatistics(_refCoarse);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
+    channel << "    building SATs for the secondary tiles" << pyre::journal::endl(__HERE__);
     auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
     // use the sum area tables to compute mean amplitude for all possible window placements
+    channel << "    computing secondary statistics" << pyre::journal::endl(__HERE__);
+    auto secMeans = _secondaryStatistics("coarse",
+                                         _refCoarse.layout(), _secCoarse.layout(),
+                                         secSATs);
     // compute the correlation hyper surface
     // find its maxima
 
+    channel << "    done" << pyre::journal::endl(__HERE__);
     // all done
     return;
 }
@@ -214,7 +225,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 _referenceStatistics(arena_reference arena) -> vector_pointer
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.stats");
+    pyre::journal::debug_t channel("ampcor.sequential.ref.stats");
 
     // allocate storage for the variances
     auto variance = new vector_type(_pairs);
@@ -278,7 +289,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 _secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_type
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.stats");
+    pyre::journal::debug_t channel("ampcor.sequential.sat");
 
     // build the name of the product
     auto satName = tag + "_sat.dat";
@@ -307,26 +318,115 @@ _secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_t
     arena_index_type up { 0, -1, 0 };
     arena_index_type left { 0, 0, -1 };
 
-    // go through each tile
-    for (auto tid = 0; tid < _pairs; ++tid) {
+    // visit the interior of the SAT
+    for (auto idx : arenaLayout) {
+        // this is the general form
+        sat[idx] = arena[idx] + sat[idx+up] + sat[idx+left] - sat[idx+up+left];
         // show me
         channel
-            << "SAT for tile " << tid << pyre::journal::newline
-            << "  interior: at: (" << arenaOrigin << "), shape: (" << arenaShape << ")"
+            << "sat[" << idx << "]"
+            << pyre::journal::newline
+            // the accesses
+            << "    = "
+            << "arena[" << idx << "]"
+            << " + sat[" << idx+up << "]"
+            << " + sat[" << idx+left << "]"
+            << " - sat[" << idx+up+left << "]"
+            << pyre::journal::newline
+            // the values
+            << "    = "
+            << arena[idx]
+            << " + " << sat[idx+up]
+            << " + " << sat[idx+left]
+            << " - " << sat[idx+up+left]
+            << pyre::journal::newline
+            // the answer
+            << "    = " << sat[idx]
             << pyre::journal::newline;
-        // visit the interior of the SAT
-        for (auto idx : arenaLayout) {
-            // show me
-            channel << "    (" << idx << ")" << pyre::journal::newline;
-            // this is the general form
-            sat[idx] = arena[idx] + sat[idx+up] + sat[idx+left] - sat[idx+up+left];
-        }
     }
     // flush
     channel << pyre::journal::endl(__HERE__);
 
     // all done; reopen the product in read-only mode and hand it off
     return const_arena_type(satSpec, satName);;
+}
+
+
+// construct an arena that contains the average value of the elements of all {ref} sized chips
+// placed with the {sec} tiles
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_secondaryStatistics(string_type tag,
+                     arena_layout_const_reference refLayout,
+                     arena_layout_const_reference secLayout,
+                     const_arena_const_reference sat) -> const_arena_type
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.sec.stats");
+
+    // build the name of the product
+    auto meanName = tag + "_mean.dat";
+
+    // get the shape of the reference arena
+    auto refShape = refLayout.shape();
+    // and the shape of the secondary arena
+    auto secShape = secLayout.shape();
+    // we also need the origin of the secondary arena
+    auto secOrigin = secLayout.origin();
+
+    // build the shape of the arena of mean values
+    arena_shape_type meanShape { _pairs, secShape[1]-refShape[1]+1, secShape[2]-refShape[2]+1 };
+    // use it to make a layout
+    arena_layout_type meanLayout { meanShape, secOrigin };
+    // and with it a product spec
+    arena_spec meanSpec { meanLayout };
+
+    // show me
+    channel
+        << "arena of mean values: "
+        << pyre::journal::newline
+        // the origin
+        << "  origin: (" << secOrigin << ")"
+        << pyre::journal::newline
+        // the shape
+        << "  shape: (" << meanShape << ")"
+        << ", " << meanSpec.cells() << " cells (" << meanSpec.bytes() << " bytes)"
+        << pyre::journal::newline;
+
+    // create the product
+    arena_type mean { meanSpec, meanName, meanSpec.cells() };
+
+    // ask the reference tile for its number of cells; don't forget that {refShape} knows how
+    // many tiles are in the arena, so that has to be divided away
+    auto refCells = refShape.cells() / _pairs;
+    // project the shape of the reference tile along each tile axis
+    arena_index_type shapeS { 0, refShape[1], 0 };
+    arena_index_type shapeE { 0, 0, refShape[2] };
+    // useful shifts
+    arena_index_type dNW { 0, -1, -1};
+    auto dNE = dNW + shapeE;
+    auto dSW = dNW + shapeS;
+    auto dSE = dNW + shapeE + shapeS;
+
+    // go through all placements
+    for (auto idx : meanLayout) {
+        // compute the sum of the elements of this placement
+        auto sum = sat[idx+dNE] + sat[idx+dSE] - sat[idx+dSW] - sat[idx+dNE];
+        // form the mean and store it
+        mean[idx] = sum / refCells;
+        // show me
+        channel
+            << "mean[" << idx << "] = " << sum << " / " << refCells
+            << " = " << mean[idx]
+            << pyre::journal::newline;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // all done: reopen the product as read-only and return it
+    return const_arena_type(meanSpec, meanName);
 }
 
 

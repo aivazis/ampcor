@@ -92,6 +92,11 @@ public:
 
     // build sum tables for the tiles in {arena}
     auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
+    // construct an arena with the means and variances of all possible placements of the
+    // reference chip in the secondary window
+    auto _secondaryStatistics(string_type,
+                              arena_layout_const_reference, arena_layout_const_reference,
+                              const_arena_const_reference) -> const_arena_type;
 
     // implementation details: data
 private:
