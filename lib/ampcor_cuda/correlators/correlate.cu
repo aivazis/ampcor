@@ -182,7 +182,7 @@ _correlate(const value_t * arena, // the dataspace
 
 
     // N.B.: do not be tempted to terminate early threads that have no assigned workload; their
-    // participation is required to make sure that shared memory is properly zeored out for the
+    // participation is required to make sure that shared memory is properly zeroed out for the
     // nominally out of bounds accesses
 
     // get access to my shared memory
@@ -209,13 +209,14 @@ _correlate(const value_t * arena, // the dataspace
 
     // if my thread id is less than the number of columns in the reference tile, i need to sum
     // up the contributions to the numerator and the secondary tile variance from my column; if
-    // not, m y contribution is zero out my slots in shared memory
+    // not, my contribution is to zero out my slots in shared memory so the reduction doesn't
+    // read uninitialized memory
     if (t < rdim) {
-        //run down the two columns
+        // run down the two matching columns, one from {ref}, one from {sec}
         for (std::size_t idx=0; idx < rdim; ++idx) {
-            // fetch the ref value
+            // fetch the {ref} value
             value_t r = ref[idx*rdim];
-            // fetch the sec value and subtract the mean secondary amplitude
+            // fetch the {sec} value and subtract the mean secondary amplitude
             value_t t = sec[idx*tdim] - mean;
             // update the numerator
             numerator += r * t;
@@ -224,7 +225,8 @@ _correlate(const value_t * arena, // the dataspace
         }
     }
 
-    // save my partial results
+    // save my partial results; idle threads only do this bit, with {numerator} and
+    // {secVariance} still at their initial values
     scratch[2*t] = numerator;
     scratch[2*t + 1] = secVariance;
     // barrier: make sure everybody is done
