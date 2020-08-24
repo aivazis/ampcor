@@ -12,9 +12,9 @@ LA:
     ; secondary raster
     secondary = slc#20070215
     ; the output of this process, configured above
-    offsetMap = offsets#single
+    offsetMap = offsets#dense
     ; the factory
-    correlator = mga#tiles.tiny
+    correlator = mga#tiles.small
 
 
 ; inputs
