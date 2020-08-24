@@ -69,12 +69,13 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             # get the cell
             p = offsets[idx]
             # show me
-            channel.line(f"offsets[{idx}]:")
-            channel.line(f"  ref: {p.ref}")
-            channel.line(f"  delta: {p.delta}")
-            channel.line(f"  confidence: {p.confidence}")
-            channel.line(f"  snr: {p.snr}")
-            channel.log(f"  covariance: {p.covariance}")
+            channel.line(f"offsets{idx}:")
+            channel.line(f"          ref: {p.ref}")
+            channel.line(f"        shift: {p.delta}")
+            channel.line(f"        gamma: {p.gamma}")
+            channel.line(f"   confidence: {p.confidence}")
+            channel.line(f"          snr: {p.snr}")
+            channel.log(f"    covariance: {p.covariance}")
 
         # all done
         return 0

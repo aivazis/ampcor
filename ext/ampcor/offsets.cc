@@ -62,6 +62,19 @@ offsets(py::module &m) {
                       // the docstring
                       "the offset to the matching pixel in the secondary raster"
                       )
+        // the correlation
+        .def_property("gamma",
+                      // the getter
+                      [](const offsets_cell_t & pxl) {
+                          return pxl.gamma;
+                      },
+                      // the setter
+                      [](offsets_cell_t & pxl, float gamma) {
+                         pxl.gamma = gamma;
+                      },
+                      // the docstring
+                      "the value of the correlation"
+                      )
         // the level of confidence in the mapping
         .def_property("confidence",
                       // the getter
