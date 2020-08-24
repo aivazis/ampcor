@@ -210,7 +210,10 @@ adjust(offsets_reference map)
     channel << "    computing the correlation surface" << pyre::journal::endl(__HERE__);
     auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima
+    channel << "    locating the correlation surface maxima" << pyre::journal::endl(__HERE__);
+    _maxcor(gamma, map);
 
+    // finish
     channel << "    done" << pyre::journal::endl(__HERE__);
     // all done
     return;
@@ -540,6 +543,54 @@ _correlate(string_type tag,
     // all done: reopen the product as read-only and return it
     return const_arena_type(gammaSpec, gammaName);
 }
+
+
+// compute and store the locations of the maxima of the correlation surface
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_maxcor(const_arena_const_reference gamma, offsets_reference map)
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.maxcor");
+
+    // go through all the entries in the correlation surface
+    for (auto idx : gamma.layout()) {
+
+        // extract the id
+        auto tid = idx[0];
+        // map to the pair id
+        auto pid = _pids[tid];
+        // get the value of the correlation surface
+        auto cor = gamma[idx];
+        // get the pixel from the output
+        auto & record = map[pid];
+
+        // if this value is bigger than what's already there
+        if (cor > record.gamma) {
+            // record the new value
+            record.gamma = cor;
+            // the new shift
+            record.shift = std::make_pair<float, float>(idx[1], idx[2]);
+            // mark it as a good one
+            record.confidence = 1;
+        }
+
+        // show mw
+        channel
+            << "cor[" << pid << "].gamma = " << record.gamma
+            << pyre::journal::newline
+            << "gamma[" << idx << "] = " << cor
+            << pyre::journal::newline;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
+}
+
 
 # endif
 

@@ -97,10 +97,12 @@ public:
     auto _secondaryStatistics(string_type,
                               arena_layout_const_reference, arena_layout_const_reference,
                               const_arena_const_reference) -> const_arena_type;
-    // compute the correlation surfaace
+    // compute the correlation surface
     auto _correlate(string_type,
                     const_arena_const_reference, vector_pointer,
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
+    // compute and store the locations of the maxima of the correlation surface
+    auto _maxcor(const_arena_const_reference, offsets_reference);
 
     // implementation details: data
 private:
