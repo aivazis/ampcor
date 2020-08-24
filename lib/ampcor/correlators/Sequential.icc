@@ -207,6 +207,8 @@ adjust(offsets_reference map)
                                          _refCoarse.layout(), _secCoarse.layout(),
                                          secSATs);
     // compute the correlation hyper surface
+    channel << "    computing the correlation surface" << pyre::journal::endl(__HERE__);
+    auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima
 
     channel << "    done" << pyre::journal::endl(__HERE__);
@@ -404,7 +406,7 @@ _secondaryStatistics(string_type tag,
     arena_index_type shapeS { 0, refShape[1], 0 };
     arena_index_type shapeE { 0, 0, refShape[2] };
     // useful shifts
-    arena_index_type dNW { 0, -1, -1};
+    arena_index_type dNW { 0, -1, -1 };
     auto dNE = dNW + shapeE;
     auto dSW = dNW + shapeS;
     auto dSE = dNW + shapeE + shapeS;
@@ -429,6 +431,115 @@ _secondaryStatistics(string_type tag,
     return const_arena_type(meanSpec, meanName);
 }
 
+
+// compute the correlation surface
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_correlate(string_type tag,
+           const_arena_const_reference ref,
+           vector_pointer refStats,
+           const_arena_const_reference sec,
+           const_arena_const_reference secStats
+           ) -> const_arena_type
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.gamma");
+
+    // constants
+    // prime the initializer
+    const arena_value_type zero = 0;
+    // a small number
+    const auto epsilon = std::numeric_limits<arena_value_type>::epsilon();
+
+    // get the shape of the reference arena
+    auto refShape = ref.layout().shape();
+    // and its origin
+    auto refOrigin = ref.layout().origin();
+
+    // build the name of the product
+    auto gammaName = tag + "_gamma.dat";
+    // the correlation surface looks just like the arena with the means of all the tile
+    // placements
+    arena_spec gammaSpec { secStats.layout() } ;
+
+    // create the product
+    arena_type gamma { gammaSpec, gammaName, gammaSpec.cells() };
+
+    // the shape of the reference tiles fixes the correlation region for both reference and
+    // secondary tiles
+    arena_shape_type shape { 1, refShape[1], refShape[2] };
+
+    // go through all indices covered by the {gamma} layout
+    for (auto idx : gamma.layout()) {
+        // extract the pair id
+        auto pid = idx[0];
+
+        // build the {ref} tile origin
+        arena_index_type refTileOrigin { pid, refOrigin[1], refOrigin[2] };
+        // combine with the fixed shape to form the reference tile
+        auto refTile = ref.box(refTileOrigin, shape);
+
+        // the secondary tile is the same shape but its origin is wherever the current placement is
+        auto secTile = sec.box(idx, shape);
+
+        // get the precomputed mean value for this placement
+        auto mean = secStats[idx];
+
+        // initialize the numerator
+        auto num = zero;
+        // and the sum of the squares of the secondary elements
+        auto var2 = zero;
+
+        // compute the correlation numerator and the square of the variance of the secondary
+        // chip
+        for (auto [r,s] = std::make_pair(refTile.begin(), secTile.begin());
+             r != refTile.end();
+             ++r, ++s ) {
+            // remove the mean from the secondary value
+            auto adj = *s - mean;
+            // accumulate into the numerator
+            num += *r * adj;
+            // and into the variance
+            var2 += adj * adj;
+        }
+
+        // unpack the reference variance
+        auto revVar = (*refStats)[pid];
+        // compute the secondary variance
+        auto secVar = std::sqrt(var2);
+        // check whether the numerator is viable
+        if (std::abs(num) > epsilon) {
+            // compute and save
+            gamma[idx] = num / revVar / secVar;
+        } else {
+            // otherwise, store a zeor
+            gamma[idx] = zero;
+        }
+
+        // show me
+        channel
+            << "ref: origin: (" << refOrigin << "), shape: (" << shape << ")"
+            << pyre::journal::newline
+            << "sec: origin: (" << idx
+            << "), shape: (" << shape << "), "
+            << "mean[" << idx << "] = " << mean
+            << pyre::journal::newline
+            << "gamma[" << idx << "]"
+            << "  = ref[" << refTileOrigin << "] * sec[" << idx << "]"
+            << pyre::journal::newline
+            << "  = " << num << " / " << revVar << " / " << secVar
+            << pyre::journal::newline
+            << "  = " << gamma[idx]
+            << pyre::journal::newline;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // all done: reopen the product as read-only and return it
+    return const_arena_type(gammaSpec, gammaName);
+}
 
 # endif
 

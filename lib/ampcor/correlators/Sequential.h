@@ -52,7 +52,7 @@ public:
 
     // 1d vectors
     using vector_type = std::valarray<arena_value_type>;
-    using vector_pointer = std::unique_ptr<vector_type>;
+    using vector_pointer = std::shared_ptr<vector_type>;
 
     // miscellaneous
     using string_type = string_t;
@@ -97,6 +97,10 @@ public:
     auto _secondaryStatistics(string_type,
                               arena_layout_const_reference, arena_layout_const_reference,
                               const_arena_const_reference) -> const_arena_type;
+    // compute the correlation surfaace
+    auto _correlate(string_type,
+                    const_arena_const_reference, vector_pointer,
+                    const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
 
     // implementation details: data
 private:
