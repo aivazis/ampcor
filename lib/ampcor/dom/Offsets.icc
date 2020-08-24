@@ -13,6 +13,7 @@
 struct ampcor::dom::Offsets::pixel_type {
     std::pair<float, float> ref;
     std::pair<float, float> shift;
+    float gamma;
     float confidence;
     float snr;
     float covariance;
