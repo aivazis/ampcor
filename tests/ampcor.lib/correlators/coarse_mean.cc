@@ -13,7 +13,7 @@
 
 
 // type aliases
-using arena_const_raster_t = ampcor::dom::arena_const_raster_t;
+using arena_const_raster_t = ampcor::dom::arena_const_raster_t<float>;
 using spec_t = arena_const_raster_t::spec_type;
 using pixel_t = spec_t::pixel_type;
 using index_t = arena_const_raster_t::index_type;
