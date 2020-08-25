@@ -37,18 +37,18 @@ public:
     using pid_grid = int *;
 
     // temporary tile storage
-    using arena_type = ampcor::dom::arena_raster_t;
-    using const_arena_type = ampcor::dom::arena_const_raster_t;
+    using arena_type = ampcor::dom::arena_raster_t<slc_value_type>;
+    using const_arena_type = ampcor::dom::arena_const_raster_t<slc_value_type>;
     using arena_reference = arena_type &;
-    using arena_spec = arena_type::spec_type;
-    using arena_value_type = arena_type::value_type;
-    using arena_layout_type = arena_type::packing_type;
-    using arena_index_type = arena_type::index_type;
-    using arena_shape_type = arena_type::shape_type;
+    using arena_spec = typename arena_type::spec_type;
+    using arena_value_type = typename arena_type::value_type;
+    using arena_layout_type = typename arena_type::packing_type;
+    using arena_index_type = typename arena_type::index_type;
+    using arena_shape_type = typename arena_type::shape_type;
     // usage
     using const_arena_const_reference = const const_arena_type &;
-    using arena_layout_const_reference = arena_type::packing_const_reference;
-    using arena_shape_const_reference = arena_type::shape_const_reference;
+    using arena_layout_const_reference = typename arena_type::packing_const_reference;
+    using arena_shape_const_reference = typename arena_type::shape_const_reference;
 
     // 1d vectors
     using vector_type = std::valarray<arena_value_type>;
