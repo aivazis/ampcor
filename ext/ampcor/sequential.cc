@@ -116,7 +116,7 @@ constructor(size_t pairs, py::tuple chip, py::tuple padding,
     sequential_t::arena_layout_type secLayout { secShape, secOrigin };
 
     // build the worker and return it
-    return std::unique_ptr<sequential_t>(new sequential_t(pairs,
+    return std::unique_ptr<sequential_t>(new sequential_t(
                                                           refLayout, secLayout,
                                                           refineFactor, refineMargin, zoomFactor));
 }

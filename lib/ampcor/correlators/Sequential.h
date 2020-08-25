@@ -64,7 +64,7 @@ public:
 
     // constructor
     inline
-    Sequential(int pairs,
+    Sequential(
                arena_layout_const_reference ref, arena_layout_const_reference sec,
                int refineFactor, int refineMargin,
                int zoomFactor);

@@ -24,12 +24,12 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 // constructor
 template <class slcT, class offsetsT>
 ampcor::correlators::Sequential<slcT, offsetsT>::
-Sequential(int pairs,
+Sequential(
            arena_layout_const_reference refLayout, arena_layout_const_reference secLayout,
            int refineFactor, int refineMargin,
            int zoomFactor) :
     // workload
-    _pairs{ pairs },
+    _pairs{ std::min(refLayout.shape()[0], secLayout.shape()[0]) },
     // the correlation refinement parameters
     _refineFactor{ refineFactor },
     _refineMargin{ refineMargin },
@@ -39,25 +39,6 @@ Sequential(int pairs,
     _refCoarse{ refLayout, "coarse_ref.dat", refLayout.cells() },
     _secCoarse{ secLayout, "coarse_sec.dat", secLayout.cells() }
 {
-    // we have some invariants to check: the number of pairs must match the reference and
-    // secondary grid layout
-    if (_pairs != refLayout.shape()[0] or _pairs != secLayout.shape()[0]) {
-        // we have a bug
-        pyre::journal::firewall_t channel("ampcor.sequential.setup");
-        // build a report and complain
-        channel
-            << "while instantiating the sequential worker:"
-            << pyre::journal::newline
-            << "mismatch in the tile pair counts:"
-            << pyre::journal::newline
-            << "expected: " << _pairs << " tile pairs"
-            << ", got " << refLayout.shape()[0] << " reference tiles"
-            << ", and " << secLayout.shape()[0] << " secondary tiles"
-            << pyre::journal::endl(__HERE__);
-        // UNREACHABLE
-        // unless the user has explicitly prevented firewalls from being fatal
-    }
-
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.setup");
     // show me
