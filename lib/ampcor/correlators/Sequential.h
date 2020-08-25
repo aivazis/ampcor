@@ -64,8 +64,8 @@ public:
 
     // constructor
     inline
-    Sequential(
-               arena_layout_const_reference ref, arena_layout_const_reference sec,
+    Sequential(slc_const_reference ref, slc_const_reference sec,
+               arena_layout_const_reference refLayout, arena_layout_const_reference secLayout,
                int refineFactor, int refineMargin,
                int zoomFactor);
 
@@ -106,6 +106,9 @@ public:
 
     // implementation details: data
 private:
+    // the input rasters
+    slc_const_reference _ref;
+    slc_const_reference _sec;
     // my workload
     const int _pairs;
     // the correlation surface refinement parameters

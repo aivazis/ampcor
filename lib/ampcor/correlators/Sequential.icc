@@ -24,10 +24,13 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 // constructor
 template <class slcT, class offsetsT>
 ampcor::correlators::Sequential<slcT, offsetsT>::
-Sequential(
+Sequential(slc_const_reference ref, slc_const_reference sec,
            arena_layout_const_reference refLayout, arena_layout_const_reference secLayout,
            int refineFactor, int refineMargin,
            int zoomFactor) :
+    // access to the input rasters
+    _ref { ref },
+    _sec { sec },
     // workload
     _pairs{ std::min(refLayout.shape()[0], secLayout.shape()[0]) },
     // the correlation refinement parameters

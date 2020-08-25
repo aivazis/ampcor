@@ -53,7 +53,8 @@ class Sequential:
         # start the timer
         timer.reset().start()
         # instantiate my worker
-        worker = libampcor.Sequential(pairs=pairs,
+        worker = libampcor.Sequential(reference=refRaster, secondary=secRaster,
+                                      pairs=pairs,
                                       chip=chip, padding=padding,
                                       refineFactor=refineFactor, refineMargin=refineMargin,
                                       zoomFactor=zoomFactor

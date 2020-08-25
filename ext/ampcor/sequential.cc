@@ -19,6 +19,9 @@ namespace ampcor::py {
     using slc_raster_t = ampcor::dom::slc_const_raster_t;
     using offsets_raster_t = ampcor::dom::offsets_raster_t;
 
+    // usage
+    using slc_const_reference = const slc_raster_t &;
+
     // the worker
     using sequential_t = ampcor::correlators::sequential_t<slc_raster_t, offsets_raster_t>;
     using sequential_reference = sequential_t &;
@@ -29,7 +32,8 @@ namespace ampcor::py {
 namespace ampcor::py {
     // the constructor
     static inline auto
-    constructor(size_t, py::tuple, py::tuple, size_t, size_t, size_t)
+    constructor(slc_const_reference, slc_const_reference,
+                size_t, py::tuple, py::tuple, size_t, size_t, size_t)
         -> unique_pointer<sequential_t>;
 
     // add a reference tile
@@ -53,11 +57,15 @@ sequential(py::module &m) {
     py::class_<sequential_t>(m, "Sequential")
         // constructor
         .def(// the wrapper
-             py::init([](size_t pairs, py::tuple chip, py::tuple padding,
-                         size_t refineFactor, size_t refineMargin, size_t zoomFactor)
-                      { return constructor(pairs, chip, padding,
-                                           refineFactor, refineMargin, zoomFactor);}),
+             py::init([](slc_const_reference ref, slc_const_reference sec,
+                         size_t pairs, py::tuple chip, py::tuple padding,
+                         size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
+                 return constructor(ref, sec,
+                                    pairs, chip, padding,
+                                    refineFactor, refineMargin, zoomFactor);
+             }),
              // the signature
+             "reference"_a, "secondary"_a,
              "pairs"_a, "chip"_a, "padding"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
@@ -92,7 +100,8 @@ sequential(py::module &m) {
 // worker constructor
 auto
 ampcor::py::
-constructor(size_t pairs, py::tuple chip, py::tuple padding,
+constructor(slc_const_reference ref, slc_const_reference sec,
+            size_t pairs, py::tuple chip, py::tuple padding,
             size_t refineFactor, size_t refineMargin, size_t zoomFactor )
     -> unique_pointer<sequential_t>
 {
@@ -116,7 +125,7 @@ constructor(size_t pairs, py::tuple chip, py::tuple padding,
     sequential_t::arena_layout_type secLayout { secShape, secOrigin };
 
     // build the worker and return it
-    return std::unique_ptr<sequential_t>(new sequential_t(
+    return std::unique_ptr<sequential_t>(new sequential_t(ref, sec,
                                                           refLayout, secLayout,
                                                           refineFactor, refineMargin, zoomFactor));
 }
