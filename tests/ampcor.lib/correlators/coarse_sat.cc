@@ -10,6 +10,8 @@
 #include <algorithm>
 // get the header
 #include <ampcor/dom.h>
+// the plan details
+#include "plan.h"
 
 
 // type aliases
@@ -30,9 +32,9 @@ int main(int argc, char *argv[]) {
     pyre::journal::debug_t channel("ampcor.correlators.sat");
 
     // the number of pairs
-    auto pairs = 4;
+    auto pairs = plan.pairs;
     // the base dimension
-    auto dim = 8;
+    auto dim = plan.dim;
 
     // the name of the product with the secondary arena
     std::string arenaName = "coarse_sec.dat";

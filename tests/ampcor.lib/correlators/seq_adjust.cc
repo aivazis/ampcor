@@ -10,8 +10,8 @@
 // get the headers
 #include <ampcor/dom.h>
 #include <ampcor/correlators.h>
-// access the complex literals
-using namespace std::complex_literals;
+// the plan details
+#include "plan.h"
 
 
 // type aliases
@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
     pyre::journal::info_t("ampcor.sequential.adjust").deactivate();
 
     // the base dimension
-    auto dim = 8;
+    auto dim = plan.dim;
     // the number of tile pairs
-    auto pairs = 4;
+    auto pairs = plan.pairs;
 
     // the shape of the reference tiles
     seq_t::arena_shape_type refArenaShape { pairs, dim/4, dim/4 };
