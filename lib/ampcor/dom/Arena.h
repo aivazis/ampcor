@@ -10,13 +10,14 @@
 
 
 // an arena is a container of detected SLC tiles
+template <typename pixelT>
 class ampcor::dom::Arena {
     // types
 public:
     // me
     using arena_type = Arena;
     // my pixel type
-    using pixel_type = float;
+    using pixel_type = pixelT;
     // my layout
     using layout_type = layout_t<3>;
     using layout_const_reference = const layout_type &;

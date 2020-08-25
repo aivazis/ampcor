@@ -10,16 +10,18 @@
 
 
 // metamethods
+template <typename pixelT>
 constexpr
-ampcor::dom::Arena::
+ampcor::dom::Arena<pixelT>::
 Arena(layout_const_reference layout):
     _layout { layout }
 {}
 
 
 // interface
+template <typename pixelT>
 constexpr auto
-ampcor::dom::Arena::
+ampcor::dom::Arena<pixelT>::
 cells() const -> std::size_t
 {
     // easy enough
@@ -27,8 +29,9 @@ cells() const -> std::size_t
 }
 
 
+template <typename pixelT>
 constexpr auto
-ampcor::dom::Arena::
+ampcor::dom::Arena<pixelT>::
 bytes() const -> std::size_t
 {
     // easy enough
@@ -36,8 +39,9 @@ bytes() const -> std::size_t
 }
 
 
+template <typename pixelT>
 constexpr auto
-ampcor::dom::Arena::
+ampcor::dom::Arena<pixelT>::
 layout() const -> layout_const_reference
 {
     // my layout knows

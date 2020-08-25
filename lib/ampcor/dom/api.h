@@ -28,10 +28,14 @@ namespace ampcor::dom {
     // intermediate data products
     // tile arenas
     // the spec
-    using arena_t = Arena;
+    template <typename pixelT>
+    using arena_t = Arena<pixelT>;
     // the rasters
-    using arena_raster_t = Product<Arena, false>;          // read-write
-    using arena_const_raster_t = Product<Arena, false>;    // read only
+    template <typename pixelT>
+    using arena_raster_t = Product<arena_t<pixelT>, false>;          // read-write
+
+    template <typename pixelT>
+    using arena_const_raster_t = Product<arena_t<pixelT>, false>;    // read only
 }
 
 #endif

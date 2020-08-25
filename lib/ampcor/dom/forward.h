@@ -16,6 +16,7 @@ namespace ampcor::dom {
     class SLC;
     class Offsets;
     // intermediate
+    template <typename pixelT>
     class Arena;
 
     // turning specs into actual products
