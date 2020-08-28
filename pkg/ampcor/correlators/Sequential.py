@@ -33,7 +33,7 @@ class Sequential:
         channel = journal.info("ampcor.timings.sequential")
 
         # unpack the rasters
-        refRaster, secRaster = rasters
+        ref, sec = rasters
         # get the tile pairings
         tiles = plan.tiles
         # because we need to know how many there are
@@ -53,7 +53,7 @@ class Sequential:
         # start the timer
         timer.reset().start()
         # instantiate my worker
-        worker = libampcor.Sequential(reference=refRaster, secondary=secRaster,
+        worker = libampcor.Sequential(reference=ref.raster, secondary=sec.raster,
                                       pairs=pairs,
                                       chip=chip, padding=padding,
                                       refineFactor=refineFactor, refineMargin=refineMargin,
@@ -70,8 +70,8 @@ class Sequential:
         for idx, (pid, refTile,secTile) in enumerate(tiles):
             # save the pair id
             worker.addTilePair(tid=idx, pid=pid,
-                               referenceRaster=refRaster, referenceTile=refTile,
-                               secondaryRaster=secRaster, secondaryTile=secTile)
+                               referenceRaster=ref.raster, referenceTile=refTile,
+                               secondaryRaster=sec.raster, secondaryTile=secTile)
         # stop the timer
         timer.stop()
         # show me
@@ -80,7 +80,7 @@ class Sequential:
         # start the timer
         timer.reset().start()
         # compute the adjustments to the offset field
-        worker.adjust(map=offsets)
+        worker.adjust(map=offsets.raster)
         # stop the timer
         timer.stop()
         # show me

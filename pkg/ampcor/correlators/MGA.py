@@ -104,8 +104,8 @@ class MGA(ampcor.flow.factory,
         # restart the timer
         timer.reset().start()
         # open the two rasters and get access to the data
-        ref = self.reference.open().raster
-        sec = self.secondary.open().raster
+        ref = self.reference.open()
+        sec = self.secondary.open()
         # stop the timer
         timer.stop()
         # show me
@@ -116,7 +116,7 @@ class MGA(ampcor.flow.factory,
         # choose the correlator implementation
         worker = self.makeWorker(layout=plexus.shell)
         # compute the offsets
-        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets.raster, plan=plan)
+        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
         # stop the timer
         timer.stop()
         # show me
