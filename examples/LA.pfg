@@ -12,7 +12,7 @@ LA:
     ; secondary raster
     secondary = slc#20070215
     ; the output of this process, configured above
-    offsetMap = offsets#dense
+    offsetMap = offsets#sparse
     ; the factory
     correlator = mga#tiles.small
 
@@ -36,7 +36,7 @@ LA:
 ; a dense tiling
 dense:
     ; shape
-    shape = 120, 40
+    shape = 128, 32
     ; pfs path to the file; currently left in the working directory
     data = offsets_dense.dat
 
@@ -44,7 +44,7 @@ dense:
 ; a sparse tiling
 sparse:
     ; shape
-    shape = 5,3
+    shape = 8,2
     ; pfs path to the file; currently left in the working directory
     data = offsets_sparse.dat
 
