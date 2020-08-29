@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     }
 
     // estimate the offsets
-    seq.adjust(offsets);
+    seq.adjust();
 
     // all done
     return 0;

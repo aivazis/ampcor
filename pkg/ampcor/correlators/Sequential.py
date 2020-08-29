@@ -81,7 +81,7 @@ class Sequential:
         # start the timer
         timer.reset().start()
         # compute the adjustments to the offset field
-        worker.adjust(map=offsets.raster)
+        worker.adjust()
         # stop the timer
         timer.stop()
         # show me

@@ -83,7 +83,7 @@ public:
                             slc_const_reference ref, slc_const_reference sec);
 
     // execute the correlation plan and adjust the offset map
-    auto adjust(offsets_reference);
+    auto adjust();
 
     // implementation details: methods
 public:

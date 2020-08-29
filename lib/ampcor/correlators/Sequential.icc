@@ -173,7 +173,7 @@ addTilePair(int tid, int pid, slc_const_reference ref, slc_const_reference sec)
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-adjust(offsets_reference map)
+adjust()
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
@@ -196,7 +196,7 @@ adjust(offsets_reference map)
     auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima
     channel << "    locating the correlation surface maxima" << pyre::journal::endl(__HERE__);
-    _maxcor(gamma, map);
+    _maxcor(gamma, _map);
 
     // finish
     channel << "    done" << pyre::journal::endl(__HERE__);
