@@ -28,14 +28,17 @@ tests.ampcor.lib.dom.offsets_get.pre := tests.ampcor.lib.dom.offsets_set
 # the correlator tests have some order requirements
 tests.ampcor.lib.correlators.slc_sec.pre := tests.ampcor.lib.correlators.slc_ref
 
-tests.ampcor.lib.correlators.seq_transfer_tiles.pre := \
+tests.ampcor.lib.correlators.seq_coarse_zero.pre := \
     tests.ampcor.lib.correlators.slc_ref \
-    tests.ampcor.lib.correlators.slc_sec
+    tests.ampcor.lib.correlators.slc_sec \
+
+tests.ampcor.lib.correlators.seq_transfer_tiles.pre := \
+    tests.ampcor.lib.correlators.seq_coarse_zero
 
 tests.ampcor.lib.correlators.seq_adjust.pre := \
-    tests.ampcor.lib.correlators.slc_ref \
-    tests.ampcor.lib.correlators.slc_sec
+    tests.ampcor.lib.correlators.seq_transfer_tiles
 
+# the test cases that open and display products
 tests.ampcor.lib.correlators.coarse_ref.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
