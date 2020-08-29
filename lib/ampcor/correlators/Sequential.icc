@@ -24,13 +24,14 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 // constructor
 template <class slcT, class offsetsT>
 ampcor::correlators::Sequential<slcT, offsetsT>::
-Sequential(slc_const_reference ref, slc_const_reference sec,
+Sequential(slc_const_reference ref, slc_const_reference sec, offsets_reference map,
            arena_layout_const_reference refLayout, arena_layout_const_reference secLayout,
            int refineFactor, int refineMargin,
            int zoomFactor) :
     // access to the input rasters
     _ref { ref },
     _sec { sec },
+    _map { map },
     // workload
     _pairs{ std::min(refLayout.shape()[0], secLayout.shape()[0]) },
     // the correlation refinement parameters
@@ -190,7 +191,7 @@ adjust(offsets_reference map)
     auto secMeans = _secondaryStatistics("coarse",
                                          _refCoarse.layout(), _secCoarse.layout(),
                                          secSATs);
-    // compute the correlation hyper surface
+    // slide {ref} sized chips around {sec} to compute the correlation hyper surface
     channel << "    computing the correlation surface" << pyre::journal::endl(__HERE__);
     auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima

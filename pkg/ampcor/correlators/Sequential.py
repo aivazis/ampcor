@@ -54,6 +54,7 @@ class Sequential:
         timer.reset().start()
         # instantiate my worker
         worker = libampcor.Sequential(reference=ref.raster, secondary=sec.raster,
+                                      map=offsets.raster,
                                       pairs=pairs,
                                       chip=chip, padding=padding,
                                       refineFactor=refineFactor, refineMargin=refineMargin,

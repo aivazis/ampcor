@@ -21,6 +21,7 @@ namespace ampcor::py {
 
     // usage
     using slc_const_reference = const slc_raster_t &;
+    using offsets_reference = offsets_raster_t &;
 
     // the worker
     using sequential_t = ampcor::correlators::sequential_t<slc_raster_t, offsets_raster_t>;
@@ -32,7 +33,7 @@ namespace ampcor::py {
 namespace ampcor::py {
     // the constructor
     static inline auto
-    constructor(slc_const_reference, slc_const_reference,
+    constructor(slc_const_reference, slc_const_reference, offsets_reference,
                 size_t, py::tuple, py::tuple, size_t, size_t, size_t)
         -> unique_pointer<sequential_t>;
 
@@ -58,14 +59,15 @@ sequential(py::module &m) {
         // constructor
         .def(// the wrapper
              py::init([](slc_const_reference ref, slc_const_reference sec,
+                         offsets_reference map,
                          size_t pairs, py::tuple chip, py::tuple padding,
                          size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
-                 return constructor(ref, sec,
+                 return constructor(ref, sec, map,
                                     pairs, chip, padding,
                                     refineFactor, refineMargin, zoomFactor);
              }),
              // the signature
-             "reference"_a, "secondary"_a,
+             "reference"_a, "secondary"_a, "map"_a,
              "pairs"_a, "chip"_a, "padding"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
@@ -100,7 +102,7 @@ sequential(py::module &m) {
 // worker constructor
 auto
 ampcor::py::
-constructor(slc_const_reference ref, slc_const_reference sec,
+constructor(slc_const_reference ref, slc_const_reference sec, offsets_reference map,
             size_t pairs, py::tuple chip, py::tuple padding,
             size_t refineFactor, size_t refineMargin, size_t zoomFactor )
     -> unique_pointer<sequential_t>
@@ -125,7 +127,7 @@ constructor(slc_const_reference ref, slc_const_reference sec,
     sequential_t::arena_layout_type secLayout { secShape, secOrigin };
 
     // build the worker and return it
-    return std::unique_ptr<sequential_t>(new sequential_t(ref, sec,
+    return std::unique_ptr<sequential_t>(new sequential_t(ref, sec, map,
                                                           refLayout, secLayout,
                                                           refineFactor, refineMargin, zoomFactor));
 }
