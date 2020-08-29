@@ -15,8 +15,10 @@
 
 
 // type aliases
+// products
 using slc_const_raster_t = ampcor::dom::slc_const_raster_t;
 using offsets_raster_t = ampcor::dom::offsets_raster_t;
+// the correlator
 using seq_t = ampcor::correlators::sequential_t<slc_const_raster_t, offsets_raster_t>;
 
 
@@ -51,18 +53,26 @@ int main(int argc, char *argv[]) {
     // the secondary tile layout
     seq_t::arena_layout_type secArenaLayout { secArenaShape, secArenaOrigin };
 
-    // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
-    seq_t seq(pairs, refArenaLayout, secArenaLayout, 1, 0, 1);
-
     // specify and open the rasters
     // shape
     slc_const_raster_t::shape_type rasterShape { dim, dim };
     // product spec
     slc_const_raster_t::spec_type spec { slc_const_raster_t::layout_type(rasterShape) };
+
     // open the sample reference raster in read-only mode
-    slc_const_raster_t refRaster { spec, "slc_ref.dat" };
+    slc_const_raster_t ref{ spec, "slc_ref.dat" };
     // repeat for the secondary raster
-    slc_const_raster_t secRaster { spec, "slc_sec.dat" };
+    slc_const_raster_t sec{ spec, "slc_sec.dat" };
+
+    // the output is a 2x2 grid
+    offsets_raster_t::shape_type offsetShape { 2, 2 };
+    // build the spec of the output product
+    offsets_raster_t::spec_type offsetSpec { offsets_raster_t::layout_type(offsetShape) };
+    // open the output
+    offsets_raster_t offsets { offsetSpec, "offsets.dat", offsetSpec.cells() };
+
+    // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
+    seq_t seq(ref, sec, offsets, refArenaLayout, secArenaLayout, 1, 0, 1);
 
     // we have four pairs of tiles to transfer
     for (auto i : {0,1}) {
@@ -71,8 +81,8 @@ int main(int argc, char *argv[]) {
             auto tid = 2*i + j;
             // add the tiles
             seq.addTilePair(tid, tid,
-                            refRaster.tile({i*dim/2 + dim/8, j*dim/2 + dim/8}, {dim/4,dim/4}),
-                            secRaster.tile({i*dim/2,j*dim/2}, {dim/2,dim/2}));
+                            ref.tile({i*dim/2 + dim/8, j*dim/2 + dim/8}, {dim/4,dim/4}),
+                            sec.tile({i*dim/2,j*dim/2}, {dim/2,dim/2}));
         }
     }
 

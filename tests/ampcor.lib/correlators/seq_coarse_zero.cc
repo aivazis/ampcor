@@ -15,7 +15,11 @@
 
 
 // type aliases
-using seq_t = ampcor::correlators::sequential_t<>;
+// products
+using slc_const_raster_t = ampcor::dom::slc_const_raster_t;
+using offsets_raster_t = ampcor::dom::offsets_raster_t;
+// the correlator
+using seq_t = ampcor::correlators::sequential_t<slc_const_raster_t, offsets_raster_t>;
 
 
 // make a sequential worker and add the reference tiles to its arena
@@ -43,8 +47,25 @@ int main(int argc, char *argv[]) {
     // their layout
     seq_t::arena_layout_type secLayout { secShape, secOrigin };
 
+    // specify and open the input rasters
+    // shape
+    slc_const_raster_t::shape_type rasterShape { dim, dim };
+    // product spec
+    slc_const_raster_t::spec_type spec { slc_const_raster_t::layout_type(rasterShape) };
+    // open the sample reference raster in read-only mode
+    slc_const_raster_t ref { spec, "slc_ref.dat" };
+    // repeat for the secondary raster
+    slc_const_raster_t sec { spec, "slc_sec.dat" };
+
+    // the output is a 2x2 grid
+    offsets_raster_t::shape_type offsetShape { 2, 2 };
+    // build the spec of the output product
+    offsets_raster_t::spec_type offsetSpec { offsets_raster_t::layout_type(offsetShape) };
+    // open the output
+    offsets_raster_t offsets { offsetSpec, "offsets.dat", offsetSpec.cells() };
+
     // make a sequential worker
-    seq_t seq(pairs, refLayout, secLayout, 1, 0, 1);
+    seq_t seq(ref, sec, offsets, refLayout, secLayout, 1, 0, 1);
 
     // all we know is the number of pairs
     assert(( seq.pairs() == pairs ));
