@@ -112,8 +112,6 @@ class OffsetMap(ampcor.flow.product,
         return self
 
 
-
-
     # meta-methods
     def __init__(self, **kwds):
         # chain up
