@@ -33,10 +33,12 @@ namespace ampcor::py {
 namespace ampcor::py {
     // the constructor
     static inline auto
-    constructor(slc_const_reference, slc_const_reference, offsets_reference,
-                size_t, py::tuple, py::tuple, size_t, size_t, size_t)
+    constructor(int rank,
+                slc_const_reference, slc_const_reference, offsets_reference,
+                py::tuple, py::tuple, size_t, size_t, size_t)
         -> unique_pointer<sequential_t>;
 
+#if MGA
     // add a reference tile
     static inline auto
     addTilePair(sequential_t &,
@@ -47,6 +49,7 @@ namespace ampcor::py {
                 // the secondary tile
                 const slc_raster_t &, const slc_raster_t::layout_type &)
         -> sequential_reference;
+#endif
 }
 
 
@@ -58,19 +61,23 @@ sequential(py::module &m) {
     py::class_<sequential_t>(m, "Sequential")
         // constructor
         .def(// the wrapper
-             py::init([](slc_const_reference ref, slc_const_reference sec,
+             py::init([](int rank,
+                         slc_const_reference ref, slc_const_reference sec,
                          offsets_reference map,
-                         size_t pairs, py::tuple chip, py::tuple padding,
+                         py::tuple chip, py::tuple window,
                          size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
-                 return constructor(ref, sec, map,
-                                    pairs, chip, padding,
+                 return constructor(rank,
+                                    ref, sec, map,
+                                    chip, window,
                                     refineFactor, refineMargin, zoomFactor);
              }),
              // the signature
+             "rank"_a,
              "reference"_a, "secondary"_a, "map"_a,
-             "pairs"_a, "chip"_a, "padding"_a,
+             "chip"_a, "window"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
+#if MGA
         // add a pair of tiles
         .def("addTilePair",
              // the handler
@@ -81,10 +88,13 @@ sequential(py::module &m) {
              // the docstring
              "detect and trasfer a reference tile to the coarse arena"
              )
+#endif
         // execute the correlation plan and adjust the offset map
         .def("adjust",
              // the handler
              &sequential_t::adjust,
+             // the signature
+             "origin"_a, "shape"_a,
              // the docstring
              "execute the correlation plan and adjust the {offsets} map"
              )
@@ -100,8 +110,9 @@ sequential(py::module &m) {
 // worker constructor
 auto
 ampcor::py::
-constructor(slc_const_reference ref, slc_const_reference sec, offsets_reference map,
-            size_t pairs, py::tuple chip, py::tuple padding,
+constructor(int rank,
+            slc_const_reference ref, slc_const_reference sec, offsets_reference map,
+            py::tuple chip, py::tuple window,
             size_t refineFactor, size_t refineMargin, size_t zoomFactor )
     -> unique_pointer<sequential_t>
 {
@@ -109,28 +120,26 @@ constructor(slc_const_reference ref, slc_const_reference sec, offsets_reference 
     size_t chip_0 = py::int_(chip[0]);
     size_t chip_1 = py::int_(chip[1]);
     // unpack the padding
-    size_t pad_0 = py::int_(padding[0]);
-    size_t pad_1 = py::int_(padding[1]);
+    size_t win_0 = py::int_(window[0]);
+    size_t win_1 = py::int_(window[1]);
 
-    // build the shape of the arena with the reference tiles
-    sequential_t::arena_shape_type refShape { pairs, chip_0, chip_1 };
-    // build its layout
-    sequential_t::arena_layout_type refLayout { refShape };
+    // build the shape of the reference tiles
+    sequential_t::slc_shape_type refShape { chip_0, chip_1 };
+    // build the shape of the secondary tiles
+    sequential_t::slc_shape_type secShape { win_0, win_1 };
 
-    // build the shape of the arena with the secondary tiles
-    sequential_t::arena_shape_type secShape { pairs, chip_0 + 2*pad_0, chip_1 + 2*pad_1 };
-    // adjust the origin
-    sequential_t::arena_index_type secOrigin { 0, -pad_0, -pad_1 };
-    // build the layout
-    sequential_t::arena_layout_type secLayout { secShape, secOrigin };
+    // build a worker
+    auto worker = new sequential_t(rank,
+                                   ref, sec, map,
+                                   refShape, secShape,
+                                   refineFactor, refineMargin, zoomFactor);
 
     // build the worker and return it
-    return std::unique_ptr<sequential_t>(new sequential_t(ref, sec, map,
-                                                          refLayout, secLayout,
-                                                          refineFactor, refineMargin, zoomFactor));
+    return std::unique_ptr<sequential_t>(worker);
 }
 
 
+#if MGA
 // add a reference tile to the worker's coarse arena
 auto
 ampcor::py::
@@ -165,6 +174,7 @@ addTilePair(sequential_t & worker,
     // all done
     return worker;
 }
+#endif
 
 
 // end of file
