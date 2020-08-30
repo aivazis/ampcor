@@ -11,55 +11,40 @@
 
 
 // metamethods
-// destructor
-template <class slcT, class offsetsT>
-ampcor::correlators::Sequential<slcT, offsetsT>::
-~Sequential()
-{
-    // clean up
-    delete [] _pids;
-}
-
-
 // constructor
 template <class slcT, class offsetsT>
 ampcor::correlators::Sequential<slcT, offsetsT>::
-Sequential(slc_const_reference ref, slc_const_reference sec, offsets_reference map,
-           arena_layout_const_reference refLayout, arena_layout_const_reference secLayout,
+Sequential(int rank,
+           slc_const_reference ref, slc_const_reference sec, offsets_reference map,
+           slc_shape_const_reference refShape, slc_shape_const_reference secShape,
            int refineFactor, int refineMargin,
            int zoomFactor) :
+    // my rank
+    _rank { rank },
     // access to the input rasters
     _ref { ref },
     _sec { sec },
     _map { map },
-    // workload
-    _pairs{ std::min(refLayout.shape()[0], secLayout.shape()[0]) },
+    // the shapes of tiles
+    _refShape { refShape },
+    _secShape { secShape },
     // the correlation refinement parameters
-    _refineFactor{ refineFactor },
-    _refineMargin{ refineMargin },
-    _zoomFactor{ zoomFactor },
-    // scratch space
-    _pids{ new int [_pairs] },
-    _refCoarse{ refLayout, "coarse_ref.dat", refLayout.cells() },
-    _secCoarse{ secLayout, "coarse_sec.dat", secLayout.cells() }
+    _refineFactor { refineFactor },
+    _refineMargin { refineMargin },
+    _zoomFactor { zoomFactor }
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.setup");
     // show me
     channel
+        << "[" << _rank << "]: "
         << "new Sequential worker:" << pyre::journal::newline
-        // number ofpairs
-        << "  pairs: " << _pairs << pyre::journal::newline
-        // the reference tile coarse arena
-        << "  reference coarse arena:" << pyre::journal::newline
-        << "    origin: {" << refLayout.origin() << "}" << pyre::journal::newline
-        << "     shape: {" << refLayout.shape() << "}" << pyre::journal::newline
-        << "     cells: " << refLayout.cells() << pyre::journal::newline
+        // the reference tile shape
+        << "  reference tiles:" << pyre::journal::newline
+        << "     shape: {" << refShape << "}" << pyre::journal::newline
         // the secondary tile coarse arena
-        << "  secondary coarse arena:" << pyre::journal::newline
-        << "    origin: {" << secLayout.origin() << "}" << pyre::journal::newline
-        << "     shape: {" << secLayout.shape() << "}" << pyre::journal::newline
-        << "     cells: " << secLayout.cells() << pyre::journal::newline
+        << "  secondary tiles:" << pyre::journal::newline
+        << "     shape: {" << secShape << "}" << pyre::journal::newline
         // flush
         << pyre::journal::endl(__HERE__);
 
@@ -68,17 +53,7 @@ Sequential(slc_const_reference ref, slc_const_reference sec, offsets_reference m
 }
 
 
-// accessors
-template <class slcT, class offsetsT>
-auto
-ampcor::correlators::Sequential<slcT, offsetsT>::
-pairs() const -> int
-{
-    // easy enough
-    return _pairs;
-}
-
-
+#if MGA
 // add a tile pair to the pile
 template <class slcT, class offsetsT>
 void
@@ -167,44 +142,103 @@ addTilePair(int tid, int pid, slc_const_reference ref, slc_const_reference sec)
     // all done
     return;
 }
+#endif
 
 
 // execute the correlation plan
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-adjust()
+adjust(offsets_index_const_reference origin, offsets_shape_const_reference shape)
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
-    channel << "  adjusting the offset map" << pyre::journal::endl(__HERE__);
+    channel
+        << "[" << _rank << "]: "
+        << "adjusting the offset map: origin: {" << origin << "}, shape: " << shape << "}"
+        << pyre::journal::endl(__HERE__);
 
     // step 1: initial exploration of the correlation surface
+    channel
+        << "[" << _rank << "]: "
+        << "initial exploration of the correlation surface:"
+        << pyre::journal::endl(__HERE__);
+    // first, the reference tiles
+    channel
+        << "[" << _rank << "]: "
+        << "prepping the reference tiles:"
+        << pyre::journal::endl(__HERE__);
+    // make a coarse arena for the amplitudes of the reference tiles
+    channel
+        << "[" << _rank << "]: "
+        << "creating a coarse arena for the amplitudes"
+        << pyre::journal::endl(__HERE__);
+    // detect and transfer the reference tile tiles to the coarse arena
+    channel
+        << "[" << _rank << "]: "
+        << "detecting and transferring"
+        << pyre::journal::endl(__HERE__);
     // adjust the reference tiles to zero mean and compute their variance
-    channel << "    computing reference statistics" << pyre::journal::endl(__HERE__);
-    auto refVariances = _referenceStatistics(_refCoarse);
+    channel
+        << "[" << _rank << "]: "
+        << "adjusting the amplitudes to zero mean and computing statistics"
+        << pyre::journal::endl(__HERE__);
+    // auto refVariances = _referenceStatistics(_refCoarse);
+
+    // next, the secondary tiles
+    channel
+        << "[" << _rank << "]: "
+        << "prepping the secondary tiles:"
+        << pyre::journal::endl(__HERE__);
+    // make a coarse arena for the amplitudes of the secondary tiles
+    channel
+        << "[" << _rank << "]: "
+        << "creating a coarse arena for the amplitudes"
+        << pyre::journal::endl(__HERE__);
+    // detect and transfer the reference tile tiles to the coarse arena
+    channel
+        << "[" << _rank << "]: "
+        << "detecting and transferring"
+        << pyre::journal::endl(__HERE__);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
-    channel << "    building SATs for the secondary tiles" << pyre::journal::endl(__HERE__);
-    auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
+    channel
+        << "[" << _rank << "]: "
+        << "building sum area tables"
+        << pyre::journal::endl(__HERE__);
+    // auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
     // use the sum area tables to compute mean amplitude for all possible window placements
-    channel << "    computing secondary statistics" << pyre::journal::endl(__HERE__);
-    auto secMeans = _secondaryStatistics("coarse",
-                                         _refCoarse.layout(), _secCoarse.layout(),
-                                         secSATs);
+    channel
+        << "[" << _rank << "]: "
+        << "computing statistics"
+        << pyre::journal::endl(__HERE__);
+    // auto secMeans = _secondaryStatistics("coarse",
+                                         // _refCoarse.layout(), _secCoarse.layout(),
+                                         // secSATs);
+    // generate the coarse correlation surface
     // slide {ref} sized chips around {sec} to compute the correlation hyper surface
-    channel << "    computing the correlation surface" << pyre::journal::endl(__HERE__);
-    auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
+    channel
+        << "[" << _rank << "]: "
+        << "computing the correlation surface"
+        << pyre::journal::endl(__HERE__);
+    // auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima
-    channel << "    locating the correlation surface maxima" << pyre::journal::endl(__HERE__);
-    _maxcor(gamma, _map);
+    channel
+        << "[" << _rank << "]: "
+        << "locating the correlation surface maxima and recording the offsets"
+        << pyre::journal::endl(__HERE__);
+    // _maxcor(gamma, _map);
 
     // finish
-    channel << "    done" << pyre::journal::endl(__HERE__);
+    channel
+        << "[" << _rank << "]: "
+        << "done"
+        << pyre::journal::endl(__HERE__);
     // all done
     return;
 }
 
 
+#if MGA
 // implementation details
 // reduce the tiles in {arena} to zero mean and compute their variances
 // invoked only for reference tiles; the mean value of secondary tiles is a bit more
@@ -575,6 +609,7 @@ _maxcor(const_arena_const_reference gamma, offsets_reference map)
     // all done
     return;
 }
+# endif
 
 
 # endif
