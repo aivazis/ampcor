@@ -12,10 +12,7 @@ import journal
 import ampcor
 
 
-# this worker takes a plan, attempts to allocate enough memory to execute it, and goes through
-# each pair of tiles in sequence until they are all done. it is smart about memory allocation,
-# in the sense that it will execute the specified plan in batches whose size is determined by
-# the available memory
+# worker that goes through the tiles in the execution plan sequentially
 class Sequential:
     """
     The sequential tile registration strategy
@@ -23,69 +20,70 @@ class Sequential:
 
 
     # interface
-    def adjust(self, manager, rasters, offsets, plan, **kwds):
+    def adjust(self, origin, shape, **kwds):
         """
-        Compute the offset map between a pair of {rasters} given a correlation {plan}
+        Compute the offset map between a pair of rasters given a correlation {plan}
         """
         # make a timer
         timer = ampcor.executive.newTimer(name="ampcor.sequential")
         # and a journal channel
         channel = journal.info("ampcor.timings.sequential")
 
+        # start the timer
+        timer.reset().start()
+        # tell
+        channel.log(f"[{self.rank}]: executing plan: origin={tuple(origin)}, shape={tuple(shape)}")
+        # compute the adjustments to the offset field
+        self.worker.adjust(origin=origin, shape=shape)
+        # stop the timer
+        timer.stop()
+        # show me
+        channel.log(f"[{self.rank}]: computed offsets: {1e3 * timer.read():.3f} ms")
+
+        # all done
+        return
+
+
+    # metamethods
+    def __init__(self, rasters, offsets, manager, plan, rank=0, **kwds):
+        # chain up
+        super().__init__(**kwds)
+
+        # save my rank
+        self.rank = rank
+
         # unpack the rasters
         ref, sec = rasters
-        # get the tile pairings
-        tiles = plan.tiles
-        # because we need to know how many there are
-        pairs = len(tiles)
         # get the shape of the reference chip
         chip = plan.chip
         # and the shape of the search windows
-        padding = plan.padding
+        window = plan.window
 
         # the manager holds the refinement plan
         refineFactor = manager.refineFactor
         refineMargin = manager.refineMargin
         zoomFactor = manager.zoomFactor
 
+        # make a timer
+        timer = ampcor.executive.newTimer(name="ampcor.sequential")
+        # and a journal channel
+        channel = journal.info("ampcor.timings.sequential")
+
         # access the bindings; this is guaranteed to succeed
-        libampcor = ampcor.ext.libampcor
+        seq = ampcor.ext.libampcor.Sequential
         # start the timer
         timer.reset().start()
+
         # instantiate my worker
-        worker = libampcor.Sequential(reference=ref.raster, secondary=sec.raster,
-                                      map=offsets.raster,
-                                      pairs=pairs,
-                                      chip=chip, padding=padding,
-                                      refineFactor=refineFactor, refineMargin=refineMargin,
-                                      zoomFactor=zoomFactor
-                                      )
+        self.worker = seq(rank=rank,
+                          reference=ref.raster, secondary=sec.raster, map=offsets.raster,
+                          chip=chip, window=window,
+                          refineFactor=refineFactor, refineMargin=refineMargin,
+                          zoomFactor=zoomFactor)
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"  instantiated the sequential worker: {1e3 * timer.read():.3f} ms")
-
-        # start the timer
-        timer.reset().start()
-        # go through the tile pairs
-        for idx, (pid, refTile,secTile) in enumerate(tiles):
-            # save the pair id
-            worker.addTilePair(tid=idx, pid=pid,
-                               referenceRaster=ref.raster, referenceTile=refTile,
-                               secondaryRaster=sec.raster, secondaryTile=secTile)
-        # stop the timer
-        timer.stop()
-        # show me
-        channel.log(f"  transferred the tiles to the coarse arena: {1e3 * timer.read():.3f} ms")
-
-        # start the timer
-        timer.reset().start()
-        # compute the adjustments to the offset field
-        worker.adjust()
-        # stop the timer
-        timer.stop()
-        # show me
-        channel.log(f"  computed the offsets: {1e3 * timer.read():.3f} ms")
+        channel.log(f"[{rank}]: instantiated a sequential worker: {1e3 * timer.read():.3f} ms")
 
         # all done
         return

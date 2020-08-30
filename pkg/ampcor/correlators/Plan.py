@@ -55,7 +55,7 @@ class Plan:
         self.chip = correlator.chip
         # and the search window padding
         self.padding = correlator.padding
-        # make me tile so i can behave like a grid
+        # make me a tile so i can behave like a grid
         self.tile = ampcor.grid.tile(shape=correlator.offsets.shape)
 
         # compute the secondary window shape

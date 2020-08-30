@@ -90,7 +90,7 @@ class MGA(ampcor.flow.factory,
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"  primed the offset map: {1e3 * timer.read():.3f} ms")
+        channel.log(f"primed the offset map: {1e3 * timer.read():.3f} ms")
 
         # start the timer
         timer.reset().start()
@@ -99,7 +99,7 @@ class MGA(ampcor.flow.factory,
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"  correlation plan: {1e3 * timer.read():.3f} ms")
+        channel.log(f"correlation plan: {1e3 * timer.read():.3f} ms")
 
         # restart the timer
         timer.reset().start()
@@ -109,14 +109,15 @@ class MGA(ampcor.flow.factory,
         # stop the timer
         timer.stop()
         # show me
-        channel.log(f"  opened the two rasters: {1e3 * timer.read():.3f} ms")
+        channel.log(f"opened the two rasters: {1e3 * timer.read():.3f} ms")
 
         # restart the timer
         timer.reset().start()
         # choose the correlator implementation
-        worker = self.makeWorker(layout=plexus.shell)
+        worker = self.makeWorker(rasters=(ref, sec), offsets=offsets,
+                                 layout=plexus.shell, plan=plan)
         # compute the offsets
-        worker.adjust(manager=self, rasters=(ref, sec), offsets=offsets, plan=plan)
+        worker.adjust(origin=offsets.layout.origin, shape=offsets.layout.shape)
         # stop the timer
         timer.stop()
         # show me
@@ -153,7 +154,7 @@ class MGA(ampcor.flow.factory,
         return
 
 
-    def makeWorker(self, layout):
+    def makeWorker(self, rasters, offsets, layout, plan):
         """
         Deduce the correlator implementation strategy
         """
@@ -171,7 +172,7 @@ class MGA(ampcor.flow.factory,
             raise NotImplementedError("no available correlation strategy")
 
         # instantiate
-        worker = workerFactory()
+        worker = workerFactory(rasters=rasters, offsets=offsets, manager=self, plan=plan)
         # that's all until there is support for other types of parallelism
         return worker
 
