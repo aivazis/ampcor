@@ -34,6 +34,7 @@ raster_layout(py::module &m) {
 
     // add the raster layout interface
     pyRasterLayout
+        // properties
         .def_property_readonly("origin",
                                // the getter
                                &raster_layout_t::origin,
@@ -55,6 +56,15 @@ raster_layout(py::module &m) {
                                // the docstring
                                "the number of pixels in the raster"
                                )
+        // methods
+        .def("box",
+             // the handler
+             &raster_layout_t::box,
+             // the signature
+             "origin"_a, "shape"_a,
+             // the docstring
+             "carve a portion of a layout"
+             )
         // done
         ;
 
