@@ -88,7 +88,7 @@ public:
 #endif
 
     // execute the correlation plan and adjust the offset map
-    auto adjust(offsets_index_const_reference, offsets_shape_const_reference);
+    auto adjust(offsets_layout_const_reference);
 
     // implementation details: methods
 public:

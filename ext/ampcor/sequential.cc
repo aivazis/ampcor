@@ -94,7 +94,7 @@ sequential(py::module &m) {
              // the handler
              &sequential_t::adjust,
              // the signature
-             "origin"_a, "shape"_a,
+             "box"_a,
              // the docstring
              "execute the correlation plan and adjust the {offsets} map"
              )

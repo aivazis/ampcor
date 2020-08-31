@@ -20,7 +20,7 @@ class Sequential:
 
 
     # interface
-    def adjust(self, origin, shape, **kwds):
+    def adjust(self, box, **kwds):
         """
         Compute the offset map between a pair of rasters given a correlation {plan}
         """
@@ -31,10 +31,8 @@ class Sequential:
 
         # start the timer
         timer.reset().start()
-        # tell
-        channel.log(f"[{self.rank}]: executing plan: origin={tuple(origin)}, shape={tuple(shape)}")
         # compute the adjustments to the offset field
-        self.worker.adjust(origin=origin, shape=shape)
+        self.worker.adjust(box=box)
         # stop the timer
         timer.stop()
         # show me

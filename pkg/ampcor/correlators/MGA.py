@@ -117,7 +117,7 @@ class MGA(ampcor.flow.factory,
         worker = self.makeWorker(rasters=(ref, sec), offsets=offsets,
                                  layout=plexus.shell, plan=plan)
         # compute the offsets
-        worker.adjust(origin=offsets.layout.origin, shape=offsets.layout.shape)
+        worker.adjust(box=offsets.layout)
         # stop the timer
         timer.stop()
         # show me

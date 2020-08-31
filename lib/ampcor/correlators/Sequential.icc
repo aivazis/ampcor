@@ -149,67 +149,74 @@ addTilePair(int tid, int pid, slc_const_reference ref, slc_const_reference sec)
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-adjust(offsets_index_const_reference origin, offsets_shape_const_reference shape)
+adjust(offsets_layout_const_reference box)
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
     channel
         << "[" << _rank << "]: "
-        << "adjusting the offset map: origin: {" << origin << "}, shape: " << shape << "}"
+        << "adjusting the offset map: origin: {"
+        << box.origin() << "}, shape: {" << box.shape() << "}"
         << pyre::journal::endl(__HERE__);
 
     // step 1: initial exploration of the correlation surface
     channel
         << "[" << _rank << "]: "
-        << "initial exploration of the correlation surface:"
+        << "  initial exploration of the correlation surface:"
         << pyre::journal::endl(__HERE__);
+    // validate the plan
+    channel
+        << "[" << _rank << "]: "
+        << "    validating the execution plan"
+        << pyre::journal::endl(__HERE__);
+
     // first, the reference tiles
     channel
         << "[" << _rank << "]: "
-        << "prepping the reference tiles:"
+        << "    prepping the reference tiles:"
         << pyre::journal::endl(__HERE__);
     // make a coarse arena for the amplitudes of the reference tiles
     channel
         << "[" << _rank << "]: "
-        << "creating a coarse arena for the amplitudes"
+        << "      creating a coarse arena for the amplitudes"
         << pyre::journal::endl(__HERE__);
     // detect and transfer the reference tile tiles to the coarse arena
     channel
         << "[" << _rank << "]: "
-        << "detecting and transferring"
+        << "      detecting and transferring"
         << pyre::journal::endl(__HERE__);
     // adjust the reference tiles to zero mean and compute their variance
     channel
         << "[" << _rank << "]: "
-        << "adjusting the amplitudes to zero mean and computing statistics"
+        << "      adjusting the amplitudes to zero mean and computing statistics"
         << pyre::journal::endl(__HERE__);
     // auto refVariances = _referenceStatistics(_refCoarse);
 
     // next, the secondary tiles
     channel
         << "[" << _rank << "]: "
-        << "prepping the secondary tiles:"
+        << "    prepping the secondary tiles:"
         << pyre::journal::endl(__HERE__);
     // make a coarse arena for the amplitudes of the secondary tiles
     channel
         << "[" << _rank << "]: "
-        << "creating a coarse arena for the amplitudes"
+        << "      creating a coarse arena for the amplitudes"
         << pyre::journal::endl(__HERE__);
     // detect and transfer the reference tile tiles to the coarse arena
     channel
         << "[" << _rank << "]: "
-        << "detecting and transferring"
+        << "      detecting and transferring"
         << pyre::journal::endl(__HERE__);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
     channel
         << "[" << _rank << "]: "
-        << "building sum area tables"
+        << "      building sum area tables"
         << pyre::journal::endl(__HERE__);
     // auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
     // use the sum area tables to compute mean amplitude for all possible window placements
     channel
         << "[" << _rank << "]: "
-        << "computing statistics"
+        << "      computing statistics"
         << pyre::journal::endl(__HERE__);
     // auto secMeans = _secondaryStatistics("coarse",
                                          // _refCoarse.layout(), _secCoarse.layout(),
@@ -218,21 +225,24 @@ adjust(offsets_index_const_reference origin, offsets_shape_const_reference shape
     // slide {ref} sized chips around {sec} to compute the correlation hyper surface
     channel
         << "[" << _rank << "]: "
-        << "computing the correlation surface"
+        << "    computing the correlation surface"
         << pyre::journal::endl(__HERE__);
     // auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
     // find its maxima
     channel
         << "[" << _rank << "]: "
-        << "locating the correlation surface maxima and recording the offsets"
+        << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
     // _maxcor(gamma, _map);
 
-    // finish
+    // done with step 1
     channel
         << "[" << _rank << "]: "
-        << "done"
+        << "  done"
         << pyre::journal::endl(__HERE__);
+
+    // step 2
+
     // all done
     return;
 }
