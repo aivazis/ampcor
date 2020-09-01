@@ -14,8 +14,12 @@
 
 // type aliases
 namespace ampcor::py {
+    // the product spec
     using offsets_t = ampcor::dom::offsets_t;
+    // its pixel type
     using offsets_cell_t = offsets_t::pixel_type;
+    // the pixel uses the {slc_t} index
+    using slc_index_t = ampcor::dom::slc_t::layout_type::index_type;
 }
 
 
@@ -44,7 +48,7 @@ offsets(py::module &m) {
                       },
                       // the setter
                       [](offsets_cell_t & pxl, std::pair<float, float> ref) {
-                          pxl.ref = ref;
+                          pxl.ref = slc_index_t { ref.first, ref.second };
                       },
                       // the docstring
                       "the reference pixel indices"
@@ -57,7 +61,7 @@ offsets(py::module &m) {
                       },
                       // the setter
                       [](offsets_cell_t & pxl, std::pair<float, float> delta) {
-                         pxl.shift = delta;
+                          pxl.shift = slc_index_t { delta.first, delta.second };
                       },
                       // the docstring
                       "the offset to the matching pixel in the secondary raster"

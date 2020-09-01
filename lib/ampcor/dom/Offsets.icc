@@ -11,8 +11,8 @@
 
 // the definition of the map info
 struct ampcor::dom::Offsets::pixel_type {
-    std::pair<float, float> ref;
-    std::pair<float, float> shift;
+    slc_t::layout_type::index_type ref;
+    slc_t::layout_type::index_type shift;
     float gamma;
     float confidence;
     float snr;

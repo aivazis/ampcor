@@ -70,8 +70,8 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             p = offsets[idx]
             # show me
             channel.line(f"offsets{idx}:")
-            channel.line(f"          ref: {p.ref}")
-            channel.line(f"        shift: {p.delta}")
+            channel.line(f"          ref: {tuple(p.ref)}")
+            channel.line(f"        shift: {tuple(p.delta)}")
             channel.line(f"        gamma: {p.gamma}")
             channel.line(f"   confidence: {p.confidence}")
             channel.line(f"          snr: {p.snr}")
