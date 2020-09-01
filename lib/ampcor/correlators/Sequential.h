@@ -94,10 +94,10 @@ public:
     // detect and transfer reference and secondary tiles into their respective arenas
     auto _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena)
         -> void;
-#if MGA
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(arena_reference) -> vector_pointer;
 
+#if MGA
 public:
     // build sum tables for the tiles in {arena}
     auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;

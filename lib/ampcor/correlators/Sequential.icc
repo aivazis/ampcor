@@ -128,7 +128,7 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "      adjusting the amplitudes to zero mean and computing statistics"
         << pyre::journal::endl(__HERE__);
-    // auto refVariances = _referenceStatistics(refCoarse);
+    auto refVariances = _referenceStatistics(refCoarse);
 
     // next, the secondary tiles
     channel
@@ -140,7 +140,8 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "      building sum area tables"
         << pyre::journal::endl(__HERE__);
-    // auto secSATs = _secondarySumAreaTables("coarse", _secCoarse);
+    // auto secSATs = _secondarySumAreaTables("coarse", secCoarse);
+
     // use the sum area tables to compute mean amplitude for all possible window placements
     channel
         << "[" << _rank << "]: "
@@ -299,7 +300,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
 {
     // make a channel
-    pyre::journal::info_t channel("ampcor.sequential.adjust");
+    pyre::journal::debug_t channel("ampcor.sequential.adjust");
 
     // detecting means
     auto detect = [](slc_pixel_type pixel) -> slc_value_type {
@@ -344,7 +345,6 @@ _detect(plan_const_reference plan, arena_reference refArena, arena_reference sec
 }
 
 
-#if MGA
 // reduce the tiles in {arena} to zero mean and compute their variances
 // invoked only for reference tiles; the mean value of secondary tiles is a bit more
 // complicated since it involves all possible placements of reference chips within their bounds
@@ -414,6 +414,7 @@ _referenceStatistics(arena_reference arena) -> vector_pointer
 }
 
 
+#if MGA
 // build an arena of SATs for all secondary tiles
 template <class slcT, class offsetsT>
 auto
@@ -507,8 +508,11 @@ _secondaryStatistics(string_type tag,
     // we also need the origin of the secondary arena
     auto secOrigin = secLayout.origin();
 
+    // the number of pairs in the plan
+    auto paits = secLayout.shape()[0];
+
     // build the shape of the arena of mean values
-    arena_shape_type meanShape { _pairs, secShape[1]-refShape[1]+1, secShape[2]-refShape[2]+1 };
+    arena_shape_type meanShape { pairs, secShape[1]-refShape[1]+1, secShape[2]-refShape[2]+1 };
     // use it to make a layout
     arena_layout_type meanLayout { meanShape, secOrigin };
     // and with it a product spec
@@ -531,7 +535,7 @@ _secondaryStatistics(string_type tag,
 
     // ask the reference tile for its number of cells; don't forget that {refShape} knows how
     // many tiles are in the arena, so that has to be divided away
-    auto refCells = refShape.cells() / _pairs;
+    auto refCells = refShape.cells() / pairs;
     // project the shape of the reference tile along each tile axis
     arena_index_type shapeS { 0, refShape[1], 0 };
     arena_index_type shapeE { 0, 0, refShape[2] };
