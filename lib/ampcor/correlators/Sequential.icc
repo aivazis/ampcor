@@ -170,27 +170,50 @@ adjust(offsets_layout_const_reference box)
     // validate the plan
     channel
         << "[" << _rank << "]: "
-        << "    validating the execution plan"
+        << "    assembling and validating the execution plan"
         << pyre::journal::endl(__HERE__);
     // make a plan
-    plan_type plan;
-    // assemble it
-    _assemblePlan(box, plan);
+    plan_type plan = _assemblePlan(box);
+
+    // if there are no valid pairs
+    if (plan.size() == 0) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.sequential.adjust");
+        // complain
+        error
+            << "all specified correlation pairs were invalid!"
+            << pyre::journal::endl(__HERE__);
+        // just in case the user has specified that errors aren't fatal
+        return;
+    }
+
+    // make a coarse arena for the amplitudes of the reference tiles
+    channel
+        << "[" << _rank << "]: "
+        << "    creating coarse arenas for the amplitudes"
+        << pyre::journal::endl(__HERE__);
+    // the reference tile arena has a trivial origin
+    slc_index_type refOrigin {};
+    // make the arena
+    auto refCoarse = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
+
+    // the secondary tile arena has a non-trivial origin
+    slc_index_type secOrigin = refOrigin - (_secShape - _refShape)/2;
+    // make the arena
+    auto secCoarse = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
+
+    // detect and transfer the reference tile tiles to the coarse arena
+    channel
+        << "[" << _rank << "]: "
+        << "    detecting and transferring"
+        << pyre::journal::endl(__HERE__);
+    // move the data
+    _detect(plan, refCoarse, secCoarse);
 
     // the reference tiles
     channel
         << "[" << _rank << "]: "
         << "    prepping the reference tiles:"
-        << pyre::journal::endl(__HERE__);
-    // make a coarse arena for the amplitudes of the reference tiles
-    channel
-        << "[" << _rank << "]: "
-        << "      creating a coarse arena for the amplitudes"
-        << pyre::journal::endl(__HERE__);
-    // detect and transfer the reference tile tiles to the coarse arena
-    channel
-        << "[" << _rank << "]: "
-        << "      detecting and transferring"
         << pyre::journal::endl(__HERE__);
     // adjust the reference tiles to zero mean and compute their variance
     channel
@@ -203,16 +226,6 @@ adjust(offsets_layout_const_reference box)
     channel
         << "[" << _rank << "]: "
         << "    prepping the secondary tiles:"
-        << pyre::journal::endl(__HERE__);
-    // make a coarse arena for the amplitudes of the secondary tiles
-    channel
-        << "[" << _rank << "]: "
-        << "      creating a coarse arena for the amplitudes"
-        << pyre::journal::endl(__HERE__);
-    // detect and transfer the reference tile tiles to the coarse arena
-    channel
-        << "[" << _rank << "]: "
-        << "      detecting and transferring"
         << pyre::journal::endl(__HERE__);
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
     channel
@@ -260,12 +273,15 @@ adjust(offsets_layout_const_reference box)
 // discard the ones that don't fit within their respective inputs, and form the actual tile
 // shapes
 template <class slcT, class offsetsT>
-void
+auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_assemblePlan(offsets_layout_const_reference box, plan_reference plan)
+_assemblePlan(offsets_layout_const_reference box) -> plan_type
 {
     // make a channel
-    pyre::journal::info_t channel("ampcor.sequential.adjust");
+    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+
+    // make a plan
+    plan_type plan;
 
     // extent of the input rasters
     // the lower bound for an index into the reference raster is its origin
@@ -289,6 +305,13 @@ _assemblePlan(offsets_layout_const_reference box, plan_reference plan)
         auto refOrigin = pair.ref - refShift;
         // if the reference origin is out of bounds
         if (refOrigin < refMinIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin: (" << refOrigin << ") < (" << refMinIndex << ")"
+                << pyre::journal::newline;
             // skip this pairing; it is invalid
             continue;
         }
@@ -318,8 +341,95 @@ _assemblePlan(offsets_layout_const_reference box, plan_reference plan)
     // tell me
     channel
         << "[" << _rank << "]: "
-        << "      " << plan.size() << "/" << box.cells() << " valid tile pairs out of"
+        << "      " << plan.size() << "/" << box.cells() << " valid tile pairs"
         << pyre::journal::endl(__HERE__);
+
+    // all done
+    return plan;
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_createAmplitudeArena(string_type name, int pairs,
+                      slc_shape_const_reference tileShape,
+                      slc_index_const_reference tileOrigin)
+    -> arena_type
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+
+    // turn the number of pairs into a shape
+    typename arena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
+    // combine with the tile shape to form the arena layout
+    auto arenaShape = pairsShape * tileShape;
+
+    // pair numbering starts at zero
+    typename arena_type::spec_type::id_layout_type::index_type pairsOrigin { 0 };
+    // combine with the tile origin to form the arena origin
+    auto arenaOrigin = pairsOrigin * tileOrigin;
+
+    // convert all this to a layout
+    typename arena_type::layout_type arenaLayout { arenaShape, arenaOrigin };
+
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "      creating '" << name << "':"
+        << " origin=(" << arenaOrigin << "), shape=(" << arenaShape << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // create the product and return it
+    return arena_type(arenaLayout, name, arenaLayout.cells());
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // detecting means
+    auto detect = [](slc_pixel_type pixel) -> slc_value_type {
+        // computing the amplitude of the complex pixel
+        return std::abs(pixel);
+    };
+
+    // go through the plan
+    for (auto pid = 0; pid < plan.size(); ++pid) {
+        // get the origins of the tiles in their respective rasters
+        const auto & [_, refOrigin, secOrigin] = plan[pid];
+        // show me
+        channel
+            << "[" << _rank << "]: "
+            << "      detecting ref(" << refOrigin << ") and sec(" << secOrigin <<  ")"
+            << pyre::journal::endl(__HERE__);
+
+        // we traverse one tile at a time
+        typename arena_type::spec_type::id_layout_type::index_type pairShape { 1 };
+        // the pairing id determines the shift from the arena origin to our tile
+        arena_index_type pairShift { pid, 0, 0 };
+
+        // specify the source tile in the reference raster
+        auto refTile = _ref.box(refOrigin, _refShape);
+        // specify the destination tile
+        auto refArenaTile = refArena.box(refArena.layout().origin() + pairShift,
+                                         pairShape * _refShape);
+        // detect
+        std::transform(refTile.begin(), refTile.end(), refArenaTile.begin(), detect);
+
+        // specify the source tile in the secondary raster
+        auto secTile = _sec.box(secOrigin, _secShape);
+        // specify the destination tile
+        auto secArenaTile = secArena.box(secArena.layout().origin() + pairShift,
+                                         pairShape * _secShape);
+        // detect
+        std::transform(secTile.begin(), secTile.end(), secArenaTile.begin(), detect);
+    }
 
     // all done
     return;

@@ -35,6 +35,7 @@ public:
     using slc_index_type = typename slc_layout_type::index_type;
     using slc_layout_const_reference = const slc_layout_type &;
     using slc_shape_const_reference = const slc_shape_type &;
+    using slc_index_const_reference = const slc_index_type &;
 
     // the specification of the portion of the work assigned to me uses output tiles`
     using offsets_layout_type = typename offsets_spec::layout_type;
@@ -43,9 +44,6 @@ public:
     using offsets_layout_const_reference = const offsets_layout_type &;
     using offsets_shape_const_reference = const offsets_shape_type &;
     using offsets_index_const_reference = const offsets_index_type &;
-
-    // my record of the original pair collation order
-    using pid_grid = int *;
 
     // temporary tile storage
     using arena_type = ampcor::dom::arena_raster_t<slc_value_type>;
@@ -65,9 +63,9 @@ public:
     using vector_type = std::valarray<arena_value_type>;
     using vector_pointer = std::shared_ptr<vector_type>;
     // the tile plan
-    using pairing_type = std::tuple<offsets_index_type, slc_shape_type, slc_shape_type>;
+    using pairing_type = std::tuple<offsets_index_type, slc_index_type, slc_index_type>;
     using plan_type = std::vector<pairing_type>;
-    using plan_reference = plan_type &;
+    using plan_const_reference = const plan_type &;
 
     // miscellaneous
     using string_type = string_t;
@@ -96,7 +94,15 @@ public:
     auto adjust(offsets_layout_const_reference);
 
     // implementation details: methods
-    void _assemblePlan(offsets_layout_const_reference, plan_reference);
+    auto _assemblePlan(offsets_layout_const_reference) -> plan_type;
+    // create a tile arena
+    auto _createAmplitudeArena(string_type name, int pairs,
+                               slc_shape_const_reference tileShape,
+                               slc_index_const_reference tileOrigin)
+        -> arena_type;
+    // detect and transfer reference and secondary tiles into their respective arenas
+    auto _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena)
+        -> void;
 
 public:
 #if MGA
