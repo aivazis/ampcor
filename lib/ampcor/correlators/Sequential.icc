@@ -140,7 +140,7 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "      building sum area tables"
         << pyre::journal::endl(__HERE__);
-    // auto secSATs = _secondarySumAreaTables("coarse", secCoarse);
+    auto secSATs = _secondarySumAreaTables("coarse", secCoarse);
 
     // use the sum area tables to compute mean amplitude for all possible window placements
     channel
@@ -414,7 +414,6 @@ _referenceStatistics(arena_reference arena) -> vector_pointer
 }
 
 
-#if MGA
 // build an arena of SATs for all secondary tiles
 template <class slcT, class offsetsT>
 auto
@@ -485,6 +484,7 @@ _secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_t
 }
 
 
+#if MGA
 // construct an arena that contains the average value of the elements of all {ref} sized chips
 // placed with the {sec} tiles
 template <class slcT, class offsetsT>

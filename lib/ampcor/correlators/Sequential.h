@@ -96,11 +96,11 @@ public:
         -> void;
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(arena_reference) -> vector_pointer;
+    // build sum tables for the tiles in {arena}
+    auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
 
 #if MGA
 public:
-    // build sum tables for the tiles in {arena}
-    auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
     // construct an arena with the means and variances of all possible placements of the
     // reference chip in the secondary window
     auto _secondaryStatistics(string_type,
