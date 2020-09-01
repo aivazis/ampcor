@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     pyre::journal::init(argc, argv);
     pyre::journal::application("arena_ref_coarse");
     // make a channel
-    pyre::journal::info_t channel("ampcor.correlators.arena");
+    pyre::journal::debug_t channel("ampcor.correlators.arena");
 
     // the name of the product
     std::string name = "coarse_ref.dat";
