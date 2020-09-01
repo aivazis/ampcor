@@ -69,6 +69,8 @@ tiles.large:
     refineMargin = 8
     ; the zoom factor
     zoomFactor = 8
+    ; configure the cover generator
+    cover.functor.shift = 3,7
 
 
 ; correlator that uses small chips
@@ -83,6 +85,8 @@ tiles.small:
     refineMargin = 2
     ; the zoom factor
     zoomFactor = 2
+    ; configure the cover generator
+    cover.functor.shift = 2,5
 
 
 ; correlator that uses tiny chips; used for sanity checks
@@ -98,7 +102,7 @@ tiles.tiny:
     ; the zoom factor
     zoomFactor = 1
     ; configure the cover generator
-    cover.functor.shift = 1,2
+    cover.functor.shift = 1,3
 
 
 ; overall application configuration
