@@ -75,7 +75,8 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
             channel.line(f"        gamma: {p.gamma}")
             channel.line(f"   confidence: {p.confidence}")
             channel.line(f"          snr: {p.snr}")
-            channel.log(f"    covariance: {p.covariance}")
+            channel.line(f"   covariance: {p.covariance}")
+            channel.log()
 
         # all done
         return 0
