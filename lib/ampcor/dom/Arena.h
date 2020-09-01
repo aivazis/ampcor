@@ -22,6 +22,11 @@ public:
     using layout_type = layout_t<3>;
     using layout_const_reference = const layout_type &;
 
+    // my layout is the cartesian product of
+    using id_layout_type = layout_t<1>;
+    // with the layout of an {slc} tile
+    using slc_layout_type = SLC::layout_type;
+
     // metamethods
 public:
     constexpr Arena(layout_const_reference);

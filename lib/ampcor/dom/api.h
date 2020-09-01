@@ -15,8 +15,8 @@ namespace ampcor::dom {
     // the spec
     using slc_t = SLC;
     // the rasters
-    using slc_raster_t = Product<SLC, false>;              // read/write
-    using slc_const_raster_t = Product<SLC, true>;         // read only
+    using slc_raster_t = Product<SLC, false>;      // read/write
+    using slc_const_raster_t = Product<SLC, true>; // read only
 
     // offset maps
     // the spec
@@ -32,10 +32,9 @@ namespace ampcor::dom {
     using arena_t = Arena<pixelT>;
     // the rasters
     template <typename pixelT>
-    using arena_raster_t = Product<arena_t<pixelT>, false>;          // read-write
-
+    using arena_raster_t = Product<arena_t<pixelT>, false>;       // read-write
     template <typename pixelT>
-    using arena_const_raster_t = Product<arena_t<pixelT>, false>;    // read only
+    using arena_const_raster_t = Product<arena_t<pixelT>, false>; // read only
 }
 
 #endif
