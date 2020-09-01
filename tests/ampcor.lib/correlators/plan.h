@@ -7,11 +7,14 @@
 
 // plan details
 struct {
-    // the size of the reference tiles
-    const int dim = 8;
-    // the number of tile pairs; don't touch this one just yet because the slicing code is not
-    // quite general enough yet
-    const int pairs = 4;
+    // the shape of the non-trivial part of the reference tiles
+    const ampcor::dom::slc_raster_t::shape_type seedShape { 3, 3 };
+    // the margin around the non-trivial part
+    const ampcor::dom::slc_raster_t::shape_type seedMargin { 1, 1 };
+
+    // the shape of the offset map
+    const ampcor::dom::offsets_raster_t::shape_type gridShape { 2, 2 };
+
 } plan;
 
 
