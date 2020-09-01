@@ -32,6 +32,7 @@ public:
     // my constructor and implementation depend on the layout of input tiles
     using slc_layout_type = typename slc_spec::layout_type;
     using slc_shape_type = typename slc_layout_type::shape_type;
+    using slc_index_type = typename slc_layout_type::index_type;
     using slc_layout_const_reference = const slc_layout_type &;
     using slc_shape_const_reference = const slc_shape_type &;
 
@@ -63,6 +64,10 @@ public:
     // 1d vectors
     using vector_type = std::valarray<arena_value_type>;
     using vector_pointer = std::shared_ptr<vector_type>;
+    // the tile plan
+    using pairing_type = std::tuple<offsets_index_type, slc_shape_type, slc_shape_type>;
+    using plan_type = std::vector<pairing_type>;
+    using plan_reference = plan_type &;
 
     // miscellaneous
     using string_type = string_t;
@@ -91,6 +96,8 @@ public:
     auto adjust(offsets_layout_const_reference);
 
     // implementation details: methods
+    void _assemblePlan(offsets_layout_const_reference, plan_reference);
+
 public:
 #if MGA
     // reduce the tiles in {arena} to zero mean, and compute their variances
@@ -120,13 +127,12 @@ private:
     slc_const_reference _sec;
     offsets_reference _map;
     // the shapes of tiles
-    slc_shape_const_reference _refShape;
-    slc_shape_const_reference _secShape;
+    slc_shape_type _refShape;
+    slc_shape_type _secShape;
     // the correlation surface refinement parameters
     const int _refineFactor;
     const int _refineMargin;
     const int _zoomFactor;
-
 
     // default metamethods
 public:

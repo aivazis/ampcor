@@ -41,10 +41,10 @@ Sequential(int rank,
         << "new Sequential worker:" << pyre::journal::newline
         // the reference tile shape
         << "  reference tiles:" << pyre::journal::newline
-        << "     shape: {" << refShape << "}" << pyre::journal::newline
+        << "     shape: {" << _refShape << "}" << pyre::journal::newline
         // the secondary tile coarse arena
         << "  secondary tiles:" << pyre::journal::newline
-        << "     shape: {" << secShape << "}" << pyre::journal::newline
+        << "     shape: {" << _secShape << "}" << pyre::journal::newline
         // flush
         << pyre::journal::endl(__HERE__);
 
@@ -153,6 +153,8 @@ adjust(offsets_layout_const_reference box)
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // sign in
     channel
         << "[" << _rank << "]: "
         << "adjusting the offset map: origin: {"
@@ -164,13 +166,18 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "  initial exploration of the correlation surface:"
         << pyre::journal::endl(__HERE__);
+
     // validate the plan
     channel
         << "[" << _rank << "]: "
         << "    validating the execution plan"
         << pyre::journal::endl(__HERE__);
+    // make a plan
+    plan_type plan;
+    // assemble it
+    _assemblePlan(box, plan);
 
-    // first, the reference tiles
+    // the reference tiles
     channel
         << "[" << _rank << "]: "
         << "    prepping the reference tiles:"
@@ -248,8 +255,78 @@ adjust(offsets_layout_const_reference box)
 }
 
 
-#if MGA
 // implementation details
+// plan assembly: pull out of {_map} the portion of the tile pairings that belong to me,
+// discard the ones that don't fit within their respective inputs, and form the actual tile
+// shapes
+template <class slcT, class offsetsT>
+void
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_assemblePlan(offsets_layout_const_reference box, plan_reference plan)
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // extent of the input rasters
+    // the lower bound for an index into the reference raster is its origin
+    auto refMinIndex = _ref.layout().origin();
+    // similarly for the secondary raster
+    auto secMinIndex = _sec.layout().origin();
+    // form the strict upper bound of indices into the reference index
+    auto refMaxIndex = refMinIndex + _ref.layout().shape();
+    // ditto for the secondary raster
+    auto secMaxIndex = secMinIndex + _sec.layout().shape();
+
+    // shifts to apply to the tile centers to form the origins of tiles
+    auto refShift = _refShape / 2;
+    auto secShift = _secShape / 2;
+
+    // go through my portion of the pairings
+    for (auto pairIdx : _map.layout().box(box.origin(), box.shape())) {
+        // get the pair
+        auto pair = _map[pairIdx];
+        // form the origin of the reference tile
+        auto refOrigin = pair.ref - refShift;
+        // if the reference origin is out of bounds
+        if (refOrigin < refMinIndex) {
+            // skip this pairing; it is invalid
+            continue;
+        }
+        // if the extent spills out of the reference raster
+        if (refOrigin + _refShape > refMaxIndex) {
+            // skip this pairing; it is invalid
+            continue;
+        }
+
+        // form the origin of the secondary tile
+        auto secOrigin = pair.ref + pair.shift - secShift;
+        // if it's out of bounds
+        if (secOrigin < secMinIndex) {
+            // skip this pairing; it is invalid
+            continue;
+        }
+        // if the extent spills out of the secondary raster
+        if (secOrigin + _secShape > secMaxIndex) {
+            // skip this pairing; it is invalid
+            continue;
+        }
+
+        // we have a valid pair; turn it into a plan record
+        plan.push_back({pairIdx, refOrigin, secOrigin});
+    }
+
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "      " << plan.size() << "/" << box.cells() << " valid tile pairs out of"
+        << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
+}
+
+
+#if MGA
 // reduce the tiles in {arena} to zero mean and compute their variances
 // invoked only for reference tiles; the mean value of secondary tiles is a bit more
 // complicated since it involves all possible placements of reference chips within their bounds
