@@ -53,98 +53,6 @@ Sequential(int rank,
 }
 
 
-#if MGA
-// add a tile pair to the pile
-template <class slcT, class offsetsT>
-void
-ampcor::correlators::Sequential<slcT, offsetsT>::
-addTilePair(int tid, int pid, slc_const_reference ref, slc_const_reference sec)
-{
-    // verify that the tile id is within bounds
-    if (tid >= _pairs) {
-        // and if not, we have a bug
-        pyre::journal::firewall_t channel("ampcor.sequential.transfer");
-        // build a report and complain
-        channel
-            << "while adding tile pairs to the coarse arena:"
-            << pyre::journal::newline
-            << "tile id is out of bounds: "
-            << pyre::journal::newline
-            << "expected a number in [0," << _pairs << ")"
-            << ", got "  << tid
-            << pyre::journal::endl(__HERE__);
-        // UNREACHABLE
-        // unless the user has explicitly prevented firewalls from being fatal
-    }
-
-    // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.transfer");
-
-    // record the original collation order
-    _pids[tid] = pid;
-
-    // build the lambda that does the detection
-    auto detect = [](slc_pixel_type cell) -> slc_value_type {
-        // compute the magnitude and return
-        return std::abs(cell);
-    };
-
-    // build the tile selector
-    arena_index_type delta { tid, 0, 0 };
-
-    // get the reference arena origin
-    auto refArenaOrigin = _refCoarse.layout().origin();
-    // build the destination index for this tile
-    auto refTileOrigin = refArenaOrigin + delta;
-    // get the reference arena shape
-    auto refArenaShape = _refCoarse.layout().shape();
-    // narrow the shape down to a single reference tile
-    arena_shape_type refTileShape { 1, refArenaShape[1], refArenaShape[2] };
-    // build the box that contains this reference tile
-    auto refBox = _refCoarse.box(refTileOrigin, refTileShape);
-    // move the data and detect in transit
-    std::transform(ref.begin(), ref.end(), refBox.begin(), detect);
-
-    // get the secondary arena origin
-    auto secArenaOrigin = _secCoarse.layout().origin();
-    // build the destination index for this tile
-    auto secTileOrigin = secArenaOrigin + delta;
-    // get the secondary arena shape
-    auto secArenaShape = _secCoarse.layout().shape();
-    // narrow the shape down to a single secondary tile
-    arena_shape_type secTileShape { 1, secArenaShape[1], secArenaShape[2] };
-    // build the box that contains this secondary tile
-    auto secBox = _secCoarse.box(secTileOrigin, secTileShape);
-    // move the data and detect in transit
-    std::transform(sec.begin(), sec.end(), secBox.begin(), detect);
-
-    // sign on
-    channel
-        << "added tile pair #" << tid << " (" << pid << ") to the arena"
-        << pyre::journal::newline
-        // reference tile info
-        << "reference:"
-        << pyre::journal::newline
-        << "    from: (" << ref.layout().origin() << "), shape: (" << ref.layout().shape() << ")"
-        << pyre::journal::newline
-        << "      to: (" << refBox.layout().origin() << "), shape: " << refBox.layout().shape()
-        << pyre::journal::newline
-        // secondary tile info
-        << "secondary:"
-        << pyre::journal::newline
-        << "    from: (" << sec.layout().origin() << "), shape: " << sec.layout().shape()
-        << pyre::journal::newline
-        << "      to: (" << secBox.layout().origin() << "), shape: " << secBox.layout().shape()
-        << pyre::journal::newline
-        // flush
-        << pyre::journal::endl;
-
-    // all done
-    return;
-}
-#endif
-
-
 // execute the correlation plan
 template <class slcT, class offsetsT>
 auto
@@ -220,7 +128,7 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "      adjusting the amplitudes to zero mean and computing statistics"
         << pyre::journal::endl(__HERE__);
-    // auto refVariances = _referenceStatistics(_refCoarse);
+    // auto refVariances = _referenceStatistics(refCoarse);
 
     // next, the secondary tiles
     channel
@@ -448,16 +356,19 @@ _referenceStatistics(arena_reference arena) -> vector_pointer
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.ref.stats");
 
-    // allocate storage for the variances
-    auto variance = new vector_type(_pairs);
-
     // the shape of the arena contains the shape of its tiles
     const auto & shape = arena.layout().shape();
     // the origin of the arena contains the origin of its tiles
     const auto & origin = arena.layout().origin();
 
+    // the number of pairs in the plan
+    auto pairs = shape[0];
+
+    // allocate storage for the variances
+    auto variance = new vector_type(pairs);
+
     // go through each tile
-    for (auto tid = 0; tid < _pairs; ++tid) {
+    for (auto tid = 0; tid < pairs; ++tid) {
         // isolate the tile
         channel << "tile " << tid << pyre::journal::newline;
         // the origin of the tile

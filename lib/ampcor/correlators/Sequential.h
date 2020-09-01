@@ -81,15 +81,6 @@ public:
 
     // interface
 public:
-#if MGA
-    // transfer, detect, and store a pair of tiles and record the id of this pairing; note that
-    // {tid} tracks the pairings that were assigned to me, while {pid} remembers the collation
-    // number of this pairing in the original plan, which may have involved invalid tiles so
-    // there may be gaps
-    inline void addTilePair(int tid, int pid,
-                            slc_const_reference ref, slc_const_reference sec);
-#endif
-
     // execute the correlation plan and adjust the offset map
     auto adjust(offsets_layout_const_reference);
 
@@ -103,12 +94,11 @@ public:
     // detect and transfer reference and secondary tiles into their respective arenas
     auto _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena)
         -> void;
-
-public:
 #if MGA
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(arena_reference) -> vector_pointer;
 
+public:
     // build sum tables for the tiles in {arena}
     auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
     // construct an arena with the means and variances of all possible placements of the
