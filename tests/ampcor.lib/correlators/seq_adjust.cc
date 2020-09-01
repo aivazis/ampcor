@@ -26,9 +26,6 @@ using slc_const_raster_t = ampcor::dom::slc_const_raster_t;
 using offsets_raster_t = ampcor::dom::offsets_raster_t;
 // make a sequential worker and add tiles to its arena
 // - the tiles come from the output of the {slc_ref} and {slc_sec} test cases
-// - the reference tiles are (dim/4, dim/4) at the center of (dim/2,dim/2) blocks
-// - the secondary tiles are (dim/2,dim/2) and contain the reference tiles at their bottom
-//   right hand corner
 // run them with activated journal channels to see what they look like
 int main(int argc, char *argv[]) {
     // initialize the journal
@@ -40,58 +37,44 @@ int main(int argc, char *argv[]) {
     // silence the {sequential_t} info channel
     pyre::journal::info_t("ampcor.sequential.adjust").deactivate();
 
-    // the base dimension
-    auto dim = plan.dim;
-    // the number of tile pairs
-    auto pairs = plan.pairs;
-
-    // the shape of the reference tiles
-    seq_t::arena_shape_type refArenaShape { pairs, dim/4, dim/4 };
-    // and their layout: 0-based, row major
-    seq_t::arena_layout_type refArenaLayout { refArenaShape };
-
-    // the shape of the secondary tiles, which includes their margin
-    seq_t::arena_shape_type secArenaShape { pairs, dim/2, dim/2 };
-    // the origin: chosen such that a zero shift corresponds to the tile with maximum
-    // correlation having origin at (0,0)
-    seq_t::arena_index_type secArenaOrigin { 0, -dim/8, -dim/8 };
-    // the secondary tile layout
-    seq_t::arena_layout_type secArenaLayout { secArenaShape, secArenaOrigin };
+    // the shape of a seed tile: margin + data + margin
+    slc_const_raster_t::shape_type tileShape = plan.seedShape + 2 * plan.seedMargin;
+    // the plan grid shape tells me how many of these tiles to build
+    slc_const_raster_t::shape_type gridShape = plan.gridShape;
+    // so the product shape is
+    slc_const_raster_t::shape_type slcShape {
+        gridShape[0]*tileShape[0],
+        gridShape[1]*tileShape[1]
+    };
+    // turn this into a layout
+    slc_const_raster_t::layout_type slcLayout { slcShape };
+    // build the product specification
+    slc_const_raster_t::spec_type spec { slcLayout };
 
     // specify and open the input rasters
-    // shape
-    slc_const_raster_t::shape_type rasterShape { dim, dim };
-    // product spec
-    slc_const_raster_t::spec_type spec { slc_const_raster_t::layout_type(rasterShape) };
-    // open the sample reference raster in read-only mode
     slc_const_raster_t ref { spec, "slc_ref.dat" };
-    // repeat for the secondary raster
     slc_const_raster_t sec { spec, "slc_sec.dat" };
 
     // the output is a 2x2 grid
-    offsets_raster_t::shape_type offsetShape { 2, 2 };
+    offsets_raster_t::layout_type offsetLayout { plan.gridShape };
     // build the spec of the output product
-    offsets_raster_t::spec_type offsetSpec { offsets_raster_t::layout_type(offsetShape) };
+    offsets_raster_t::spec_type offsetSpec { offsetLayout };
     // open the output
     offsets_raster_t offsets { offsetSpec, "offsets.dat", offsetSpec.cells() };
-
-    // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
-    seq_t seq(ref, sec, offsets, refArenaLayout, secArenaLayout, 1, 0, 1);
-
-    // we have four pairs of tiles to transfer
-    for (auto i : {0,1}) {
-        for (auto j : {0,1}) {
-            // form the collation order
-            auto tid = 2*i + j;
-            // add the tiles
-            seq.addTilePair(tid, tid,
-                            ref.tile({i*dim/2 + dim/8, j*dim/2 + dim/8}, {dim/4,dim/4}),
-                            sec.tile({i*dim/2,j*dim/2}, {dim/2,dim/2}));
-        }
+    // prime it
+    for (auto idx : offsets.layout()) {
+        // get the record
+        auto & rec = offsets[idx];
+        // find the origin of this tile
+        slc_const_raster_t::shape_type origin { idx[0] * tileShape[0], idx[1] * tileShape[1] };
+        // shift to its center and save
+        rec.ref = origin + tileShape / 2;
     }
 
+    // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
+    seq_t seq(0, ref, sec, offsets, plan.seedShape, tileShape, 1, 0, 1);
     // estimate the offsets
-    seq.adjust();
+    seq.adjust(offsets.layout());
 
     // all done
     return 0;
