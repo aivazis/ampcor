@@ -31,31 +31,32 @@ int main(int argc, char *argv[]) {
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.sat");
 
-    // the number of pairs
-    auto pairs = plan.pairs;
-    // the base dimension
-    auto dim = plan.dim;
-
     // the name of the product with the secondary arena
     std::string arenaName = "coarse_sec.dat";
     // the name of the product with the SAT table
     std::string satName = "coarse_sat.dat";
 
+    // term that help form all possible placements of ref tiles in the secondary window
+    ampcor::dom::slc_raster_t::shape_type one { 1, 1 };
+    // the number of pairs as an index part
+    spec_t::id_layout_type::index_type pairs { plan.gridShape.cells() };
+    // isolator of a single tile
+    spec_t::id_layout_type::index_type single { 1 };
+    // the pair portion of the arena origin
+    spec_t::id_layout_type::index_type none { 0 };
+
     // the shape of a reference tile in its arena
-    shape_t refShape { 1, dim/4, dim/4 };
-    // the shape of a secondary tile in its arena
-    shape_t secShape { 1, dim/2, dim/2 };
+    shape_t refShape = single * plan.seedShape;
     // the shape of all possible placements of a {ref} tile within a {sec} tile
-    shape_t plcShape {
-        pairs, secShape[1] - refShape[1] + 1, secShape[2] - refShape[2] + 1 };
+    shape_t plcShape = pairs * (2 * plan.seedMargin + one);
 
     // a useful index shift
     index_t deltaUL = { 0, -1, -1 };
 
     // arena: the origin
-    index_t arenaOrigin { 0, -dim/8, -dim/8 };
+    index_t arenaOrigin = none * (-1 * plan.seedMargin);
     // the shape
-    shape_t arenaShape { pairs, dim/2, dim/2 };
+    shape_t arenaShape = pairs * (plan.seedShape + 2 * plan.seedMargin);
     // build the layout
     layout_t arenaLayout { arenaShape, arenaOrigin };
     // the product specification
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
     // SAT: the origin
     index_t satOrigin = arenaOrigin + deltaUL;
     // the shape
-    shape_t satShape { pairs, dim/2+1, dim/2+1 };
+    shape_t satShape = pairs * (plan.seedShape + 2 * plan.seedMargin + one);
     // the product specification
     spec_t satSpec { spec_t::layout_type(satShape, satOrigin) };
 
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]) {
                 // form the index
                 index_t idx { tid, i, j };
                 // show me
-                channel << "  " << std::setw(7) << arena[idx];
+                channel << "  " << std::setprecision(3) << std::setw(7) << arena[idx];
             }
             channel << pyre::journal::newline;
         }
@@ -95,13 +96,18 @@ int main(int argc, char *argv[]) {
                 // form the index
                 index_t idx { tid, i, j };
                 // show me
-                channel << "  " << std::setw(7) << sat[idx];
+                channel << "  " << std::setprecision(3) << std::setw(7) << sat[idx];
             }
             channel << pyre::journal::newline;
         }
     }
+
     // verify: slide chips around the arena and verify that the sum of its elements can be
     // obtained by using the sat table
+    channel
+        << pyre::journal::newline
+        << "VERIFYING:"
+        << pyre::journal::newline;
 
     // for each index that describes the origin of a placement of the chip with the secondary
     // tile, we need the four indices in the SAT that are used in the computation of the sum
