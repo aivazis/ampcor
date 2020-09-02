@@ -82,10 +82,17 @@ public:
     // interface
 public:
     // execute the correlation plan and adjust the offset map
-    auto adjust(offsets_layout_const_reference);
+    void adjust(offsets_layout_const_reference);
+
+    // implementation details: top level steps
+public:
+    void coarseCorrelation(offsets_layout_const_reference);
+    void refinedCorrelation(offsets_layout_const_reference);
 
     // implementation details: methods
-    auto _assemblePlan(offsets_layout_const_reference) -> plan_type;
+public:
+    auto _assemblePlan(offsets_layout_const_reference,
+                       slc_shape_const_reference, slc_shape_const_reference) -> plan_type;
     // create a tile arena
     auto _createAmplitudeArena(string_type name, int pairs,
                                slc_shape_const_reference tileShape,

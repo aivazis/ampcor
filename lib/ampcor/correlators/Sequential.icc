@@ -55,7 +55,7 @@ Sequential(int rank,
 
 // execute the correlation plan
 template <class slcT, class offsetsT>
-auto
+void
 ampcor::correlators::Sequential<slcT, offsetsT>::
 adjust(offsets_layout_const_reference box)
 {
@@ -69,10 +69,33 @@ adjust(offsets_layout_const_reference box)
         << box.origin() << "}, shape: {" << box.shape() << "}"
         << pyre::journal::endl(__HERE__);
 
+    // we have a valid plan; perform an initial exploration
+    coarseCorrelation(box);
+    // refine the neighborhood of the coarse match and try again
+    refinedCorrelation(box);
+
+    // done
+    channel
+        << "[" << _rank << "]: "
+        << "  done"
+        << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
+}
+
+template <class slcT, class offsetsT>
+void
+ampcor::correlators::Sequential<slcT, offsetsT>::
+coarseCorrelation(offsets_layout_const_reference box)
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
     // step 1: initial exploration of the correlation surface
     channel
         << "[" << _rank << "]: "
-        << "  initial exploration of the correlation surface:"
+        << "  step 1: initial exploration of the correlation surface:"
         << pyre::journal::endl(__HERE__);
 
     // validate the plan
@@ -81,7 +104,7 @@ adjust(offsets_layout_const_reference box)
         << "    assembling and validating the execution plan"
         << pyre::journal::endl(__HERE__);
     // make a plan
-    plan_type plan = _assemblePlan(box);
+    plan_type plan = _assemblePlan(box, _refShape, _secShape);
 
     // if there are no valid pairs
     if (plan.size() == 0) {
@@ -167,13 +190,77 @@ adjust(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
     _maxcor(plan, _map, gamma);
 
-    // done with step 1
+    // all done
+    return;
+}
+
+
+template <class slcT, class offsetsT>
+void
+ampcor::correlators::Sequential<slcT, offsetsT>::
+refinedCorrelation(offsets_layout_const_reference box)
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // check the parameters
+    // if we have an invalid refinement factor
+    if (_refineFactor < 2) {
+        // get a channel
+        pyre::journal::warning_t warning("ampcor.sequential.refined");
+        // generate a report
+        warning
+            << "while refining the search:"
+            << pyre::journal::newline
+            << "refinement factor: " << _refineFactor
+            << pyre::journal::newline
+            << "unable to refine; refinement factor must be 2 or greater"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        return;
+    }
+    // if we have an invalid refinement margin
+    if (_refineMargin < 1) {
+        // get a channel
+        pyre::journal::warning_t warning("ampcor.sequential.refined");
+        // generate a report
+        warning
+            << "while refining the search:"
+            << pyre::journal::newline
+            << "refinement margin: " << _refineMargin
+            << pyre::journal::newline
+            << "unable to refine; refinement margin must be 1 or greater"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        return;
+    }
+
+    // step 2: refining the search neighborhoods and trying again
     channel
         << "[" << _rank << "]: "
-        << "  done"
+        << "  step 2: refining the search:"
         << pyre::journal::endl(__HERE__);
 
-    // step 2
+    // a useful index
+    slc_shape_type one { 1, 1 };
+
+    // form the shape of the refined neighborhood in the reference raster
+    auto refRefinedShape = _refShape / _refineFactor;
+    // the origins of the reference refined tiles are at zero
+    slc_index_type refRefinedOrigin {};
+
+    // form the shape of the refined neighborhood in the secondary raster
+    auto secRefinedShape = refRefinedShape + 2 * _refineMargin * one;
+    // the origins of the refined secondary tiles are at {-refinedMargin}
+    auto secRefinedOrigin = - _refineMargin * one;
+
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "    refined origin:" << pyre::journal::newline
+        << "      ref: (" << refRefinedOrigin << ")" << pyre::journal::newline
+        << "      sec: (" << secRefinedOrigin << ")" << pyre::journal::newline
+        << pyre::journal::endl(__HERE__);
 
     // all done
     return;
@@ -187,7 +274,9 @@ adjust(offsets_layout_const_reference box)
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_assemblePlan(offsets_layout_const_reference box) -> plan_type
+_assemblePlan(offsets_layout_const_reference box,
+              slc_shape_const_reference refShape, slc_shape_const_reference secShape)
+    -> plan_type
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.adjust");
@@ -206,8 +295,8 @@ _assemblePlan(offsets_layout_const_reference box) -> plan_type
     auto secMaxIndex = secMinIndex + _sec.layout().shape();
 
     // shifts to apply to the tile centers to form the origins of tiles
-    auto refShift = _refShape / 2;
-    auto secShift = _secShape / 2;
+    auto refShift = refShape / 2;
+    auto secShift = secShape / 2;
 
     // go through my portion of the pairings
     for (auto pairIdx : _map.layout().box(box.origin(), box.shape())) {
@@ -228,7 +317,7 @@ _assemblePlan(offsets_layout_const_reference box) -> plan_type
             continue;
         }
         // if the extent spills out of the reference raster
-        if (refOrigin + _refShape > refMaxIndex) {
+        if (refOrigin + refShape > refMaxIndex) {
             // skip this pairing; it is invalid
             continue;
         }
@@ -241,7 +330,7 @@ _assemblePlan(offsets_layout_const_reference box) -> plan_type
             continue;
         }
         // if the extent spills out of the secondary raster
-        if (secOrigin + _secShape > secMaxIndex) {
+        if (secOrigin + secShape > secMaxIndex) {
             // skip this pairing; it is invalid
             continue;
         }
