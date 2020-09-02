@@ -147,9 +147,9 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "      computing statistics"
         << pyre::journal::endl(__HERE__);
-    // auto secMeans = _secondaryStatistics("coarse",
-                                         // _refCoarse.layout(), _secCoarse.layout(),
-                                         // secSATs);
+    auto secMeans = _secondaryStatistics("coarse",
+                                         refCoarse.layout(), secCoarse.layout(),
+                                         secSATs);
     // generate the coarse correlation surface
     // slide {ref} sized chips around {sec} to compute the correlation hyper surface
     channel
@@ -484,7 +484,6 @@ _secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_t
 }
 
 
-#if MGA
 // construct an arena that contains the average value of the elements of all {ref} sized chips
 // placed with the {sec} tiles
 template <class slcT, class offsetsT>
@@ -509,7 +508,7 @@ _secondaryStatistics(string_type tag,
     auto secOrigin = secLayout.origin();
 
     // the number of pairs in the plan
-    auto paits = secLayout.shape()[0];
+    auto pairs = secLayout.shape()[0];
 
     // build the shape of the arena of mean values
     arena_shape_type meanShape { pairs, secShape[1]-refShape[1]+1, secShape[2]-refShape[2]+1 };
@@ -566,6 +565,7 @@ _secondaryStatistics(string_type tag,
 }
 
 
+#if MGA
 // compute the correlation surface
 template <class slcT, class offsetsT>
 auto
