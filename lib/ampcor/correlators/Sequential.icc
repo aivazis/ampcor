@@ -135,6 +135,7 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "    prepping the secondary tiles:"
         << pyre::journal::endl(__HERE__);
+
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
     channel
         << "[" << _rank << "]: "
@@ -150,13 +151,15 @@ adjust(offsets_layout_const_reference box)
     auto secMeans = _secondaryStatistics("coarse",
                                          refCoarse.layout(), secCoarse.layout(),
                                          secSATs);
+
     // generate the coarse correlation surface
     // slide {ref} sized chips around {sec} to compute the correlation hyper surface
     channel
         << "[" << _rank << "]: "
         << "    computing the correlation surface"
         << pyre::journal::endl(__HERE__);
-    // auto gamma = _correlate("coarse", _refCoarse, refVariances, _secCoarse, secMeans);
+    auto gamma = _correlate("coarse", refCoarse, refVariances, secCoarse, secMeans);
+
     // find its maxima
     channel
         << "[" << _rank << "]: "
@@ -565,7 +568,6 @@ _secondaryStatistics(string_type tag,
 }
 
 
-#if MGA
 // compute the correlation surface
 template <class slcT, class offsetsT>
 auto
@@ -676,6 +678,7 @@ _correlate(string_type tag,
 }
 
 
+#if MGA
 // compute and store the locations of the maxima of the correlation surface
 template <class slcT, class offsetsT>
 auto
