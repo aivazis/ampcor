@@ -165,7 +165,7 @@ adjust(offsets_layout_const_reference box)
         << "[" << _rank << "]: "
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
-    // _maxcor(gamma, _map);
+    _maxcor(plan, _map, gamma);
 
     // done with step 1
     channel
@@ -678,43 +678,63 @@ _correlate(string_type tag,
 }
 
 
-#if MGA
 // compute and store the locations of the maxima of the correlation surface
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(const_arena_const_reference gamma, offsets_reference map)
+_maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_reference gamma)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
 
-    // go through all the entries in the correlation surface
-    for (auto idx : gamma.layout()) {
+    // get the layout of the correlation matrix
+    const auto & corLayout = gamma.layout();
+    // get the shape of the correlation matrix
+    const auto & corShape = corLayout.shape();
+    // and its origin
+    const auto & corOrigin = corLayout.origin();
 
-        // extract the id
-        auto tid = idx[0];
-        // map to the pair id
-        auto pid = _pids[tid];
-        // get the value of the correlation surface
-        auto cor = gamma[idx];
-        // get the pixel from the output
-        auto & record = map[pid];
+    // go through the plan
+    for (auto pid = 0; pid < plan.size(); ++pid) {
+        // narrow {gamma} to a tile corresponding to this pairing only
+        // the shape
+        arena_shape_type shape  { 1, corShape[1], corShape[2] };
+        // the origin
+        arena_index_type origin { pid, corOrigin[1], corOrigin[2] };
+        // make the tile
+        auto tile = corLayout.box(origin, shape);
 
-        // if this value is bigger than what's already there
-        if (cor > record.gamma) {
-            // record the new value
-            record.gamma = cor;
-            // the new shift
-            record.shift = std::make_pair<float, float>(idx[1], idx[2]);
-            // mark it as a good one
-            record.confidence = 1;
+        // initialize the correlation target
+        float corMax = 0;
+        // and a shift
+        slc_index_type delta { 0,0 };
+
+        // go through the tile
+        for (auto idx : tile) {
+            // get the correlation value
+            auto cor = gamma[idx];
+            // if it is greater than what we have seen before
+            if (cor > corMax) {
+                // save the new value
+                corMax = cor;
+                // form the associated shift
+                delta = slc_index_type(idx[1], idx[2]);
+            }
         }
 
-        // show mw
+        // get the corresponding record from the output product, in write enabled mode
+        auto & rec = map[pid];
+        // record the new value
+        rec.gamma = corMax;
+        // update the shift
+        rec.shift = rec.shift + delta;
+        // mark it as a good one
+        rec.confidence = 1;
+        // show me
         channel
-            << "cor[" << pid << "].gamma = " << record.gamma
-            << pyre::journal::newline
-            << "gamma[" << idx << "] = " << cor
+            << pid << ": "
+            << "(" << rec.ref << ") --> (" << rec.ref + rec.shift << "), "
+            << "gamma: " << rec.gamma
             << pyre::journal::newline;
     }
 
@@ -724,7 +744,6 @@ _maxcor(const_arena_const_reference gamma, offsets_reference map)
     // all done
     return;
 }
-# endif
 
 
 # endif

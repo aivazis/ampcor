@@ -107,12 +107,8 @@ public:
     auto _correlate(string_type,
                     const_arena_const_reference, vector_pointer,
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
-
-#if MGA
-public:
     // compute and store the locations of the maxima of the correlation surface
-    auto _maxcor(const_arena_const_reference, offsets_reference);
-#endif
+    auto _maxcor(plan_const_reference, offsets_reference, const_arena_const_reference);
 
     // implementation details: data
 private:
