@@ -31,23 +31,19 @@ int main(int argc, char *argv[]) {
     // make a channel
     pyre::journal::debug_t channel("ampcor.correlators.gamma");
 
-    // the number of pairs
-    auto pairs = plan.pairs;
-    // the base dimension
-    auto dim = plan.dim;
-
-    // the shape of a reference tile in its arena
-    shape_t refShape { 1, dim/4, dim/4 };
-    // the shape of a secondary tile in its arena
-    shape_t secShape { 1, dim/2, dim/2 };
+    // the pair portion of the arena origin
+    spec_t::id_layout_type::index_type none { 0 };
+    // the number of pairs as an index part
+    spec_t::id_layout_type::index_type pairs { plan.gridShape.cells() };
+    // term that help form all possible placements of ref tiles in the secondary window
+    ampcor::dom::slc_raster_t::shape_type one { 1, 1 };
 
     // arena: the name of the product
     std::string arenaName = "coarse_gamma.dat";
     // the origin
-    index_t arenaOrigin { 0, -dim/8, -dim/8 };
+    index_t arenaOrigin = none * (-1 * plan.seedMargin);
     // the shape: all possible placements of a {ref} tile within a {sec} tile
-    shape_t arenaShape {
-        pairs, secShape[1] - refShape[1] + 1, secShape[2] - refShape[2] + 1 };
+    shape_t arenaShape = pairs * (2 * plan.seedMargin + one);
     // build the layout
     layout_t arenaLayout { arenaShape, arenaOrigin };
     // the product specification
@@ -57,7 +53,7 @@ int main(int argc, char *argv[]) {
     arena_const_raster_t arena { arenaSpec, arenaName };
 
     // go through the tiles
-    for (auto tid = 0; tid < pairs; ++tid) {
+    for (auto tid = 0; tid < pairs[0]; ++tid) {
         // show me the tile number
         channel << "tile " << tid << pyre::journal::newline;
         // and the contents
@@ -66,7 +62,7 @@ int main(int argc, char *argv[]) {
                 // form the index
                 index_t idx { tid, i, j };
                 // show me
-                channel << "  " << std::setprecision(4) << std::setw(10) << arena[idx];
+                channel << "  " << std::setprecision(3) << std::setw(10) << arena[idx];
             }
             channel << pyre::journal::newline;
         }
