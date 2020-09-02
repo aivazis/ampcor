@@ -46,14 +46,17 @@ int main(int argc, char *argv[]) {
         // get the source pixel
         auto ref = rec.ref;
         // form the destination pixel
-        auto sec = ref + rec.shift;
+        auto shift = rec.shift;
         // get the confidence
         auto conf = rec.confidence;
 
         // show me
         channel
-            << "(" << idx << "): "
-            << "(" << ref << ") --> (" << sec << "), conf="
+            << "(" << idx << "): ("
+            << ref.first << "," << ref.second
+            << ") --> ("
+            << ref.first + shift.first << "," << ref.second + shift.second
+            << "), conf="
             << std::setprecision(3) << conf
             << pyre::journal::newline;
     }

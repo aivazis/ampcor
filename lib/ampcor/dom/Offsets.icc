@@ -11,10 +11,14 @@
 
 // the definition of the map info
 struct ampcor::dom::Offsets::pixel_type {
-    slc_t::layout_type::index_type ref;
-    slc_t::layout_type::index_type shift;
+    // leave these as pairs of floats so they can record fractional pixels
+    std::pair<float, float> ref;
+    std::pair<float, float> shift;
+    // the value of the correlation for this pairing
     float gamma;
+    // useful as a mask: set to one when this pairing has been processed
     float confidence;
+    // placeholders for quality metrics
     float snr;
     float covariance;
 };

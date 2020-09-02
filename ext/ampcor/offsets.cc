@@ -48,7 +48,7 @@ offsets(py::module &m) {
                       },
                       // the setter
                       [](offsets_cell_t & pxl, std::pair<float, float> ref) {
-                          pxl.ref = slc_index_t { ref.first, ref.second };
+                          pxl.ref = ref;
                       },
                       // the docstring
                       "the reference pixel indices"
@@ -61,7 +61,7 @@ offsets(py::module &m) {
                       },
                       // the setter
                       [](offsets_cell_t & pxl, std::pair<float, float> delta) {
-                          pxl.shift = slc_index_t { delta.first, delta.second };
+                          pxl.shift = delta;
                       },
                       // the docstring
                       "the offset to the matching pixel in the secondary raster"

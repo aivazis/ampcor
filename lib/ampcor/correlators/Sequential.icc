@@ -301,8 +301,13 @@ _assemblePlan(offsets_layout_const_reference box,
     for (auto pairIdx : _map.layout().box(box.origin(), box.shape())) {
         // get the pair
         auto pair = _map[pairIdx];
+        // convert the center of the {ref} tile into an index
+        slc_index_type refCenter {
+            static_cast<int>(pair.ref.first), static_cast<int>(pair.ref.second)
+        };
+
         // form the origin of the reference tile
-        auto refOrigin = pair.ref - refShift;
+        auto refOrigin = refCenter - refShift;
         // if the reference origin is out of bounds
         if (refOrigin < refMinIndex) {
             // tell me
@@ -329,8 +334,11 @@ _assemblePlan(offsets_layout_const_reference box,
             continue;
         }
 
+        // compute the center of the {sec} tile
+        auto secCenter = refCenter + slc_index_type(static_cast<int>(pair.shift.first),
+                                                    static_cast<int>(pair.shift.second));
         // form the origin of the secondary tile
-        auto secOrigin = pair.ref + pair.shift - secShift;
+        auto secOrigin = secCenter - secShift;
         // if it's out of bounds
         if (secOrigin < secMinIndex) {
             // tell me
@@ -838,13 +846,15 @@ _maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_refe
         // record the new value
         rec.gamma = corMax;
         // update the shift
-        rec.shift = rec.shift + delta;
+        rec.shift.first += delta[0];
+        rec.shift.second += delta[1];
         // mark it as a good one
         rec.confidence = 1;
         // show me
         channel
             << pid << ": "
-            << "(" << rec.ref << ") --> (" << rec.ref + rec.shift << "), "
+            << "(" << rec.ref.first << "," << rec.ref.second << ") --> ("
+            << rec.ref.first + rec.shift.first << "," << rec.ref.second + rec.shift.second << "), "
             << "gamma: " << rec.gamma
             << pyre::journal::newline;
     }

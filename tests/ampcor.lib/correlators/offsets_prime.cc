@@ -42,12 +42,17 @@ int main(int argc, char *argv[]) {
         auto & rec = offsets[idx];
         // find the origin of this tile
         slc_const_raster_t::shape_type origin { idx[0] * tileShape[0], idx[1] * tileShape[1] };
-        // shift to its center and save
-        rec.ref = origin + tileShape / 2;
-
+        // shift to its center
+        auto ref = origin + tileShape / 2;
+        // and save
+        rec.ref = std::make_pair<float, float>(ref[0], ref[1]);
         // show me
         channel
-            << "(" << idx << ") : (" << rec.ref << ") --> (" << rec.ref + rec.shift << ")"
+            << "(" << idx << ") : ("
+            << rec.ref.first << "," << rec.ref.second
+            << ") --> ("
+            << rec.ref.first + rec.shift.first << "," << rec.ref.second + rec.shift.second
+            << ")"
             << pyre::journal::newline;
     }
 
