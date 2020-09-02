@@ -243,14 +243,13 @@ refinedCorrelation(offsets_layout_const_reference box)
 
     // a useful index
     slc_shape_type one { 1, 1 };
-
     // form the shape of the refined neighborhood in the reference raster
     auto refRefinedShape = _refShape / _refineFactor;
-    // the origins of the reference refined tiles are at zero
-    slc_index_type refRefinedOrigin {};
-
     // form the shape of the refined neighborhood in the secondary raster
     auto secRefinedShape = refRefinedShape + 2 * _refineMargin * one;
+
+    // the origins of the reference refined tiles are at zero
+    slc_index_type refRefinedOrigin {};
     // the origins of the refined secondary tiles are at {-refinedMargin}
     auto secRefinedOrigin = - _refineMargin * one;
 
@@ -279,7 +278,7 @@ _assemblePlan(offsets_layout_const_reference box,
     -> plan_type
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+    pyre::journal::debug_t channel("ampcor.sequential.plan");
 
     // make a plan
     plan_type plan;
@@ -311,13 +310,21 @@ _assemblePlan(offsets_layout_const_reference box,
                 << "[" << _rank << "]: "
                 << "      pair (" << pairIdx << ") is invalid:"
                 << pyre::journal::newline
-                << "        origin: (" << refOrigin << ") < (" << refMinIndex << ")"
+                << "        origin@(" << refOrigin << ") < ref origin@(" << refMinIndex << ")"
                 << pyre::journal::newline;
             // skip this pairing; it is invalid
             continue;
         }
         // if the extent spills out of the reference raster
         if (refOrigin + refShape > refMaxIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << refOrigin << ") + shape@(" << refShape
+                << ") > ref shape@(" << refMaxIndex << ")"
+                << pyre::journal::newline;
             // skip this pairing; it is invalid
             continue;
         }
@@ -326,11 +333,26 @@ _assemblePlan(offsets_layout_const_reference box,
         auto secOrigin = pair.ref + pair.shift - secShift;
         // if it's out of bounds
         if (secOrigin < secMinIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << secOrigin << ") < sec origin@(" << secMinIndex << ")"
+                << pyre::journal::newline;
             // skip this pairing; it is invalid
             continue;
         }
         // if the extent spills out of the secondary raster
         if (secOrigin + secShape > secMaxIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << secOrigin << ") + shape@(" << secShape
+                << ") > sec shape@(" << secMaxIndex << ")"
+                << pyre::journal::newline;
             // skip this pairing; it is invalid
             continue;
         }
