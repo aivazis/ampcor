@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     }
 
     // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
-    seq_t seq(0, ref, sec, offsets, plan.seedShape, tileShape, 1, 0, 1);
+    seq_t seq(0, ref, sec, offsets, plan.seedShape, tileShape, 2, 1, 1);
     // estimate the offsets
     seq.adjust(offsets.layout());
 
