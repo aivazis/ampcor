@@ -45,7 +45,7 @@ public:
     using offsets_shape_const_reference = const offsets_shape_type &;
     using offsets_index_const_reference = const offsets_index_type &;
 
-    // temporary tile storage
+    // temporary storage for detected tiles
     using arena_type = ampcor::dom::arena_raster_t<slc_value_type>;
     using const_arena_type = ampcor::dom::arena_const_raster_t<slc_value_type>;
     using arena_reference = arena_type &;
@@ -58,6 +58,20 @@ public:
     using const_arena_const_reference = const const_arena_type &;
     using arena_layout_const_reference = typename arena_type::packing_const_reference;
     using arena_shape_const_reference = typename arena_type::shape_const_reference;
+
+    // temporary storage for complex tiles
+    using carena_type = ampcor::dom::arena_raster_t<slc_pixel_type>;
+    using const_carena_type = ampcor::dom::arena_const_raster_t<slc_pixel_type>;
+    using carena_reference = carena_type &;
+    using carena_spec = typename carena_type::spec_type;
+    using carena_value_type = typename carena_type::value_type;
+    using carena_layout_type = typename carena_type::packing_type;
+    using carena_index_type = typename carena_type::index_type;
+    using carena_shape_type = typename carena_type::shape_type;
+    // usage
+    using const_carena_const_reference = const const_carena_type &;
+    using carena_layout_const_reference = typename carena_type::packing_const_reference;
+    using carena_shape_const_reference = typename carena_type::shape_const_reference;
 
     // 1d vectors
     using vector_type = std::valarray<arena_value_type>;
@@ -116,6 +130,10 @@ public:
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
     // compute and store the locations of the maxima of the correlation surface
     auto _maxcor(plan_const_reference, offsets_reference, const_arena_const_reference);
+    // build complex arenas for storing tiles for deramping and refininment
+    auto _createComplexArena(string_type, int, slc_shape_const_reference) -> carena_type;
+    // fill the complex arenas with pixels from the rasters
+    auto _primeComplexArenas(plan_const_reference, carena_reference, carena_reference) -> void;
 
     // implementation details: data
 private:

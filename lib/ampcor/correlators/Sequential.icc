@@ -98,14 +98,13 @@ coarseCorrelation(offsets_layout_const_reference box)
         << "  step 1: initial exploration of the correlation surface:"
         << pyre::journal::endl(__HERE__);
 
-    // validate the plan
+    // assemble and validate the work plan
     channel
         << "[" << _rank << "]: "
-        << "    assembling and validating the execution plan"
+        << "    assembling and validating the work plan"
         << pyre::journal::endl(__HERE__);
-    // make a plan
+    // build the plan
     plan_type plan = _assemblePlan(box, _refShape, _secShape);
-
     // if there are no valid pairs
     if (plan.size() == 0) {
         // make a channel
@@ -248,6 +247,42 @@ refinedCorrelation(offsets_layout_const_reference box)
     // form the shape of the refined neighborhood in the secondary raster
     auto secRefinedShape = refRefinedShape + 2 * _refineMargin * one;
 
+    // assemble and validate the work plan
+    channel
+        << "[" << _rank << "]: "
+        << "    assembling and validating the work plan"
+        << pyre::journal::endl(__HERE__);
+    // build the plan
+    plan_type plan = _assemblePlan(box, refRefinedShape, secRefinedShape);
+    // if there are no valid pairs
+    if (plan.size() == 0) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.sequential.adjust");
+        // complain
+        error
+            << "all specified correlation pairs were invalid!"
+            << pyre::journal::endl(__HERE__);
+        // just in case the user has specified that errors aren't fatal
+        return;
+    }
+
+    // build a staging area for the complex pixels so we can deramp and refine them
+    channel
+        << "[" << _rank << "]: "
+        << "    allocating temporary storage for the refined tiles"
+        << pyre::journal::endl(__HERE__);
+    // for the reference tiles
+    auto refRefinedComplex = _createComplexArena("complex_ref.dat", plan.size(), refRefinedShape);
+    // for the secondary tiles
+    auto secRefinedComplex = _createComplexArena("complex_sec.dat", plan.size(), secRefinedShape);
+
+    channel
+        << "[" << _rank << "]: "
+        << "    transferring tiles from the input rasters"
+        << pyre::journal::endl(__HERE__);
+    // move data from the rasters to the complex arenas
+    _primeComplexArenas(plan, refRefinedComplex, secRefinedComplex);
+
     // the origins of the reference refined tiles are at zero
     slc_index_type refRefinedOrigin {};
     // the origins of the refined secondary tiles are at {-refinedMargin}
@@ -389,7 +424,7 @@ _createAmplitudeArena(string_type name, int pairs,
     -> arena_type
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+    pyre::journal::debug_t channel("ampcor.sequential.arena");
 
     // turn the number of pairs into a shape
     typename arena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
@@ -862,6 +897,138 @@ _maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_refe
     // flush
     channel << pyre::journal::endl(__HERE__);
 
+    // all done
+    return;
+}
+
+
+// allocate complex arenas; currently memory mapped, which implies zero initialization
+// automatically
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_createComplexArena(string_type name, int pairs, slc_shape_const_reference tileShape)
+    -> carena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
+
+    // turn the number of pairs into a shape
+    typename carena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
+    // after refinement, the tile shape will be
+    auto refinedShape = _refineFactor * tileShape;
+
+    // combine with the tile shape to form the tile layout
+    auto carenaShape = pairsShape * refinedShape;
+
+    // no need for a fancy origin until after detection, so just make a layout
+    typename carena_type::layout_type carenaLayout { carenaShape };
+
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "      creating '" << name << "':"
+        << " origin=(" << carenaLayout.origin() << "), shape=(" << carenaLayout.shape() << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // create the product and return it
+    return carena_type(carenaLayout, name, carenaLayout.cells());
+}
+
+
+// move complex tiles from the input rasters to appropriately shaped temporary storage so we
+// can deramp and refine them
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_primeComplexArenas(plan_const_reference plan,
+                    carena_reference refArena, carena_reference secArena)
+    -> void
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.refine");
+
+    // get the arena origins
+    auto refArenaOrigin = refArena.layout().origin();
+    auto secArenaOrigin = secArena.layout().origin();
+    // and he arena shapes
+    auto refArenaShape = refArena.layout().shape();
+    auto secArenaShape = secArena.layout().shape();
+    // get the shapes of the reference tiles from the arenas
+    slc_shape_type refRefinedShape { refArenaShape[1], refArenaShape[2] };
+    slc_shape_type secRefinedShape { secArenaShape[1], secArenaShape[2] };
+    // the source tiles shapes are smaller than this by the {_refineFactor}
+    auto refShape = refRefinedShape / _refineFactor;
+    auto secShape = secRefinedShape / _refineFactor;
+
+    // go through the plan
+    for (auto pid=0; pid < plan.size(); ++pid) {
+        // get plan entry
+        const auto & rec = plan[pid];
+        // get the origins of the tiles in their respective rasters
+        const auto & [pdx, refOrigin, secOrigin] = plan[pid];
+
+        // to move the data, we must form the destination boxes in the complex arenas
+        // make a shift from the arena origin to the start of the current pairing
+        carena_index_type pair { pid, 0, 0 };
+        // form the origin of the {ref} tile
+        auto refTileOrigin = refArenaOrigin + pair;
+        // and the origin of the {sec} tile
+        auto secTileOrigin = secArenaOrigin + pair;
+
+        // we must also form shapes that is as big as the origin tiles for one pairing
+        // we will take the cartesian product of a pair selector shape
+        typename carena_spec::id_layout_type::shape_type one { 1 };
+        // with the reference tile shape
+        auto refTileShape = one * refShape;
+        // and the secondary tile shape
+        auto secTileShape = one * secShape;
+
+        // we copy from a tiles in the input rasters
+        auto refSrcTile = _ref.box(refOrigin, refShape);
+        auto secSrcTile = _sec.box(secOrigin, secShape);
+        // to tiles in the corresponding arenas
+        auto refDestTile = refArena.box(refTileOrigin, refTileShape);
+        auto secDestTile = secArena.box(secTileOrigin, secTileShape);
+
+        // tell me
+        channel
+            << "pid: #" << pid << ", pairing (" << pdx << "):"
+            << pyre::journal::newline;
+
+        // transfer the data from the reference raster
+        std::copy(refSrcTile.begin(), refSrcTile.end(), refDestTile.begin());
+        // tell me
+        channel
+            << "  ref:"
+            << pyre::journal::newline
+            // the source
+            << "    from: (" << refOrigin << ")+(" << refShape << "), "
+            << refSrcTile.layout().cells() << " cells"
+            << pyre::journal::newline
+            // the destination
+            << "      to: (" << refTileOrigin << ")+(" << refTileShape << "), "
+            << refDestTile.layout().cells() << " cells"
+            << pyre::journal::newline;
+
+        // transfer the data from the secondary raster
+        std::copy(secSrcTile.begin(), secSrcTile.end(), secDestTile.begin());
+        // tell me
+        channel
+            << "  sec:"
+            << pyre::journal::newline
+            // the source
+            << "    from: (" << secOrigin << ")+(" << secShape << "), "
+            << secSrcTile.layout().cells() << " cells"
+            << pyre::journal::newline
+            // the destination
+            << "      to: (" << secTileOrigin << ")+(" << secTileShape << "), "
+            << secDestTile.layout().cells() << " cells"
+            << pyre::journal::newline;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
     // all done
     return;
 }
