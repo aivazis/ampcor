@@ -18,7 +18,8 @@ ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 tests.ampcor.lib.dom.clean += slc.dat offsets.dat
 tests.ampcor.lib.correlators.clean += \
     slc_ref.dat slc_sec.dat offsets.dat \
-    coarse_ref.dat coarse_sec.dat coarse_sat.dat coarse_mean.dat coarse_gamma.dat
+    coarse_ref.dat coarse_sec.dat coarse_sat.dat coarse_mean.dat coarse_gamma.dat \
+    complex_ref.dat complex_sec.dat
 
 # the {slc_t} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
