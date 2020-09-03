@@ -276,12 +276,31 @@ refinedCorrelation(offsets_layout_const_reference box)
     // for the secondary tiles
     auto secRefinedComplex = _createComplexArena("complex_sec.dat", plan.size(), secRefinedShape);
 
+    // prime the complex arenas
     channel
         << "[" << _rank << "]: "
         << "    transferring tiles from the input rasters"
         << pyre::journal::endl(__HERE__);
     // move data from the rasters to the complex arenas
     _primeComplexArenas(plan, refRefinedComplex, secRefinedComplex);
+
+    // deramp
+    channel
+        << "[" << _rank << "]: "
+        << "    deramping"
+        << pyre::journal::endl(__HERE__);
+    // the reference arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the reference arena"
+        << pyre::journal::endl(__HERE__);
+    _deramp(refRefinedComplex);
+    // the secondary arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the secondary arena"
+        << pyre::journal::endl(__HERE__);
+    _deramp(secRefinedComplex);
 
     // the origins of the reference refined tiles are at zero
     slc_index_type refRefinedOrigin {};
@@ -424,7 +443,7 @@ _createAmplitudeArena(string_type name, int pairs,
     -> arena_type
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.arena");
+    pyre::journal::info_t channel("ampcor.sequential.arena");
 
     // turn the number of pairs into a shape
     typename arena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
@@ -1025,6 +1044,122 @@ _primeComplexArenas(plan_const_reference plan,
             << "      to: (" << secTileOrigin << ")+(" << secTileShape << "), "
             << secDestTile.layout().cells() << " cells"
             << pyre::journal::newline;
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+    // all done
+    return;
+}
+
+
+// deramp
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_deramp(carena_reference arena) -> void
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.refine");
+
+    // we do floating point arithmetic...
+    auto eps = std::numeric_limits<float>::epsilon();
+
+    // get the layout of the arena
+    auto arenaLayout = arena.layout();
+    // its origin
+    auto arenaOrigin = arenaLayout.origin();
+    // and its shape
+    auto arenaShape = arenaLayout.shape();
+
+    // get the number of tiles in the arena
+    auto tiles = arenaShape[0];
+
+    // make a shift that can be used to move the arena origin to the beginning of a tile
+    carena_index_type ofTile { 1, 0 , 0};
+    // make a shape that narrows iterations to one tile at native resolution
+    carena_shape_type tileShape { 1, arenaShape[1]/_refineFactor, arenaShape[2]/_refineFactor };
+
+    // in order to accumulate the phase when scanning tiles horizontally, we must narrow the
+    // tile shape by one column
+    carena_shape_type colRake { 0, 0, -1 };
+    // since we access the cell to the right of the current one
+    carena_index_type colNext { 0, 0, 1 };
+
+    // in order to accumulate the phase when scanning tiles vertically, we must narrow the tile
+    // shape by one row
+    carena_shape_type rowRake { 0, -1, 0 };
+    // since we access the cell below the current one
+    carena_index_type rowNext { 0, 1, 0 };
+
+    // show me
+    channel
+        << pyre::journal::newline
+        << "arena shape: (" << arenaShape << ")" << pyre::journal::newline
+        << " tile shape: (" << tileShape << ")" << pyre::journal::newline;
+
+    // the horizontal phase accumulator
+    auto phaseHorzAccum =
+        [&arena, &colNext](carena_value_type sum, carena_index_type idx) -> carena_value_type {
+            // multiply this cell with the complex conjugate of its neighbor to the right
+            auto value = arena[idx]*std::conj(arena[idx+colNext]);
+            // accumulate and return
+            return sum + value;
+        };
+    // the vertical phase accumulator
+    auto phaseVertAccum =
+        [&arena, &rowNext](carena_value_type sum, carena_index_type idx) -> carena_value_type {
+            // multiply this cell with the complex conjugate of its neighbor below
+            auto value = arena[idx]*std::conj(arena[idx+rowNext]);
+            // accumulate and return
+            return sum + value;
+        };
+    // also, we need this in order to prime the accumulator correctly
+    carena_value_type zero { 0, 0 };
+
+    // go through the tiles
+    for (auto tid = 0; tid < tiles; ++tid) {
+        // form the beginning of this tile
+        auto tileOrigin = arenaOrigin + tid * ofTile;
+
+        // make a shape that excludes the last column of this tile
+        auto shrinkHorz = tileShape + colRake;
+        // combine with the tile origin to make the range
+        auto hbox = arenaLayout.box(tileOrigin, shrinkHorz);
+        // compute the horizontal phase
+        auto phaseHorz = std::accumulate(hbox.begin(), hbox.end(), zero, phaseHorzAccum);
+        // convert to an angle
+        auto phiH = std::abs(phaseHorz) > eps ? std::atan2(phaseHorz.imag(), phaseHorz.real()) : 0;
+
+        // make a shape that excludes the last row of this tile
+        auto shrinkVert = tileShape + rowRake;
+        // combine with the tile shape to make a range
+        auto vbox = arenaLayout.box(tileOrigin, shrinkVert);
+        // compute the vertical phase
+        auto phaseVert = std::accumulate(vbox.begin(), vbox.end(), zero, phaseVertAccum);
+        // convert to an angle
+        auto phiV = std::abs(phaseVert) > eps ? std::atan2(phaseVert.imag(), phaseVert.real()) : 0;
+
+        // fold the accumulated phases back into the data; careful to cover the entire tile
+        // make a box that will generate *indices* from the tile layout
+        auto idxBox = arenaLayout.box(tileOrigin, tileShape);
+        // make a box with access to the *values* from the same layout
+        auto valBox = arena.box(tileOrigin, tileShape);
+
+        // use this deramper
+        auto deramp =
+            [&arena, &phiH, &phiV](carena_index_const_reference idx) -> carena_value_type {
+                // unpack the index; ignore the tile id
+                auto [_, i, j] = idx;
+                // combine the two phases
+                auto comb = i*phiV + j*phiH;
+                // form the phase factor
+                carena_value_type phase { std::cos(comb), std::sin(comb) };
+                // look up pixel at {idx} and multiply it by this phase
+                return arena[idx] * phase;
+            };
+        // to adjust the phase of every cell in the tile
+        std::transform(idxBox.begin(), idxBox.end(), valBox.begin(), deramp);
     }
 
     // flush

@@ -71,6 +71,7 @@ public:
     // usage
     using const_carena_const_reference = const const_carena_type &;
     using carena_layout_const_reference = typename carena_type::packing_const_reference;
+    using carena_index_const_reference = typename carena_type::index_const_reference;
     using carena_shape_const_reference = typename carena_type::shape_const_reference;
 
     // 1d vectors
@@ -134,6 +135,8 @@ public:
     auto _createComplexArena(string_type, int, slc_shape_const_reference) -> carena_type;
     // fill the complex arenas with pixels from the rasters
     auto _primeComplexArenas(plan_const_reference, carena_reference, carena_reference) -> void;
+    // deramp
+    auto _deramp(carena_reference) -> void;
 
     // implementation details: data
 private:
