@@ -329,12 +329,17 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // show me
     channel
         << "[" << _rank << "]: "
-        << "      gamma: origin (" << gamma.layout().origin()
+        << "    gamma: origin (" << gamma.layout().origin()
         << ")+(" << gamma.layout().shape() << ")"
         << pyre::journal::endl(__HERE__);
 
     // if we are not zooming into the correlation surface
     if (_zoomFactor < 2) {
+        // find its maxima
+        channel
+            << "[" << _rank << "]: "
+            << "    locating the correlation surface maxima and recording the offsets"
+            << pyre::journal::endl(__HERE__);
         // compute the maximum of the new correlation surface
         _maxcor(gamma, _refineFactor);
         // and we are done
@@ -348,6 +353,12 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << pyre::journal::endl(__HERE__);
     // refine the correlation surface
     auto gammaZoomed = _zoom(gamma);
+
+    // find its maxima
+    channel
+        << "[" << _rank << "]: "
+        << "    locating the correlation surface maxima and recording the offsets"
+        << pyre::journal::endl(__HERE__);
     // compute the maximum and store
     _maxcor(gammaZoomed, _refineFactor * _zoomFactor);
 
