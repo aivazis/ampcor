@@ -138,7 +138,8 @@ public:
     auto _maxcor(offsets_reference, const_arena_const_reference, int=1) -> void;
 
     // build complex arenas for storing tiles for deramping and refininment
-    auto _createComplexArena(string_type, int, slc_shape_const_reference) -> carena_type;
+    auto _createComplexArena(string_type, int,
+                             slc_index_const_reference, slc_shape_const_reference) -> carena_type;
     // fill the complex arenas with pixels from the rasters
     auto _primeComplexArenas(plan_const_reference, carena_reference, carena_reference) -> void;
     // deramp

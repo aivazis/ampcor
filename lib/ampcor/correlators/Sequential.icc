@@ -205,6 +205,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
 
     // a useful index
     slc_shape_type one { 1, 1 };
+
     // form the shape of the refined neighborhood in the reference raster
     auto refRefinedShape = _refShape / _refineFactor;
     // form the shape of the refined neighborhood in the secondary raster
@@ -234,10 +235,19 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    allocating temporary storage for the refined tiles"
         << pyre::journal::endl(__HERE__);
-    // for the reference tiles
-    auto refRefinedComplex = _createComplexArena("complex_ref.dat", plan.size(), refRefinedShape);
-    // for the secondary tiles
-    auto secRefinedComplex = _createComplexArena("complex_sec.dat", plan.size(), secRefinedShape);
+
+    // for the reference tiles, use a trivial origin
+    slc_index_type refRefinedOrigin { 0, 0 };
+    // make the arena
+    auto refRefinedComplex = _createComplexArena("complex_ref.dat",
+                                                 plan.size(),
+                                                 refRefinedOrigin, refRefinedShape);
+
+    // for the secondary tiles, shift the origin by _refineMargin
+    slc_index_type secRefinedOrigin { -_refineMargin, -_refineMargin };
+    auto secRefinedComplex = _createComplexArena("complex_sec.dat",
+                                                 plan.size(),
+                                                 secRefinedOrigin, secRefinedShape);
 
     // prime the complex arenas
     channel
@@ -996,22 +1006,29 @@ _maxcor(offsets_reference map, const_arena_const_reference gamma, int zoomFactor
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_createComplexArena(string_type name, int pairs, slc_shape_const_reference tileShape)
+_createComplexArena(string_type name, int pairs,
+                    slc_index_const_reference tileOrigin, slc_shape_const_reference tileShape)
     -> carena_type
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.refine");
 
+    // make a zero to be used to assemble the arena origin
+    typename carena_type::spec_type::id_layout_type::index_type pairsOrigin { 0 };
+    // after refinement, the tile origin will be
+    auto refinedOrigin = _refineFactor * tileOrigin;
+    // combine with the pair origin to form the arena origin
+    auto carenaOrigin = pairsOrigin * refinedOrigin;
+
     // turn the number of pairs into a shape
     typename carena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
     // after refinement, the tile shape will be
     auto refinedShape = _refineFactor * tileShape;
-
     // combine with the tile shape to form the tile layout
     auto carenaShape = pairsShape * refinedShape;
 
     // no need for a fancy origin until after detection, so just make a layout
-    typename carena_type::layout_type carenaLayout { carenaShape };
+    typename carena_type::layout_type carenaLayout { carenaShape, carenaOrigin };
 
     // show me
     channel
