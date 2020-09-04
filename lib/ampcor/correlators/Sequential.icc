@@ -148,13 +148,15 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
-    _maxcor(plan, _map, gamma);
+    _maxcor(_map, gamma);
 
     // all done
     return;
 }
 
 
+// narrow the search down to a smaller neighborhood of the best matching pairs, refine using
+// DFTs, and then zoom in to get subpixel estimates
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
@@ -920,7 +922,7 @@ _correlate(string_type tag,
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_reference gamma) -> void
+_maxcor(offsets_reference map, const_arena_const_reference gamma, int zoomFactor) -> void
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
@@ -932,8 +934,11 @@ _maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_refe
     // and its origin
     const auto & corOrigin = corLayout.origin();
 
+    // the number of pairs is buried in gamma
+    auto pairs = corShape[0];
+
     // go through the plan
-    for (auto pid = 0; pid < plan.size(); ++pid) {
+    for (auto pid = 0; pid < pairs; ++pid) {
         // narrow {gamma} to a tile corresponding to this pairing only
         // the shape
         arena_shape_type shape  { 1, corShape[1], corShape[2] };
@@ -965,8 +970,8 @@ _maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_refe
         // record the new value
         rec.gamma = corMax;
         // update the shift
-        rec.shift.first += delta[0];
-        rec.shift.second += delta[1];
+        rec.shift.first += delta[0] / zoomFactor;
+        rec.shift.second += delta[1] / zoomFactor;
         // mark it as a good one
         rec.confidence = 1;
         // show me
