@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     pyre::journal::debug_t channel("ampcor.correlators.seq");
 
     // silence the {sequential_t} info channel
-    pyre::journal::info_t("ampcor.sequential.adjust").deactivate();
+    pyre::journal::info_t("ampcor.sequential").deactivate();
 
     // the shape of a seed tile: margin + data + margin
     slc_const_raster_t::shape_type tileShape = plan.seedShape + 2 * plan.seedMargin;

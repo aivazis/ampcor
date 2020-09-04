@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     pyre::journal::init(argc, argv);
     pyre::journal::application("offsets");
     // make a channel
-    pyre::journal::info_t channel("ampcor.correlators.offsets");
+    pyre::journal::debug_t channel("ampcor.correlators.offsets");
 
     // the name of the product
     std::string name = "offsets.dat";
