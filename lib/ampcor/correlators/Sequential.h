@@ -48,13 +48,13 @@ public:
     // temporary storage for detected tiles
     using arena_type = ampcor::dom::arena_raster_t<slc_value_type>;
     using const_arena_type = ampcor::dom::arena_const_raster_t<slc_value_type>;
-    using arena_reference = arena_type &;
     using arena_spec = typename arena_type::spec_type;
     using arena_value_type = typename arena_type::value_type;
     using arena_layout_type = typename arena_type::packing_type;
     using arena_index_type = typename arena_type::index_type;
     using arena_shape_type = typename arena_type::shape_type;
     // usage
+    using arena_reference = arena_type &;
     using const_arena_const_reference = const const_arena_type &;
     using arena_layout_const_reference = typename arena_type::packing_const_reference;
     using arena_shape_const_reference = typename arena_type::shape_const_reference;
@@ -62,13 +62,14 @@ public:
     // temporary storage for complex tiles
     using carena_type = ampcor::dom::arena_raster_t<slc_pixel_type>;
     using const_carena_type = ampcor::dom::arena_const_raster_t<slc_pixel_type>;
-    using carena_reference = carena_type &;
     using carena_spec = typename carena_type::spec_type;
     using carena_value_type = typename carena_type::value_type;
     using carena_layout_type = typename carena_type::packing_type;
     using carena_index_type = typename carena_type::index_type;
     using carena_shape_type = typename carena_type::shape_type;
     // usage
+    using carena_reference = carena_type &;
+    using carena_const_reference = const carena_type &;
     using const_carena_const_reference = const const_carena_type &;
     using carena_layout_const_reference = typename carena_type::packing_const_reference;
     using carena_index_const_reference = typename carena_type::index_const_reference;
@@ -101,11 +102,15 @@ public:
 
     // implementation details: top level steps
 public:
-    void coarseCorrelation(offsets_layout_const_reference);
-    void refinedCorrelation(offsets_layout_const_reference);
+    auto coarseCorrelation(offsets_layout_const_reference) -> void;
+    auto refinedCorrelation(offsets_layout_const_reference) -> void;
 
     // implementation details: methods
 public:
+    // go through all the necessary steps to compute the correlation surface
+    auto _gamma(string_type, arena_type, arena_type) -> const_arena_type;
+
+    // build and validate a work plan
     auto _assemblePlan(offsets_layout_const_reference,
                        slc_shape_const_reference, slc_shape_const_reference) -> plan_type;
     // create a tile arena
@@ -119,7 +124,7 @@ public:
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(arena_reference) -> vector_pointer;
     // build sum tables for the tiles in {arena}
-    auto _secondarySumAreaTables(string_type, arena_reference) -> const_arena_type;
+    auto _secondarySumAreaTables(string_type, const_arena_const_reference) -> const_arena_type;
     // construct an arena with the means and variances of all possible placements of the
     // reference chip in the secondary window
     auto _secondaryStatistics(string_type,
@@ -130,7 +135,8 @@ public:
                     const_arena_const_reference, vector_pointer,
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
     // compute and store the locations of the maxima of the correlation surface
-    auto _maxcor(plan_const_reference, offsets_reference, const_arena_const_reference);
+    auto _maxcor(plan_const_reference, offsets_reference, const_arena_const_reference) -> void;
+
     // build complex arenas for storing tiles for deramping and refininment
     auto _createComplexArena(string_type, int, slc_shape_const_reference) -> carena_type;
     // fill the complex arenas with pixels from the rasters
@@ -141,6 +147,8 @@ public:
     auto _refine(carena_reference) -> void;
     // spectrum spread
     auto _spreadSpectrum(carena_reference arena, int factor) -> void;
+    // detect a complex arena
+    auto _detectComplexArena(string_type, carena_const_reference) -> arena_type;
 
     // implementation details: data
 private:

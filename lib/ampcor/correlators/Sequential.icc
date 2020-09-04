@@ -85,9 +85,9 @@ adjust(offsets_layout_const_reference box)
 }
 
 template <class slcT, class offsetsT>
-void
+auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-coarseCorrelation(offsets_layout_const_reference box)
+coarseCorrelation(offsets_layout_const_reference box) -> void
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
@@ -125,12 +125,12 @@ coarseCorrelation(offsets_layout_const_reference box)
     // the reference tile arena has a trivial origin
     slc_index_type refOrigin {};
     // make the arena
-    auto refCoarse = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
+    auto refArena = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
 
     // the secondary tile arena has a non-trivial origin
     slc_index_type secOrigin = refOrigin - (_secShape - _refShape)/2;
     // make the arena
-    auto secCoarse = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
+    auto secArena = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
 
     // detect and transfer the reference tile tiles to the coarse arena
     channel
@@ -138,49 +138,10 @@ coarseCorrelation(offsets_layout_const_reference box)
         << "    detecting and transferring"
         << pyre::journal::endl(__HERE__);
     // move the data
-    _detect(plan, refCoarse, secCoarse);
+    _detect(plan, refArena, secArena);
 
-    // the reference tiles
-    channel
-        << "[" << _rank << "]: "
-        << "    prepping the reference tiles:"
-        << pyre::journal::endl(__HERE__);
-    // adjust the reference tiles to zero mean and compute their variance
-    channel
-        << "[" << _rank << "]: "
-        << "      adjusting the amplitudes to zero mean and computing statistics"
-        << pyre::journal::endl(__HERE__);
-    auto refVariances = _referenceStatistics(refCoarse);
-
-    // next, the secondary tiles
-    channel
-        << "[" << _rank << "]: "
-        << "    prepping the secondary tiles:"
-        << pyre::journal::endl(__HERE__);
-
-    // build sum area tables so we can do the same to the sliding window in the secondary tiles
-    channel
-        << "[" << _rank << "]: "
-        << "      building sum area tables"
-        << pyre::journal::endl(__HERE__);
-    auto secSATs = _secondarySumAreaTables("coarse", secCoarse);
-
-    // use the sum area tables to compute mean amplitude for all possible window placements
-    channel
-        << "[" << _rank << "]: "
-        << "      computing statistics"
-        << pyre::journal::endl(__HERE__);
-    auto secMeans = _secondaryStatistics("coarse",
-                                         refCoarse.layout(), secCoarse.layout(),
-                                         secSATs);
-
-    // generate the coarse correlation surface
-    // slide {ref} sized chips around {sec} to compute the correlation hyper surface
-    channel
-        << "[" << _rank << "]: "
-        << "    computing the correlation surface"
-        << pyre::journal::endl(__HERE__);
-    auto gamma = _correlate("coarse", refCoarse, refVariances, secCoarse, secMeans);
+    // compute the correlation surface
+    auto gamma = _gamma("coarse", refArena, secArena);
 
     // find its maxima
     channel
@@ -195,9 +156,9 @@ coarseCorrelation(offsets_layout_const_reference box)
 
 
 template <class slcT, class offsetsT>
-void
+auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-refinedCorrelation(offsets_layout_const_reference box)
+refinedCorrelation(offsets_layout_const_reference box) -> void
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
@@ -313,7 +274,6 @@ refinedCorrelation(offsets_layout_const_reference box)
         << "      the reference arena"
         << pyre::journal::endl(__HERE__);
     _refine(refRefinedComplex);
-
     // the secondary arena
     channel
         << "[" << _rank << "]: "
@@ -321,12 +281,110 @@ refinedCorrelation(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
     _refine(secRefinedComplex);
 
+    // detect the newly refined arenas
+    channel
+        << "[" << _rank << "]: "
+        << "    detecting"
+        << pyre::journal::endl(__HERE__);
+    // the reference arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the reference arena"
+        << pyre::journal::endl(__HERE__);
+    auto refArena = _detectComplexArena("refined_ref.dat", refRefinedComplex);
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "        origin (" << refArena.layout().origin()
+        << ")+(" << refArena.layout().shape() << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // the secondary arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the secondary arena"
+        << pyre::journal::endl(__HERE__);
+    auto secArena = _detectComplexArena("refined_sec.dat", secRefinedComplex);
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "        origin (" << secArena.layout().origin()
+        << ")+(" << secArena.layout().shape() << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // compute the refined correlation matrix
+    auto gamma = _gamma("refined", refArena, secArena);
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "      gamma: origin (" << gamma.layout().origin()
+        << ")+(" << gamma.layout().shape() << ")"
+        << pyre::journal::endl(__HERE__);
+
     // all done
     return;
 }
 
 
 // implementation details
+// go through the sequence of steps necessary to compute the correlation surface given a pair
+// of arenas with detected tiles
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_gamma(string_type tag, arena_type refArena, arena_type secArena)
+    -> const_arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.gamma");
+
+    // the reference tiles
+    channel
+        << "[" << _rank << "]: "
+        << "    prepping the reference tiles:"
+        << pyre::journal::endl(__HERE__);
+    // adjust the reference tiles to zero mean and compute their variance
+    channel
+        << "[" << _rank << "]: "
+        << "      adjusting the amplitudes to zero mean and computing statistics"
+        << pyre::journal::endl(__HERE__);
+    auto refVariances = _referenceStatistics(refArena);
+
+    // next, the secondary tiles
+    channel
+        << "[" << _rank << "]: "
+        << "    prepping the secondary tiles:"
+        << pyre::journal::endl(__HERE__);
+
+    // build sum area tables so we can do the same to the sliding window in the secondary tiles
+    channel
+        << "[" << _rank << "]: "
+        << "      building sum area tables"
+        << pyre::journal::endl(__HERE__);
+    auto secSATs = _secondarySumAreaTables(tag, secArena);
+
+    // use the sum area tables to compute mean amplitude for all possible window placements
+    channel
+        << "[" << _rank << "]: "
+        << "      computing statistics"
+        << pyre::journal::endl(__HERE__);
+    auto secMeans = _secondaryStatistics(tag,
+                                         refArena.layout(), secArena.layout(),
+                                         secSATs);
+
+    // generate the correlation surface
+    // slide {ref} sized chips around {sec} to compute the correlation hyper surface
+    channel
+        << "[" << _rank << "]: "
+        << "    computing the correlation surface"
+        << pyre::journal::endl(__HERE__);
+    auto gamma = _correlate(tag, refArena, refVariances, secArena, secMeans);
+
+    // all done
+    return gamma;
+}
+
+
 // plan assembly: pull out of {_map} the portion of the tile pairings that belong to me,
 // discard the ones that don't fit within their respective inputs, and form the actual tile
 // shapes
@@ -440,6 +498,7 @@ _assemblePlan(offsets_layout_const_reference box,
 }
 
 
+// build a real arena as an intermediate data product
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
@@ -476,6 +535,8 @@ _createAmplitudeArena(string_type name, int pairs,
 }
 
 
+// transfer tiles from the input rasters into corresponding arenas, and compute their magnitude
+// in flight
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
@@ -600,7 +661,7 @@ _referenceStatistics(arena_reference arena) -> vector_pointer
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_secondarySumAreaTables(string_type tag, arena_reference arena) -> const_arena_type
+_secondarySumAreaTables(string_type tag, const_arena_const_reference arena) -> const_arena_type
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.sat");
@@ -752,11 +813,9 @@ template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
 _correlate(string_type tag,
-           const_arena_const_reference ref,
-           vector_pointer refStats,
-           const_arena_const_reference sec,
-           const_arena_const_reference secStats
-           ) -> const_arena_type
+           const_arena_const_reference ref, vector_pointer refStats,
+           const_arena_const_reference sec, const_arena_const_reference secStats)
+    -> const_arena_type
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.gamma");
@@ -861,7 +920,7 @@ _correlate(string_type tag,
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_reference gamma)
+_maxcor(plan_const_reference plan, offsets_reference map, const_arena_const_reference gamma) -> void
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
@@ -1289,7 +1348,7 @@ _refine(carena_reference arena) -> void
 }
 
 
-// refine
+// spread the spectrum after a forward DFT
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
@@ -1367,6 +1426,36 @@ _spreadSpectrum(carena_reference arena, int factor) -> void
 }
 
 
-# endif
+// detect a complex arena
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_detectComplexArena(string_type name, carena_const_reference carena) -> arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
 
-// end of file
+    // grab the layout of the complex arena
+    auto layout = carena.layout();
+    // use it to make a spec for the detected arena
+    arena_spec spec { layout };
+    // and with that the output data product
+    arena_type arena { spec, name, spec.cells() };
+
+    // detecting means
+    auto detect = [](slc_pixel_type pixel) -> slc_value_type {
+        // computing the amplitude of the complex pixel
+        return std::abs(pixel);
+    };
+
+    // do it
+    std::transform(carena.begin(), carena.end(), arena.begin(), detect);
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+    // all done
+    return arena;
+}
+
+
+# endif
