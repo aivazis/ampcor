@@ -1300,7 +1300,7 @@ _refine(carena_reference arena) -> void
     // transform
     fftwf_execute(forwardPlan);
 
-    // spread the spectrum: split the unrefined tile into quadrants and push them to the four
+    // spread the spectrum: split the unrefined tile into four pieces and push them to the four
     // corners of the refined tile
     channel
         << "[" << _rank << "]: "
@@ -1378,39 +1378,68 @@ _spreadSpectrum(carena_reference arena, int factor) -> void
     // and its origin
     auto origin = layout.origin();
 
-    // form the shape of a tile quadrant: this is the shape that has data before the spread
-    arena_shape_type quadrant { shape[0], shape[1]/factor, shape[2]/factor };
-    // form the shape of a tile octant; this is the shape of the blocks we will move around
-    arena_shape_type octant { shape[0], shape[1]/(2*factor), shape[2]/(2*factor) };
+    // form the shape of a tile block: this is the shape that has data before the spread
+    arena_shape_type tile { shape[0], shape[1]/factor, shape[2]/factor };
+    // form the shape of a tile quadrant; this is the shape of the blocks we will move around,
+    // equivalent to a single "X" in the diagram above
+    arena_shape_type quad{ shape[0], shape[1]/(2*factor), shape[2]/(2*factor) };
 
-    // the origins of the three source octants
-    arena_index_type srcOrigin_01 { origin[0], origin[1]/(2*factor), shape[2]/(2*factor) };
-    arena_index_type srcOrigin_10 { origin[0], shape[1]/(2*factor), origin[2]/(2*factor) };
-    arena_index_type srcOrigin_11 { origin[0], shape[1]/(2*factor), shape[2]/(2*factor) };
+    // the origins of the three source quadrants: see the left block in the diagram above
+    // the top right "X"
+    arena_index_type s_01 {
+        origin[0],                       // leave the tile id alone
+        origin[1],                       // leave the row index alone
+        origin[2] + quad[2]              // shift the column index one quadrant to the right
+    };
+    // the bottom left "X"
+    arena_index_type s_10 {
+        origin[0],                       // leave the tile id alone
+        origin[1] + quad[1],             // shift the row index one quadrant downward
+        origin[2]                        // leave the column index alone
+    };
+    // the bottom right "X"
+    arena_index_type s_11 {
+        origin[0],                       // leave the tile id alone
+        origin[1] + quad[1],             // shift the row index one quadrant downward
+        origin[2] + quad[2]              // shift the column index one quadrant to the right
+    };
 
-    // shifts to the origins of the three destination octants
-    arena_index_type dstOrigin_01 { origin[0], (2*factor-1)*shape[1]/(2*factor), origin[2] };
-    arena_index_type dstOrigin_10 { origin[0], origin[1], (2*factor-1)*shape[2]/(2*factor) };
-    arena_index_type dstOrigin_11 { origin[0],
-        (2*factor-1)*shape[1]/(2*factor),
-        (2*factor-1)*shape[2]/(2*factor) };
+    // the origins of the three destination quadrants: see the right block in the diagram above
+    // the top right "X"
+    arena_index_type d_01 {
+        s_01[0],                         // leave the tile id alone
+        s_01[1],                         // leave the row index alone
+        s_01[2] + (factor-1)*tile[2]     // shift the column index to the right
+    };
+    // the bottom left "X"
+    arena_index_type d_10 {
+        s_10[0],                         // leave the tile id alone
+        s_10[1] + (factor-1)*tile[1],    // shift the row index downwards
+        s_10[2]                          // leave the column index alone
+    };
+    // the bottom right "X"
+    arena_index_type d_11 {
+        s_11[0],                         // leave the tile id alone
+        s_11[1] + (factor-1)*tile[1],    // shift the row index downwards
+        s_11[2] + (factor-1)*tile[2]     // shift the column index to the right
+    };
 
     // make the corresponding tiles
     // source
-    auto src_01 = arena.box(srcOrigin_01, octant);
-    auto src_10 = arena.box(srcOrigin_10, octant);
-    auto src_11 = arena.box(srcOrigin_11, octant);
+    auto src_01 = arena.box(s_01, quad);
+    auto src_10 = arena.box(s_10, quad);
+    auto src_11 = arena.box(s_11, quad);
     // destination
-    auto dst_01 = arena.box(dstOrigin_01, octant);
-    auto dst_10 = arena.box(dstOrigin_10, octant);
-    auto dst_11 = arena.box(dstOrigin_11, octant);
+    auto dst_01 = arena.box(d_01, quad);
+    auto dst_10 = arena.box(d_10, quad);
+    auto dst_11 = arena.box(d_11, quad);
 
     // copy from {src} to {dst}
     std::copy(src_01.begin(), src_01.end(), dst_01.begin());
     std::copy(src_10.begin(), src_10.end(), dst_10.begin());
     std::copy(src_11.begin(), src_11.end(), dst_11.begin());
 
-    // zero out the source octants
+    // zero out the source quadrants
     // src_01
     for (auto & value : src_01) {
         value = 0;
