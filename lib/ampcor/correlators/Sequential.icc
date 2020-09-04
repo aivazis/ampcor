@@ -988,8 +988,6 @@ _primeComplexArenas(plan_const_reference plan,
 
     // go through the plan
     for (auto pid=0; pid < plan.size(); ++pid) {
-        // get plan entry
-        const auto & rec = plan[pid];
         // get the origins of the tiles in their respective rasters
         const auto & [pdx, refOrigin, secOrigin] = plan[pid];
 
@@ -1186,10 +1184,8 @@ _refine(carena_reference arena) -> void
 
     // get the layout of the arean
     auto layout = arena.layout();
-    // its shape
+    // and its shape
     auto shape = layout.shape();
-    // and its origin
-    auto origin = layout.origin();
 
     // we will carry out as many DFTs as there are pairs in the plan
     auto pairs = shape[0];
