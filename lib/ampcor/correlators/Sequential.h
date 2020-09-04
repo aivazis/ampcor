@@ -145,11 +145,13 @@ public:
     // deramp
     auto _deramp(carena_reference) -> void;
     // refine
-    auto _refine(carena_reference) -> void;
+    auto _refine(carena_reference, int) -> void;
     // spectrum spread
     auto _spreadSpectrum(carena_reference arena, int factor) -> void;
     // detect a complex arena
     auto _detectComplexArena(string_type, carena_const_reference) -> arena_type;
+    // zoom into the correlation surface
+    auto _zoom(const_arena_const_reference) -> const_arena_type;
 
     // implementation details: data
 private:

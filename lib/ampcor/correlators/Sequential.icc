@@ -285,13 +285,13 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "      the reference arena"
         << pyre::journal::endl(__HERE__);
-    _refine(refRefinedComplex);
+    _refine(refRefinedComplex, _refineFactor);
     // the secondary arena
     channel
         << "[" << _rank << "]: "
         << "      the secondary arena"
         << pyre::journal::endl(__HERE__);
-    _refine(secRefinedComplex);
+    _refine(secRefinedComplex, _refineFactor);
 
     // detect the newly refined arenas
     channel
@@ -342,10 +342,14 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     }
 
     // zoom
-    // otherwise, make an arena big enough for the zoomed correlation surface
-    // populate it with the correlation surface
-    // refine it by {_zoomFactor}
+    channel
+        << "[" << _rank << "]: "
+        << "    zooming the correlation surface by a factor of " << _zoomFactor
+        << pyre::journal::endl(__HERE__);
+    // refine the correlation surface
+    auto gammaZoomed = _zoom(gamma);
     // compute the maximum and store
+    _maxcor(gammaZoomed, _refineFactor * _zoomFactor);
 
     // all done
     return;
@@ -1272,7 +1276,7 @@ _deramp(carena_reference arena) -> void
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_refine(carena_reference arena) -> void
+_refine(carena_reference arena, int refineFactor) -> void
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.refine");
@@ -1287,7 +1291,7 @@ _refine(carena_reference arena) -> void
     // the refined ranks are in the arena shape
     int refinedRanks[] = { shape[1], shape[2] };
     // the dimensions of the unrefined tiles must be scaled down
-    int unrefinedRanks[] = { shape[1] / _refineFactor, shape[2] / _refineFactor };
+    int unrefinedRanks[] = { shape[1] / refineFactor, shape[2] / refineFactor };
     // the distance between blocks is the number of cells in a tile
     auto distance = shape[1] * shape[2];
     // treat my storage area as an {fftw_complex} pointer; access to the raw pointer of the
@@ -1338,7 +1342,7 @@ _refine(carena_reference arena) -> void
         << "        spreading the spectrum"
         << pyre::journal::endl(__HERE__);
     // do it
-    _spreadSpectrum(arena, _refineFactor);
+    _spreadSpectrum(arena, refineFactor);
 
     // reverse DFT
     channel
@@ -1520,6 +1524,62 @@ _detectComplexArena(string_type name, carena_const_reference carena) -> arena_ty
     channel << pyre::journal::endl(__HERE__);
     // all done
     return arena;
+}
+
+
+// zoom the correlation surface
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_zoom(const_arena_const_reference gamma) -> const_arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
+
+    // get the layout of the correlation surface
+    auto layout = gamma.layout();
+    // get its origin
+    auto origin = layout.origin();
+    // and its shape
+    auto shape = layout.shape();
+
+    // form the origin of the zoomed surface
+    carena_index_type zoomedOrigin { origin[0], _zoomFactor*origin[1], _zoomFactor*origin[2] };
+    // and the shape
+    carena_shape_type zoomedShape { shape[0], _zoomFactor*shape[1], _zoomFactor*shape[2] };
+    // use these to form a layout
+    carena_layout_type zoomedLayout { zoomedShape, zoomedOrigin };
+    // turn it into a spec
+    carena_spec zoomedSpec { zoomedLayout };
+    // and a product
+    carena_type zoomedGamma { zoomedSpec, "zoomed_gamma.dat", zoomedSpec.cells() };
+
+    // make the source tile
+    auto src = gamma.box(origin, shape);
+    // and the destination tile
+    auto dst = zoomedGamma.box(zoomedOrigin, shape);
+    // transfer the data
+    std::copy(src.begin(), src.end(), dst.begin());
+
+    // refine in place
+    _refine(zoomedGamma, _zoomFactor);
+
+    // make a real gamma spec
+    arena_spec realSpec { zoomedLayout };
+    // and a product
+    arena_type realGamma { realSpec, "zoomed_real_gamma.dat", realSpec.cells() };
+
+    // transformation that just computes the magnitude
+    auto detect = [](carena_value_type value) -> arena_value_type {
+        // easy enough
+        return std::abs(value);
+    };
+
+    // move the data
+    std::transform(zoomedGamma.begin(), zoomedGamma.end(), realGamma.begin(), detect);
+
+    // all dome; reopen as a {const} product
+    return const_arena_type { realSpec, "zoomed_real_gamma.dat" };
 }
 
 
