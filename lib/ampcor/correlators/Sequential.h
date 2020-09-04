@@ -137,6 +137,10 @@ public:
     auto _primeComplexArenas(plan_const_reference, carena_reference, carena_reference) -> void;
     // deramp
     auto _deramp(carena_reference) -> void;
+    // refine
+    auto _refine(carena_reference) -> void;
+    // spectrum spread
+    auto _spreadSpectrum(carena_reference arena, int factor) -> void;
 
     // implementation details: data
 private:

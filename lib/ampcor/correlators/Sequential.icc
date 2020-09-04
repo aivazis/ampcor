@@ -302,18 +302,24 @@ refinedCorrelation(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
     _deramp(secRefinedComplex);
 
-    // the origins of the reference refined tiles are at zero
-    slc_index_type refRefinedOrigin {};
-    // the origins of the refined secondary tiles are at {-refinedMargin}
-    auto secRefinedOrigin = - _refineMargin * one;
-
-    // show me
+    // refine
     channel
         << "[" << _rank << "]: "
-        << "    refined origin:" << pyre::journal::newline
-        << "      ref: (" << refRefinedOrigin << ")" << pyre::journal::newline
-        << "      sec: (" << secRefinedOrigin << ")" << pyre::journal::newline
+        << "    refining"
         << pyre::journal::endl(__HERE__);
+    // the reference arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the reference arena"
+        << pyre::journal::endl(__HERE__);
+    _refine(refRefinedComplex);
+
+    // the secondary arena
+    channel
+        << "[" << _rank << "]: "
+        << "      the secondary arena"
+        << pyre::journal::endl(__HERE__);
+    _refine(secRefinedComplex);
 
     // all done
     return;
@@ -1160,6 +1166,202 @@ _deramp(carena_reference arena) -> void
             };
         // to adjust the phase of every cell in the tile
         std::transform(idxBox.begin(), idxBox.end(), valBox.begin(), deramp);
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+    // all done
+    return;
+}
+
+
+// refine
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_refine(carena_reference arena) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
+
+    // get the layout of the arean
+    auto layout = arena.layout();
+    // its shape
+    auto shape = layout.shape();
+    // and its origin
+    auto origin = layout.origin();
+
+    // we will carry out as many DFTs as there are pairs in the plan
+    auto pairs = shape[0];
+    // the refined ranks are in the arena shape
+    int refinedRanks[] = { shape[1], shape[2] };
+    // the dimensions of the unrefined tiles must be scaled down
+    int unrefinedRanks[] = { shape[1] / _refineFactor, shape[2] / _refineFactor };
+    // the distance between blocks is the number of cells in a tile
+    auto distance = shape[1] * shape[2];
+    // treat my storage area as an {fftw_complex} pointer; access to the raw pointer of the
+    // arena storage strategy is a bit awkward; will rethink...
+    fftwf_complex * data = reinterpret_cast<fftwf_complex *>(arena.data()->data());
+
+    // forward DFT
+    channel
+        << "[" << _rank << "]: "
+        << "        forward FFTs"
+        << pyre::journal::endl(__HERE__);
+    // make a plan
+    auto forwardPlan = fftwf_plan_many_dft(2,                    // 2d- transform
+                                           unrefinedRanks,       // the shape of the tiles
+                                           pairs,                // this many DFTs
+                                           // input
+                                           data,                 // in-place
+                                           refinedRanks,         // tiles are embedded
+                                           1,                    // stride: densely packed
+                                           distance,             // distance between tiles
+                                           // output
+                                           data,                 // in-place
+                                           refinedRanks,         // tiles are embedded
+                                           1,                    // stride: densely packed
+                                           distance,             // distance between tiles
+                                           FFTW_FORWARD,         // forward transform
+                                           FFTW_ESTIMATE         // don't touch the input array
+                                           );
+    // if something went wrong
+    if (forwardPlan == NULL) {
+        // there isn't much I can do
+        pyre::journal::error_t error("ampcor.sequential.refine");
+        // so just complain
+        error
+            << "while planning a forward DFT" << pyre::journal::newline
+            << "fftw returned " << forwardPlan << pyre::journal::newline
+            << pyre::journal::endl(__HERE__);
+        // and just in case the user has marked this error as non-fatal
+        return;
+    }
+    // transform
+    fftwf_execute(forwardPlan);
+
+    // spread the spectrum: split the unrefined tile into quadrants and push them to the four
+    // corners of the refined tile
+    channel
+        << "[" << _rank << "]: "
+        << "        spreading the spectrum"
+        << pyre::journal::endl(__HERE__);
+    // do it
+    _spreadSpectrum(arena, _refineFactor);
+
+    // reverse DFT
+    channel
+        << "[" << _rank << "]: "
+        << "        reverse FFTs"
+        << pyre::journal::endl(__HERE__);
+    // make a plan
+    auto reversePlan = fftwf_plan_many_dft(2,                    // 2d- transform
+                                           refinedRanks,         // the shape of the tiles
+                                           pairs,                // this many DFTs
+                                           // input
+                                           data,                 // in-place
+                                           refinedRanks,         // whole tiles
+                                           1,                    // stride: densely packed
+                                           distance,             // distance between tiles
+                                           // output
+                                           data,                 // in-place
+                                           refinedRanks,         // whole tiles
+                                           1,                    // stride: densely packed
+                                           distance,             // distance between tiles
+                                           FFTW_BACKWARD,        // forward transform
+                                           FFTW_ESTIMATE         // don't touch the input array
+                                           );
+    // if something went wrong
+    if (reversePlan == NULL) {
+        // there isn't much I can do
+        pyre::journal::error_t error("ampcor.sequential.refine");
+        // so just complain
+        error
+            << "while planning the reverse DFT" << pyre::journal::newline
+            << "fftw returned " << forwardPlan << pyre::journal::newline
+            << pyre::journal::endl(__HERE__);
+        // and just in case the user has marked this error as non-fatal
+        return;
+    }
+    // transform
+    fftwf_execute(reversePlan);
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+    // all done
+    return;
+}
+
+
+// refine
+template <class slcT, class offsetsT>
+auto
+ampcor::correlators::Sequential<slcT, offsetsT>::
+_spreadSpectrum(carena_reference arena, int factor) -> void
+{
+    // this is the transformation we apply to each tile in the arena
+
+    //     X X . .          X . . X
+    //     X X . .          . . . .
+    //     . . . .   --->   . . . .
+    //     . . . .          X . . X
+
+    // shown for factor=2
+
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
+
+    // get the arena layout
+    auto layout = arena.layout();
+    // its shape
+    auto shape = layout.shape();
+    // and its origin
+    auto origin = layout.origin();
+
+    // form the shape of a tile quadrant: this is the shape that has data before the spread
+    arena_shape_type quadrant { shape[0], shape[1]/factor, shape[2]/factor };
+    // form the shape of a tile octant; this is the shape of the blocks we will move around
+    arena_shape_type octant { shape[0], shape[1]/(2*factor), shape[2]/(2*factor) };
+
+    // the origins of the three source octants
+    arena_index_type srcOrigin_01 { origin[0], origin[1]/(2*factor), shape[2]/(2*factor) };
+    arena_index_type srcOrigin_10 { origin[0], shape[1]/(2*factor), origin[2]/(2*factor) };
+    arena_index_type srcOrigin_11 { origin[0], shape[1]/(2*factor), shape[2]/(2*factor) };
+
+    // shifts to the origins of the three destination octants
+    arena_index_type dstOrigin_01 { origin[0], (2*factor-1)*shape[1]/(2*factor), origin[2] };
+    arena_index_type dstOrigin_10 { origin[0], origin[1], (2*factor-1)*shape[2]/(2*factor) };
+    arena_index_type dstOrigin_11 { origin[0],
+        (2*factor-1)*shape[1]/(2*factor),
+        (2*factor-1)*shape[2]/(2*factor) };
+
+    // make the corresponding tiles
+    // source
+    auto src_01 = arena.box(srcOrigin_01, octant);
+    auto src_10 = arena.box(srcOrigin_10, octant);
+    auto src_11 = arena.box(srcOrigin_11, octant);
+    // destination
+    auto dst_01 = arena.box(dstOrigin_01, octant);
+    auto dst_10 = arena.box(dstOrigin_10, octant);
+    auto dst_11 = arena.box(dstOrigin_11, octant);
+
+    // copy from {src} to {dst}
+    std::copy(src_01.begin(), src_01.end(), dst_01.begin());
+    std::copy(src_10.begin(), src_10.end(), dst_10.begin());
+    std::copy(src_11.begin(), src_11.end(), dst_11.begin());
+
+    // zero out the source octants
+    // src_01
+    for (auto & value : src_01) {
+        value = 0;
+    }
+    // src_10
+    for (auto & value : src_10) {
+        value = 0;
+    }
+    // src_11
+    for (auto & value : src_11) {
+        value = 0;
     }
 
     // flush

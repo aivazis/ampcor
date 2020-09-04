@@ -13,6 +13,8 @@
 #include <complex>
 #include <algorithm>
 #include <valarray>
+// FFTW
+#include <fftw3.h>
 // externals
 #include <p2/grid.h>
 
