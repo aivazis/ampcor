@@ -148,7 +148,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
-    _maxcor(_map, gamma);
+    _maxcor(gamma, 1);
 
     // all done
     return;
@@ -332,6 +332,20 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << "      gamma: origin (" << gamma.layout().origin()
         << ")+(" << gamma.layout().shape() << ")"
         << pyre::journal::endl(__HERE__);
+
+    // if we are not zooming into the correlation surface
+    if (_zoomFactor < 2) {
+        // compute the maximum of the new correlation surface
+        _maxcor(gamma, _refineFactor);
+        // and we are done
+        return;
+    }
+
+    // zoom
+    // otherwise, make an arena big enough for the zoomed correlation surface
+    // populate it with the correlation surface
+    // refine it by {_zoomFactor}
+    // compute the maximum and store
 
     // all done
     return;
@@ -932,7 +946,7 @@ _correlate(string_type tag,
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(offsets_reference map, const_arena_const_reference gamma, int zoomFactor) -> void
+_maxcor(const_arena_const_reference gamma, int zoomFactor) -> void
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
@@ -976,7 +990,7 @@ _maxcor(offsets_reference map, const_arena_const_reference gamma, int zoomFactor
         }
 
         // get the corresponding record from the output product, in write enabled mode
-        auto & rec = map[pid];
+        auto & rec = _map[pid];
         // record the new value
         rec.gamma = corMax;
         // update the shift
