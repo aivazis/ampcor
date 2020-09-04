@@ -9,7 +9,7 @@
 # the libampcor test suite
 ampcor.lib.tests.stem := ampcor.lib
 ampcor.lib.tests.prerequisites := ampcor.lib
-ampcor.lib.tests.extern := ampcor.lib p2
+ampcor.lib.tests.extern := ampcor.lib fftw pyre p2
 # c++ compiler flags
 ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 
@@ -47,6 +47,9 @@ tests.ampcor.lib.correlators.coarse_mean.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
 tests.ampcor.lib.correlators.coarse_gamma.pre := \
+    tests.ampcor.lib.correlators.seq_adjust
+
+tests.ampcor.lib.correlators.offsets.pre := \
     tests.ampcor.lib.correlators.seq_adjust
 
 
