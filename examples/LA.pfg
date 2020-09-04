@@ -49,6 +49,14 @@ sparse:
     data = offsets_sparse.dat
 
 
+; 4 tiles
+quad:
+    ; shape
+    shape = 2,2
+    ; pfs path to the file; currently left in the working directory
+    data = offsets_single.dat
+
+
 ; a single tile
 single:
     ; shape
