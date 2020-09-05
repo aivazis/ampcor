@@ -108,7 +108,7 @@ public:
     // implementation details: methods
 public:
     // go through all the necessary steps to compute the correlation surface
-    auto _gamma(string_type, arena_type, arena_type) -> const_arena_type;
+    auto _gamma(string_type, arena_reference, arena_reference) -> const_arena_type;
 
     // build and validate a work plan
     auto _assemblePlan(offsets_layout_const_reference,
@@ -135,7 +135,7 @@ public:
                     const_arena_const_reference, vector_pointer,
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
     // compute and store the locations of the maxima of the correlation surface
-    auto _maxcor(const_arena_const_reference, int) -> void;
+    auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
 
     // build complex arenas for storing tiles for deramping and refininment
     auto _createComplexArena(string_type, int,

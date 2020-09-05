@@ -326,12 +326,6 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
 
     // compute the refined correlation matrix
     auto gamma = _gamma("refined", refArena, secArena);
-    // show me
-    channel
-        << "[" << _rank << "]: "
-        << "    gamma: origin (" << gamma.layout().origin()
-        << ")+(" << gamma.layout().shape() << ")"
-        << pyre::journal::endl(__HERE__);
 
     // if we are not zooming into the correlation surface
     if (_zoomFactor < 2) {
@@ -353,7 +347,6 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << pyre::journal::endl(__HERE__);
     // refine the correlation surface
     auto gammaZoomed = _zoom(gamma);
-
     // find its maxima
     channel
         << "[" << _rank << "]: "
@@ -373,7 +366,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_gamma(string_type tag, arena_type refArena, arena_type secArena)
+_gamma(string_type tag, arena_reference refArena, arena_reference secArena)
     -> const_arena_type
 {
     // make a channel
@@ -420,6 +413,12 @@ _gamma(string_type tag, arena_type refArena, arena_type secArena)
         << "    computing the correlation surface"
         << pyre::journal::endl(__HERE__);
     auto gamma = _correlate(tag, refArena, refVariances, secArena, secMeans);
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "       " << tag << " gamma: origin (" << gamma.layout().origin() << ")+("
+        << gamma.layout().shape() << ")"
+        << pyre::journal::endl(__HERE__);
 
     // all done
     return gamma;
@@ -961,7 +960,7 @@ _correlate(string_type tag,
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(const_arena_const_reference gamma, int zoomFactor) -> void
+_maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
@@ -1016,6 +1015,7 @@ _maxcor(const_arena_const_reference gamma, int zoomFactor) -> void
         // show me
         channel
             << pid << ": "
+            << "gamma: max@(" << delta << "): "
             << "(" << rec.ref.first << "," << rec.ref.second << ") --> ("
             << rec.ref.first + rec.shift.first << "," << rec.ref.second + rec.shift.second << "), "
             << "gamma: " << rec.gamma
@@ -1545,7 +1545,7 @@ ampcor::correlators::Sequential<slcT, offsetsT>::
 _zoom(const_arena_const_reference gamma) -> const_arena_type
 {
     // make a channel
-    pyre::journal::info_t channel("ampcor.sequential.refine");
+    pyre::journal::info_t channel("ampcor.sequential.zoom");
 
     // get the layout of the correlation surface
     auto layout = gamma.layout();
@@ -1564,6 +1564,13 @@ _zoom(const_arena_const_reference gamma) -> const_arena_type
     carena_spec zoomedSpec { zoomedLayout };
     // and a product
     carena_type zoomedGamma { zoomedSpec, "zoomed_gamma.dat", zoomedSpec.cells() };
+
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "      zoomed gamma: origin (" << zoomedGamma.layout().origin()
+        << ")+(" << zoomedGamma.layout().shape() << ")"
+        << pyre::journal::endl(__HERE__);
 
     // make the source tile
     auto src = gamma.box(origin, shape);
