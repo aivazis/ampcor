@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     pyre::journal::debug_t channel("ampcor.correlators.seq");
 
     // silence the {sequential_t} info channel
-    pyre::journal::info_t("ampcor.sequential").deactivate();
+    // pyre::journal::info_t("ampcor.sequential").deactivate();
 
     // the shape of a seed tile: margin + data + margin
     slc_const_raster_t::shape_type tileShape = plan.seedShape + 2 * plan.seedMargin;
@@ -74,7 +74,8 @@ int main(int argc, char *argv[]) {
     }
 
     // make a sequential worker with 4 pairs of tiles, trivial refinement and zoom
-    seq_t seq(0, ref, sec, offsets, plan.seedShape, tileShape, 2, 1, 1);
+    seq_t seq(0, ref, sec, offsets, plan.seedShape, tileShape,
+              plan.refineFactor, plan.refineMargin, plan.zoomFactor);
     // estimate the offsets
     seq.adjust(offsets.layout());
 
