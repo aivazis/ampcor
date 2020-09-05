@@ -78,7 +78,7 @@ tiles.large:
     ; the zoom factor
     zoomFactor = 8
     ; configure the cover generator
-    cover.functor.shift = 3,7
+    cover.functor.shift = 5,7
 
 
 ; correlator that uses small chips
@@ -86,15 +86,15 @@ tiles.small:
     ; reference chip size
     chip = 32, 32
     ; padding used to form the search window in the secondary raster
-    padding = 4, 4
+    padding = 16, 16
     ; the refinement factor
     refineFactor = 2
     ; the refinement margin
-    refineMargin = 2
+    refineMargin = 8
     ; the zoom factor
-    zoomFactor = 2
+    zoomFactor = 4
     ; configure the cover generator
-    cover.functor.shift = 2,5
+    cover.functor.shift = 2,3
 
 
 ; correlator that uses tiny chips; used for sanity checks
