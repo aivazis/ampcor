@@ -20,8 +20,8 @@ tests.ampcor.lib.correlators.clean += \
     slc_ref.dat slc_sec.dat offsets.dat \
     coarse_ref.dat coarse_sec.dat coarse_sat.dat coarse_mean.dat coarse_gamma.dat \
     complex_ref.dat complex_sec.dat \
-    refined_ref.dat refined_sec.dat refined_sat.dat refined_mean.dat \
-    refined_gamma.dat refined_real_gamma.dat
+    refined_ref.dat refined_sec.dat refined_sat.dat refined_mean.dat refined_gamma.dat \
+    zoomed_gamma.dat zoomed_real_gamma.dat
 
 # the {slc_t} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
