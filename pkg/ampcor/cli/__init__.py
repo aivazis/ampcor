@@ -25,6 +25,17 @@ def offsets():
     return Offsets
 
 
+# temporary vis
+@foundry(implements=action, tip="visualize the correlation surface")
+def gamma():
+    # get the action
+    from .Gamma import Gamma
+    # borrow its doctsring
+    __doc__ = Gamma.__doc__
+    # and publish it
+    return Gamma
+
+
 # help
 @foundry(implements=action, tip="display information about this application")
 def about():
