@@ -9,6 +9,7 @@
 # publish the product specs
 from .SLC import SLC as slc
 from .OffsetMap import OffsetMap as offsets
+from .Arena import Arena as arena
 
 # publish the factory specs
 from .Correlator import Correlator as correlator

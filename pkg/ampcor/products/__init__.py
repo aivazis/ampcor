@@ -54,4 +54,13 @@ def newOffsets(**kwds):
     return OffsetMap(**kwds)
 
 
+def newArena(**kwds):
+    """
+    Access an intermediate product
+    """
+    from .Arena import Arena
+    # build one and return it
+    return Arena(**kwds)
+
+
 # end of file
