@@ -1,0 +1,91 @@
+/*  -*- CSS -*-  */
+/*
+ * michael a.g. aïvázis <michael.aivazis@para-sim.com>
+ * (c) 1998-2020 all rights reserved
+ */
+
+
+/* the page banner */
+header {
+    font-size: 60%;
+
+    margin: 0.0em;
+    height: 5.0em;
+
+    /* do not change the size of this box */
+    flex: none;
+
+    display: flex;
+    flex-direction: row;
+
+    color: #5c2813;
+    /* markers for debugging
+    border: 1px solid #888;
+    */
+}
+
+/* logo */
+header img#logo {
+    height: 2.0em;
+    padding-right: 2em;
+    flex: none;
+}
+
+/* access portal */
+header p {
+    font-size: 200%;
+    text-align: center;
+    color: #f37f18;
+
+    height: 2.5em;
+    padding-top: 0.5em;
+
+    flex: auto;
+}
+
+/* navigation bar */
+header ul {
+    list-style-type: none;
+
+    text-align: right;
+    white-space: nowrap;
+
+    /* marker for debugging
+    border: 1px solid #e0e0e0;
+    */
+}
+
+header ul li {
+    display: inline;
+    cursor: pointer;
+
+    /*
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+    */
+    padding-left: 1.0em;
+    padding-right: 1.0em;
+    line-height: 2.0em;
+    text-transform: uppercase;
+
+    border-right: 1px solid #c8c8c8;
+}
+
+header ul li.last {
+    border-right: none;
+}
+
+header ul li:hover {
+    color: #ff6600;
+}
+
+header ul li.current {
+    cursor: default;
+    color: #ff6600;
+}
+
+header ul[name="company-links"] {
+    padding-top: 5.0em;
+}
+
+/* end of file */

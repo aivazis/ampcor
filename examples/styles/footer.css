@@ -1,0 +1,64 @@
+/*  -*- CSS -*-  */
+/*
+ * michael a.g. aïvázis <michael.aivazis@para-sim.com>
+ * (c) 1998-2020 all rights reserved
+ */
+
+
+/* colophon */
+footer {
+    font-size: 50%;
+    margin: 0.0em;
+    padding-right: 1.0em;
+    padding-bottom: 1.0em;
+    height: 2.0em;
+    color: #444;
+    text-align: right;
+
+    /* do not change the size of this box */
+    flex: none;
+
+    /* markers for debugging
+    border: 1px solid #888;
+    */
+}
+
+footer span.copyright {
+    font-weight: normal;
+    font-size: 100%;
+}
+
+footer a:link {
+    text-transform: uppercase;
+    padding-left: 0.15em;
+    padding-right: 0.15em;
+    color: #555;
+}
+
+footer a:visited {
+    color: #aaa;
+    border-bottom: 1px dotted #ccc;
+}
+
+footer a:hover {
+    color: #aaa;
+    border-bottom: 1px dotted #bbb;
+}
+
+footer a:active {
+    color: #aaa;
+    border-bottom: 1px solid #888;
+}
+
+footer span.social {
+    margin-left: 1.5em;
+}
+
+footer span.social img {
+    height: 7em;
+    margin: 0em;
+    padding: 0em;
+}
+
+
+/* end of file */
