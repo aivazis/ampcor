@@ -35,5 +35,4 @@ class SLC(ampcor.flow.specification, family="ampcor.products.slc"):
         return ampcor.products.slc()
 
 
-
 # end of file

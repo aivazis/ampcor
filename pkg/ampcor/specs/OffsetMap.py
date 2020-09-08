@@ -13,7 +13,7 @@ import ampcor
 # declaration
 class OffsetMap(ampcor.flow.specification, family="ampcor.products.offsets"):
     """
-    Access to the data of a file based SLC
+    Access to the data of an offset map
     """
 
 
@@ -33,7 +33,6 @@ class OffsetMap(ampcor.flow.specification, family="ampcor.products.offsets"):
         """
         # invoke the foundry and publish the product
         return ampcor.products.offsets()
-
 
 
 # end of file
