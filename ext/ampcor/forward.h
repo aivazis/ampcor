@@ -28,6 +28,12 @@ namespace ampcor::py {
     void offsets_raster(py::module &);
     void offsets_const_raster(py::module &);
 
+    // arenas
+    void arena(py::module &);
+    void arena_const_raster(py::module &);
+    // the arena layout
+    void arena_layout(py::module &);
+
     // access to the correlators
     void sequential(py::module &);
 }

@@ -20,8 +20,11 @@ PYBIND11_MODULE(ampcor, m) {
     // register the exception types
     ampcor::py::exceptions(m);
 
-    // raster layout
+    // layouts
+    // rasters
     ampcor::py::raster_layout(m);
+    // arenas
+    ampcor::py::arena_layout(m);
 
     // slc
     ampcor::py::slc(m);
@@ -32,6 +35,10 @@ PYBIND11_MODULE(ampcor, m) {
     ampcor::py::offsets(m);
     ampcor::py::offsets_raster(m);
     ampcor::py::offsets_const_raster(m);
+
+    // arenas
+    ampcor::py::arena(m);
+    ampcor::py::arena_const_raster(m);
 
     // correlators
     ampcor::py::sequential(m);
