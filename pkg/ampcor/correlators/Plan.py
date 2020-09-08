@@ -101,7 +101,7 @@ class Plan:
                 continue
 
             # the upper left hand corner of the secondary tile
-            origin = tuple(t - c//2 - p for t,c,p in zip(sec, chip, padding))
+            origin = tuple(s - c//2 - p for s,c,p in zip(sec, chip, padding))
             # and its shape
             shape = tuple(c + 2*p for c,p in zip(chip, padding))
             # try to turn this into a slice

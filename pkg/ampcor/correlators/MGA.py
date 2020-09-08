@@ -57,7 +57,7 @@ class MGA(ampcor.flow.factory,
 
 
     # types
-    from .Plan import Plan as newPlan
+    from .Plan import Plan
 
 
     # protocol obligations
@@ -83,8 +83,15 @@ class MGA(ampcor.flow.factory,
 
         # start the timer
         timer.reset().start()
-        # get the coarse map
-        map = self.cover.map(bounds=reference.shape, shape=offsets.shape)
+        # get and validate the plan
+        map, plan = self.plan()
+        # stop the timer
+        timer.stop()
+        # show me
+        channel.log(f"correlation plan: {1e3 * timer.read():.3f} ms")
+
+        # start the timer
+        timer.reset().start()
         # initialize the output product
         self.primeOffsets(map=map)
         # stop the timer
@@ -92,20 +99,11 @@ class MGA(ampcor.flow.factory,
         # show me
         channel.log(f"primed the offset map: {1e3 * timer.read():.3f} ms")
 
-        # start the timer
-        timer.reset().start()
-        # make a plan
-        plan = self.newPlan(correlator=self, regmap=map, rasters=(reference,secondary))
-        # stop the timer
-        timer.stop()
-        # show me
-        channel.log(f"correlation plan: {1e3 * timer.read():.3f} ms")
-
         # restart the timer
         timer.reset().start()
         # open the two rasters and get access to the data
-        ref = self.reference.open()
-        sec = self.secondary.open()
+        ref = reference.open()
+        sec = secondary.open()
         # stop the timer
         timer.stop()
         # show me
@@ -128,6 +126,26 @@ class MGA(ampcor.flow.factory,
 
 
     # interface
+    def plan(self):
+        """
+        Get and validate the plan implied by the initial cover of the rasters
+        """
+        # unpack my products
+        # inputs
+        ref = self.reference
+        sec = self.secondary
+        # outputs
+        offsets = self.offsets
+
+        # get the coarse map
+        map = self.cover.map(bounds=ref.shape, shape=offsets.shape)
+        # make a plan
+        plan = self.Plan(correlator=self, regmap=map, rasters=(ref,sec))
+
+        # all done
+        return map, plan
+
+
     def primeOffsets(self, map):
         """
         Initialize the offset map by recording the initial guesses
@@ -207,7 +225,7 @@ class MGA(ampcor.flow.factory,
         # get the coarse map
         map = self.cover.map(bounds=reference.shape, shape=offsets.shape)
         # make a plan
-        plan = self.newPlan(correlator=self, regmap=map, rasters=(reference,secondary))
+        plan = self.plan(correlator=self, regmap=map, rasters=(reference,secondary))
         # and show me the plan details
         yield from plan.show(indent=indent, margin=margin+indent)
 
