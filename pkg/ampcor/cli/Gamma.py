@@ -26,8 +26,9 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     # other user configurable state
     # the size of the viewport
     viewport = ampcor.properties.tuple(schema=ampcor.properties.int())
-    viewport.default = (600, 600)
-    # grid
+    viewport.default = (600, 800)
+
+    # colormap
     bins = ampcor.properties.int(default=5)
 
 
@@ -45,45 +46,6 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         with open(f"coarse.html", "w") as stream:
             # render the document and write it
             print('\n'.join(self.weaver.weave(document=page)), file=stream)
-
-        # all done
-        return 0
-
-
-
-
-        # make a channel
-        channel = journal.info("ampcor.offsets.dump")
-
-        # get the correlator
-        correlator = self.flow.correlator
-        # unpack
-        # products
-        ref = correlator.reference
-        sec = correlator.secondary
-        offsets = correlator.offsets
-        # shapes
-        chip = correlator.chip
-        pad = correlator.padding
-
-        # ask the correlator for the workplan
-        map, plan = correlator.plan()
-        # the number of pairs
-        pairs = len(plan.tiles)
-        # hence the shape of the {gamma} arena is
-        gammaShape = (pairs, 2*pad[0]+1, 2*pad[1]+1)
-        # with origin at
-        gammaOrigin = (0, -pad[0], -pad[1])
-
-        # get the arena
-        channel.log(f"gamma: {gammaOrigin}+{gammaShape}")
-        # make a default instance
-        gamma = ampcor.products.newArena()
-        # configure it
-        gamma.setSpec(origin=gammaOrigin, shape=gammaShape)
-        gamma.data = "coarse_gamma.dat"
-        # attach it to its file
-        gamma.open()
 
         # all done
         return 0
@@ -128,12 +90,114 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     def gammaCoarseDraw(self):
         """
         """
-        yield '<!-- the map -->'
-        yield '<div class="plot">'
-        yield '  <svg class="gamma" version="1.1"'
-        yield '       width="10344px"'
-        yield '       height="36864px"'
-        yield '       xmlns="http://www.w3.org/2000/svg">'
+        # get the correlator
+        correlator = self.flow.correlator
+        # unpack the shapes
+        chip = correlator.chip
+        pad = correlator.padding
+        # get the secondary raster
+        secondary = correlator.secondary
+        # get and open the offsets
+        offsets = correlator.offsets.open()
+
+        height, width = secondary.shape
+        # add the plot element
+        yield f'<!-- the map -->'
+        yield f'<div class="plot"'
+        yield f'    style="height: {self.viewport[0]}px; width: {self.viewport[1]}px">'
+        yield f'  <svg class="gamma" version="1.1"'
+        yield f'       height="{height}px"'
+        yield f'       width="{width}px"'
+        yield f'       xmlns="http://www.w3.org/2000/svg">'
+
+        # ask the correlator for the workplan
+        map, plan = correlator.plan()
+        # the number of pairs
+        pairs = len(plan.tiles)
+        # hence the shape of the {gamma} arena is
+        gammaShape = (pairs, 2*pad[0]+1, 2*pad[1]+1)
+        # with origin at
+        gammaOrigin = (0, -pad[0], -pad[1])
+
+        for spot in map[1]:
+            print(spot)
+
+        # make a default instance
+        gamma = ampcor.products.newArena()
+        # configure it
+        gamma.setSpec(origin=gammaOrigin, shape=gammaShape)
+        gamma.data = "coarse_gamma.dat"
+        # attach it to its file
+        gamma.open()
+
+        # to find the max correlation values
+        highs = [ 0 ] * pairs
+        # go through the product
+        for idx in gamma.layout:
+            # get each value
+            g = gamma[idx]
+            # get the pair id
+            pid = idx[0]
+            # if the value is the new high
+            if g > highs[pid]:
+                # replace it
+                highs[pid] = g
+        # to avoid spurious overflows, go through the highs
+        for idx in range(len(highs)):
+            # scale the highs up at the least significant figure
+            highs[idx] *= 1 + 1e-6
+
+        # build color maps
+        colormaps = [ None ] * pairs
+        # by going through all the pairs
+        for pid in range(pairs):
+            # to make a grid
+            grid = GeometricGrid(max=highs[pid], bins=self.bins)
+            # and a color map
+            colormaps[pid] = ColorMap(grid=grid)
+
+        # make a horizontal grid
+        hgrid = ' '.join([ f"M 0 {y} h {width}" for y in range(0, height, 500) ])
+        # and render it
+        yield f'    <path class="hgrid-major" d="{hgrid}" />'
+
+        # make a verical grid
+        vgrid = ' '.join([ f"M {x} 0 v {height}" for x in range(0, width, 500) ])
+        # and render it
+        yield f'    <path class="vgrid-major" d="{vgrid}" />'
+
+        # print the coordinates of the grid intersections
+        yield '<!-- grid intersections -->'
+        for line in range(0, height, 500):
+            for sample in range(0, width, 500):
+                yield f'<text class="grid"'
+                yield f'  y="{line}" x="{sample}" '
+                yield f'  >'
+                yield f'(line={line}, sample={sample})'
+                yield f'</text>'
+
+        # now, go through all the entries in the product
+        for pid, dx, dy in gamma.layout:
+            # get the value of {gamma}
+            cor = gamma[pid, dx, dy]
+            # my color
+            color = colormaps[pid].color(cor)
+            # get the secondary pixel that corresponds to this {pid}
+            spot = map[1][pid]
+            # shift to get my center
+            line = spot[0] + 7*dx
+            sample = spot[1] + 7*dy
+            yield f'    <rect class="gamma_value"'
+            yield f'      x="{sample}" y="{line}"'
+            yield f'      width="{5}" height="{5}" rx="1" ry="1"'
+            yield f'      fill="{color}"'
+            yield f'      >'
+            yield f'      <title class="gamma_detail">'
+            yield f'pos: ({spot[0] + dx}, {spot[1] + dy})'
+            yield f'shift: ({dx}, {dy})'
+            yield f'gamma: {cor:.2g}'
+            yield f'      </title>'
+            yield f'    </rect>'
 
         # close up the wrapper
         yield '  </svg>'
@@ -358,13 +422,15 @@ class GeometricGrid:
         cursor = -1
         # run up the tick marks; for small {bins}, it's faster than bisection
         for tick in self.ticks:
-            # if the value is smaller than {tick}
-            if value < tick:
+            # if the value is up to {tick}
+            if value <= tick:
                 # we found the bin
                 break
             # otherwise, up the cursor and grab the next bin
             cursor += 1
         # all done
+        if cursor >= self.bins:
+            print(f"overflow: {value}, max={self.ticks[-1]}")
         return cursor
 
 
@@ -408,13 +474,21 @@ class ColorMap:
     # public data
     start = [0.20, 0.20, 0.20]
     end =   [1.00, 0.00, 0.00]
-    end =   [1.00, 0.00, 0.00] # red
     end =   [0.68, 0.70, 0.32] # pyre green
     end =   [0.29, 0.67, 0.91] # pyre blue
     end =   [0.89, 0.52, 0.22] # pyre orange
+    end =   [1.00, 0.00, 0.00] # red
 
     under = [0.00, 0.00, 0.00]
     over = [1.00, 1.00, 1.00]
+
+
+    def color(self, value):
+        """
+        Ask the grid for the bin, then lookup the color
+        """
+        # exactly that...
+        return self.rgb(self.grid.bin(value=value))
 
 
     def rgb(self, bin):
@@ -434,23 +508,25 @@ class ColorMap:
             # get the color values
             r,g,b = self.colors[bin]
         # format and return
-        return f'rgb({100*r}%, {100*g}%, {100*b}%)'
+        return f'rgb({int(100*r)}%, {int(100*g)}%, {int(100*b)}%)'
 
 
     def __init__(self, grid, start=start, end=end, **kwds):
         # chain up
         super().__init__(**kwds)
 
+        # save the grid
+        self.grid = grid
+
         # get the grid weights
         weights = grid.weights
         # make a sequence of parameter values
         ticks = [0] + list(reversed(weights[-len(weights)+1:-1])) + [1]
         # assign a color to each bin by biasing a gradient with the width of the grid bins
-        self.colors = [ [ s + (e-s)*t for s,e in zip(start, end)] for t  in ticks]
+        self.colors = [ [ s + (e-s)*t for s,e in zip(start, end)] for t in ticks]
 
         # all done
         return
-
 
 
 # end of file
