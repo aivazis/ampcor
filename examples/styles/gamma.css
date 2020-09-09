@@ -20,8 +20,10 @@
 }
 
 .plot {
+    /*
     width: 800px;
     height: 500px;
+    */
     overflow: auto;
 }
 
@@ -37,6 +39,61 @@ svg.gamma {
     border: 1px solid #975c30;
    */
 }
+
+svg.gamma circle.gamma_spot {
+    fill: none;
+    stroke: #f37f18; /* pyre orange */
+    stroke-width: 2;
+}
+
+svg.gamma rect.gamma_value {
+    stroke: none;
+}
+
+svg.gamma text.grid {
+    font-family: "Menlo", "Monaco", "Courier New", "Courier";
+    font-size: 10px;
+    fill: #777;
+}
+
+svg.gamma title.gamma_detail {
+    font-family: "Menlo", "Monaco", "Courier New", "Courier";
+    font-size: 10px;
+    fill: #777;
+}
+
+svg.gamma path.hgrid-major {
+    stroke: #444;
+    stroke-width: 1;
+    stroke-linecap: butt;
+    stroke-opacity: 0.8;
+}
+
+svg.gamma path.hgrid-minor {
+    stroke: #1b1b1b;
+    stroke-width: 1;
+    stroke-linecap: butt;
+    stroke-opacity: 0.8;
+}
+
+
+svg.gamma path.vgrid-major {
+    stroke: #444;
+    stroke-width: 1;
+    stroke-linecap: butt;
+    stroke-opacity: 0.8;
+}
+
+svg.gamma path.vgrid-minor {
+    stroke: #1b1b1b;
+    stroke-width: 1;
+    stroke-linecap: butt;
+    stroke-opacity: 0.8;
+}
+
+
+
+/* the legend */
 
 svg.gamma_legend {
     margin: auto 2.0em 0.0em 2.0em;
