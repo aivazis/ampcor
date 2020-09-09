@@ -15,6 +15,10 @@
 namespace ampcor::py {
     using arena_t = ampcor::dom::arena_t<float>;
     using arena_const_raster_t = ampcor::dom::arena_const_raster_t<float>;
+
+    using arena_layout_t = arena_const_raster_t::layout_type;
+    using arena_index_t = arena_const_raster_t::index_type;
+    using arena_shape_t = arena_const_raster_t::shape_type;
 }
 
 // helpers
@@ -77,7 +81,19 @@ arena_const_raster(py::module &m) {
                                )
 
         // metamethods
-        // data read access given an index
+        // data read access given a native index
+        .def("__getitem__",
+             // convert the incoming tuple into an index and fetch the data
+             [](const arena_const_raster_t & arena, const arena_index_t & idx) {
+                 // get the data and return it
+                 return arena[idx];
+             },
+             // the signature
+             "index"_a,
+             // the docstring
+             "access the data at the given index"
+             )
+        // data read access given a python tuple
         .def("__getitem__",
              // convert the incoming tuple into an index and fetch the data
              [](const arena_const_raster_t & arena, py::tuple pyIdx) {
