@@ -15,7 +15,7 @@ import journal
 # clunky visualization of the correlation surface
 class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     """
-    Visualize the correlation surface
+    Select visualizations of intermediate ampcor products
     """
 
 
@@ -28,27 +28,47 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     viewport = ampcor.properties.tuple(schema=ampcor.properties.int())
     viewport.default = (600, 800)
 
+    zoom = ampcor.properties.int(default=0)
+
     # colormap
     bins = ampcor.properties.int(default=5)
 
 
-
     # behaviors
-    @ampcor.export(tip="generate an html page with a static visualization of the coarse surface")
+    @ampcor.export(tip="static visualization of the coarse correlation surface")
     def coarse(self, plexus, **kwds):
         """
-        Produce an offset map between the {reference} and {secondary} images
+        Produce a visualization of the coarse correlation surface
         """
         # build the page
-        page = self.page(content=self.gammaCoarse)
+        page = self.page(title="the correlation surface", content=self.gammaCoarse)
 
         # open the output file
-        with open(f"coarse.html", "w") as stream:
+        with open(f"gamma_coarse.html", "w") as stream:
             # render the document and write it
             print('\n'.join(self.weaver.weave(document=page)), file=stream)
 
         # all done
         return 0
+
+
+    @ampcor.export(tip="static visualization of the workplan")
+    def plan(self, plexus, **kwds):
+        """
+        Visualize the workplan
+        """
+        # build the page
+        page = self.page(title="the workplan", content=self.workplan)
+
+        # open the output file
+        with open(f"plan.html", "w") as stream:
+            # render the document and write it
+            print('\n'.join(self.weaver.weave(document=page)), file=stream)
+
+        # all done
+        return 0
+
+
 
 
     def __init__(self, **kwds):
@@ -67,6 +87,112 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
 
 
     # the types of content i can generate
+    def workplan(self):
+        """
+        Build a visualization of the workplan
+        """
+        # get the correlator
+        correlator = self.flow.correlator
+        # unpack the shapes
+        chip = correlator.chip
+        pad = correlator.padding
+        # get the secondary raster
+        secondary = correlator.secondary
+        # unpack its shape
+        height, width = secondary.shape
+
+        zf = 2**self.zoom
+
+        # wrappers
+        yield '<!-- the plot frame -->'
+        yield '<div class="iVu">'
+        # add the plot element
+        yield f'<!-- the plan -->'
+        yield f'<div class="plot"'
+        yield f'    style="height: {self.viewport[0]}px; width: {self.viewport[1]}px">'
+        # with the drawing
+        yield f'  <svg class="gamma" version="1.1"'
+        yield f'       height="{height*zf}px"'
+        yield f'       width="{width*zf}px"'
+        yield f'       xmlns="http://www.w3.org/2000/svg">'
+        yield f'    <g transform="scale({zf} {zf})">'
+
+        gridSpacing = 500
+
+        # make a horizontal grid
+        hgrid = ' '.join([ f"M 0 {y} h {width}" for y in range(0, height, gridSpacing) ])
+        # and render it
+        yield f'    <path class="hgrid-major" d="{hgrid}" />'
+
+        # make a verical grid
+        vgrid = ' '.join([ f"M {x} 0 v {height}" for x in range(0, width, gridSpacing) ])
+        # and render it
+        yield f'    <path class="vgrid-major" d="{vgrid}" />'
+
+        # print the coordinates of the grid intersections
+        yield '<!-- grid intersections -->'
+        for line in range(0, height, gridSpacing):
+            for sample in range(0, width, gridSpacing):
+                yield f'<text class="grid"'
+                yield f'  y="{line}" x="{sample}" '
+                yield f'  >'
+                yield f'(line={line}, sample={sample})'
+                yield f'</text>'
+
+        # ask the correlator for the workplan
+        map, plan = correlator.plan()
+
+        # the shape of a reference tile
+        reftileDY, reftileDX = chip
+        sectileDY, sectileDX = [ c + 2*p for c,p in zip(chip, pad) ]
+        # go through the map
+        for (refLine, refSample), (secLine, secSample) in zip(*map):
+            # plot the center
+            yield f'<circle class="plan_ref"'
+            yield f'  cx="{refSample}" cy="{refLine}" r="5"'
+            yield f'  />'
+            # shift to form the origin of the reference tile
+            reftileY = refLine - reftileDY // 2
+            reftileX = refSample - reftileDX // 2
+            # generate the reference rectangle
+            yield f'<rect class="plan_ref"'
+            yield f'  x="{reftileX}" y="{reftileY}"'
+            yield f'  width="{reftileDX}" height="{reftileDY}"'
+            yield f'  rx="1" ry="1"'
+            yield f'  >'
+            yield f'  <title>({refLine},{refSample})+({reftileDY},{reftileDX})</title>'
+            yield f'</rect>'
+
+            # plot the center
+            yield f'<circle class="plan_sec"'
+            yield f'  cx="{secSample}" cy="{secLine}" r="5"'
+            yield f'  />'
+            # shift to form the origin of the secondary tile
+            sectileY = secLine - sectileDY // 2
+            sectileX = secSample - sectileDX // 2
+            # generate the reference rectangle
+            yield f'<rect class="plan_sec"'
+            yield f'  x="{sectileX}" y="{sectileY}"'
+            yield f'  width="{sectileDX}" height="{sectileDY}"'
+            yield f'  rx="1" ry="1"'
+            yield f'  >'
+            yield f'  <title>({secLine},{secSample})+({sectileDY},{sectileDX})</title>'
+            yield f'</rect>'
+
+            # plot the shift
+            yield f'<path class="plan_shift"'
+            yield f'  d="M {refSample} {refLine} L {secSample} {secLine}"'
+            yield f'  />'
+
+        # close up the wrappers
+        yield f'    </g>'
+        yield '  </svg>'
+        yield '</div>'
+        yield '</div>'
+        # all done
+        return
+
+
     def gammaCoarse(self):
         """
         Build a visualization of the coarse correlation surface
@@ -207,14 +333,14 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
 
 
     # implementation details
-    def page(self, content):
+    def page(self, title, content):
         """
         The page builder
         """
         # start the document
         yield from self.start()
         # my body
-        yield from self.body(content=content)
+        yield from self.body(title=title, content=content)
         # finish up
         yield from self.end()
         # all done
@@ -248,14 +374,14 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def body(self, content):
+    def body(self, title, content):
         """
         The document body
         """
         # open the tag
         yield "  <body>"
         # the page header
-        yield from self.header()
+        yield from self.header(title=title)
         # draw the frame
         yield from content()
         # the page footer
@@ -267,19 +393,19 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def header(self):
+    def header(self, title):
         """
         Generate the app header
         """
         yield '<header>'
-        yield '  <!-- app id -->'
-        yield '  <p>'
-        yield '    the correlation surface'
-        yield '  </p>'
-        yield '  <!-- logo -->'
-        yield '  <img id="logo" src="logo.png"/>'
-        yield '</header>'
-        yield ''
+        yield f'  <!-- app id -->'
+        yield f'  <p>'
+        yield f'    {title}'
+        yield f'  </p>'
+        yield f'  <!-- logo -->'
+        yield f'  <img id="logo" src="logo.png"/>'
+        yield f'</header>'
+        yield f''
 
         # all done
         return
