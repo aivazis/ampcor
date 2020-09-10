@@ -27,7 +27,7 @@ def offsets():
 
 # temporary vis
 @foundry(implements=action, tip="visualize the correlation surface")
-def gamma():
+def mdy():
     # get the action
     from .Gamma import Gamma
     # borrow its doctsring
