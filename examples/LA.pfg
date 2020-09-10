@@ -77,9 +77,8 @@ tiles.large:
     refineMargin = 8
     ; the zoom factor
     zoomFactor = 8
-    ; configure the cover generator
-    cover.functor.shift = 5,7
-
+    ; configure the cover generator; values taken from the inputs to insarflow.offsetprf
+    cover.functor.shift = -111, 256
 
 ; correlator that uses small chips
 tiles.small:
@@ -93,8 +92,8 @@ tiles.small:
     refineMargin = 8
     ; the zoom factor
     zoomFactor = 4
-    ; configure the cover generator
-    cover.functor.shift = 2,3
+    ; configure the cover generator; values taken from the inputs to insarflow.offsetprf
+    cover.functor.shift = -111, 256
 
 
 ; correlator that uses tiny chips; used for sanity checks
@@ -109,8 +108,8 @@ tiles.tiny:
     refineMargin = 0
     ; the zoom factor
     zoomFactor = 1
-    ; configure the cover generator
-    cover.functor.shift = 1,3
+    ; configure the cover generator; values taken from the inputs to insarflow.offsetprf
+    cover.functor.shift = -111, 256
 
 
 ; overall application configuration
