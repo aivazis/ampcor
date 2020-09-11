@@ -26,7 +26,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     # other user configurable state
     # the size of the viewport
     viewport = ampcor.properties.tuple(schema=ampcor.properties.int())
-    viewport.default = (600, 800)
+    viewport.default = (800, 600)
 
     zoom = ampcor.properties.int(default=0)
 
@@ -70,6 +70,23 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
 
 
 
+    @ampcor.export(tip="static visualization of the workplan")
+    def offsets(self, plexus, **kwds):
+        """
+        Visualize the sequence of shift proposed by ampcor
+        """
+        # build the page
+        page = self.page(title="the shifts", content=self.shifts)
+
+        # open the output file
+        with open(f"offsets.html", "w") as stream:
+            # render the document and write it
+            print('\n'.join(self.weaver.weave(document=page)), file=stream)
+
+        # all done
+        return 0
+
+
 
     def __init__(self, **kwds):
         # chain up
@@ -87,6 +104,15 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
 
 
     # the types of content i can generate
+    def shifts(self):
+        """
+        Visualize the shifts proposed by ampcor
+        """
+        yield ''
+        # all done
+        return
+
+
     def workplan(self):
         """
         Build a visualization of the workplan
@@ -108,8 +134,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield '<div class="iVu">'
         # add the plot element
         yield f'<!-- the plan -->'
-        yield f'<div class="plot"'
-        yield f'    style="height: {self.viewport[0]}px; width: {self.viewport[1]}px">'
+        yield f'<div class="plot">'
         # with the drawing
         yield f'  <svg class="gamma" version="1.1"'
         yield f'       height="{height*zf}px"'
@@ -207,7 +232,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield from self.legend(min=.0, max=1.00)
 
         # close up the wrapper
-        yield "    </div>"
+        yield "</div>"
 
         # all done
         return
@@ -229,8 +254,8 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         height, width = secondary.shape
         # add the plot element
         yield f'<!-- the map -->'
-        yield f'<div class="plot"'
-        yield f'    style="height: {self.viewport[0]}px; width: {self.viewport[1]}px">'
+        yield f'<div class="plot">'
+        # yield f'    style="height: {self.viewport[1]}px; width: {self.viewport[0]}px">'
         yield f'  <svg class="gamma" version="1.1"'
         yield f'       height="{height}px"'
         yield f'       width="{width}px"'
@@ -402,8 +427,6 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield f'  <p>'
         yield f'    {title}'
         yield f'  </p>'
-        yield f'  <!-- logo -->'
-        yield f'  <img id="logo" src="logo.png"/>'
         yield f'</header>'
         yield f''
 
@@ -424,6 +447,25 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield '  </span>'
         yield '  <span class="social">'
         yield '  </span>'
+        yield '<!-- logo -->'
+        yield '<div>'
+        yield '<svg id="logo" version="1.1" xmlns="http://www.w3.org/2000/svg">'
+        yield '<g fill="#f37f19" stroke="#f37f19" transform="scale(0.15 0.15)">'
+        yield '<path d="'
+        yield 'M 100 0'
+        yield 'C 200 75 -125 160 60 300'
+        yield 'C 20 210 90 170 95 170'
+        yield 'C 80 260 130 225 135 285'
+        yield 'C 160 260 160 250 155 240'
+        yield 'C 180 260 175 270 170 300'
+        yield 'C 205 270 240 210 195 135'
+        yield 'C 195 165 190 180 160 200'
+        yield 'C 175 180 220 55 100 0'
+        yield 'Z'
+        yield '" />'
+        yield '</g>'
+        yield '</svg>'
+        yield '</div>'
         yield '</footer>'
         yield ''
 
