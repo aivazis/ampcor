@@ -8,16 +8,30 @@
 /* colophon */
 footer {
     font-size: 50%;
-    margin: 0.0em;
-    padding-right: 1.0em;
+    margin-right: 2.0em;
     padding-bottom: 1.0em;
-    height: 2.0em;
+    height: 5.0em;
     color: #444;
     text-align: right;
 
     /* do not change the size of this box */
     flex: none;
 
+    display: flex;
+    flex-direction: row;
+
+    /* markers for debugging
+    border: 1px solid #888;
+    */
+}
+
+/* logo */
+footer svg#logo {
+    flex: none;
+    width: 4.0em;
+    height: 5.0em;
+    margin-top: auto;
+    opacity: 0.5;
     /* markers for debugging
     border: 1px solid #888;
     */
@@ -26,6 +40,11 @@ footer {
 footer span.copyright {
     font-weight: normal;
     font-size: 100%;
+    margin-top: auto;
+    flex: auto;
+    /*
+    border: 1px solid #888;
+    */
 }
 
 footer a:link {
@@ -36,7 +55,7 @@ footer a:link {
 }
 
 footer a:visited {
-    color: #aaa;
+    color: #777;
     border-bottom: 1px dotted #ccc;
 }
 
