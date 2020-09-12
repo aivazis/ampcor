@@ -89,9 +89,9 @@ tiles.small:
     ; the refinement factor
     refineFactor = 2
     ; the refinement margin
-    refineMargin = 8
+    refineMargin = 4
     ; the zoom factor
-    zoomFactor = 4
+    zoomFactor = 2
     ; configure the cover generator; values taken from the inputs to insarflow.offsetprf
     cover.functor.shift = -111, 256
 
