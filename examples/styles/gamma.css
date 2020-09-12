@@ -18,13 +18,13 @@
 }
 
 .plot {
+    flex-grow: 1;
     overflow: auto;
 }
 
 svg.gamma {
     margin: 0.0em;
     padding: 0.0em;
-    flex-grow: 1;
     background-color: #262626;
     /* marker for debugging
     border: 1px solid #975c30;
