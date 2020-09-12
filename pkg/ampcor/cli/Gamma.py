@@ -156,6 +156,11 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
             [ int(ref+delta) for ref,delta in zip(offsets[idx].ref, offsets[idx].delta) ]
             for idx,_,_ in plan.tiles
             ]
+        # print the values
+        for spot in locations:
+            # so the user can scroll
+            print(spot)
+
 
         # prime my content
         content = self.renderGamma(gamma=gamma,
