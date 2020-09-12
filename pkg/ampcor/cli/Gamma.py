@@ -66,25 +66,6 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         """
         Produce a visualization of the coarse correlation surface
         """
-        # prime my content
-        content = self.gammaCoarse()
-        # build the page
-        page = self.page(title="the correlation surface", content=content)
-
-        # open the output file
-        with open(f"coarse_gamma.html", "w") as stream:
-            # render the document and write it
-            print('\n'.join(self.weaver.weave(document=page)), file=stream)
-
-        # all done
-        return 0
-
-
-    @ampcor.export(tip="static visualization of the coarse correlation surface")
-    def coarse(self, plexus, **kwds):
-        """
-        Produce a visualization of the coarse correlation surface
-        """
         # get the correlator
         correlator = self.flow.correlator
         # it has access to the secondary raster shape
@@ -132,8 +113,53 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         """
         Produce a visualization of the zoomed correlation surface
         """
+        # get the output
+        offsets = self.flow.offsetMap
+        # open its raster
+        offsets.open()
+
+        # get the correlator
+        correlator = self.flow.correlator
+        # it has access to the secondary raster shape
+        rasterShape = correlator.secondary.shape
+        # and the workplan
+        map, plan = correlator.plan()
+
+        # get the number of pairs
+        pairs = len(plan.tiles)
+        # the refine margin
+        margin = correlator.refineMargin
+        # the refine factor
+        refine = correlator.refineFactor
+        # and the zoom factor
+        zoom = correlator.zoomFactor
+
+        # the size of a zoomed gamma tile
+        ext = (2*margin*refine + 1) * zoom
+        # and its origin
+        org = -margin * refine * zoom
+
+        # build the shape of the zoomed gamma arena
+        shape = (pairs, ext, ext)
+        # and its origin
+        origin = (0, org, org)
+
+        gamma = ampcor.products.newArena()
+        # configure it
+        gamma.setSpec(origin=origin, shape=shape)
+        gamma.data = "zoomed_gamma.dat"
+        # attach it to its data file
+        gamma.open()
+
+        # we are going to place the zoomed correlation surface rendering on the output pixel
+        locations = [
+            [ int(ref+delta) for ref,delta in zip(offsets[idx].ref, offsets[idx].delta) ]
+            for idx,_,_ in plan.tiles
+            ]
+
         # prime my content
-        content = self.gammaZoomed()
+        content = self.renderGamma(gamma=gamma,
+                                   locations=locations, rasterShape=rasterShape, zoom=refine*zoom)
         # build the page
         page = self.page(title="the zoomed correlation surface", content=content)
 
@@ -314,7 +340,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def renderGamma(self, gamma, locations, rasterShape):
+    def renderGamma(self, gamma, locations, rasterShape, zoom=1):
         """
         Draw the given correlation surface
         """
@@ -363,7 +389,8 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         # render a grid
         yield from self.renderGrid(shape=rasterShape)
         # render the arena
-        yield from self.renderArena(arena=gamma, locations=locations, colormaps=colormaps)
+        yield from self.renderArena(arena=gamma,
+                                    locations=locations, colormaps=colormaps, zoom=zoom)
         # done with the rendering of the correlation surface
         yield '  </svg>'
         yield '</div>'
@@ -394,7 +421,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def renderArena(self, arena, locations, colormaps):
+    def renderArena(self, arena, locations, colormaps, zoom):
         """
         Generate a rendering of the data in an {arena} at the specified {locations}
         """
@@ -412,7 +439,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
             # build the coordinates that correspond to this tile by looking up the central spot
             center = locations[pid]
             # and shifting by the tile index
-            pixel = tuple(c + i for c,i in zip(center, tdx))
+            pixel = tuple(c + i/zoom for c,i in zip(center, tdx))
 
             # we render pixels as tiles by zooming and shifting; the math below guarantees that
             # the center of the tile at index (0,0) sits on the pixel that corresponds to this
@@ -578,7 +605,10 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield '<!-- logo -->'
         yield '<div>'
         yield '<svg id="logo" version="1.1" xmlns="http://www.w3.org/2000/svg">'
-        yield '<g fill="#f37f19" stroke="#f37f19" transform="scale(0.15 0.15)">'
+        yield '<g '
+        yield '    fill="#f37f19" fill-opacity="0.5"'
+        yield '    stroke="none"'
+        yield '    transform="scale(0.15 0.15)">'
         yield '<path d="'
         yield 'M 100 0'
         yield 'C 200 75 -125 160 60 300'
