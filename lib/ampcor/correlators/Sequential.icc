@@ -1563,7 +1563,7 @@ _zoom(const_arena_const_reference gamma) -> const_arena_type
     // turn it into a spec
     carena_spec zoomedSpec { zoomedLayout };
     // and a product
-    carena_type zoomedGamma { zoomedSpec, "zoomed_gamma.dat", zoomedSpec.cells() };
+    carena_type zoomedGamma { zoomedSpec, "zoomed_gamma_complex.dat", zoomedSpec.cells() };
 
     // show me
     channel
@@ -1585,7 +1585,7 @@ _zoom(const_arena_const_reference gamma) -> const_arena_type
     // make a real gamma spec
     arena_spec realSpec { zoomedLayout };
     // and a product
-    arena_type realGamma { realSpec, "zoomed_real_gamma.dat", realSpec.cells() };
+    arena_type realGamma { realSpec, "zoomed_gamma.dat", realSpec.cells() };
 
     // transformation that just computes the magnitude
     auto detect = [](carena_value_type value) -> arena_value_type {
@@ -1597,7 +1597,7 @@ _zoom(const_arena_const_reference gamma) -> const_arena_type
     std::transform(zoomedGamma.begin(), zoomedGamma.end(), realGamma.begin(), detect);
 
     // all dome; reopen as a {const} product
-    return const_arena_type { realSpec, "zoomed_real_gamma.dat" };
+    return const_arena_type { realSpec, "zoomed_gamma.dat" };
 }
 
 
