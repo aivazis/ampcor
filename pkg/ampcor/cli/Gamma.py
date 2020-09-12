@@ -27,11 +27,37 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
     # the size of the viewport
     viewport = ampcor.properties.tuple(schema=ampcor.properties.int())
     viewport.default = (800, 600)
+    viewport.doc = "the size of the central plot window, in pixels"
 
     zoom = ampcor.properties.int(default=0)
+    zoom.doc = "the zoom level"
+
+    # arena rendering
+    tileSize = ampcor.properties.tuple(schema=ampcor.properties.int())
+    tileSize.default = 5,5
+    tileSize.doc = "the render size of individual pixels"
+
+    tileMargin = ampcor.properties.tuple(schema=ampcor.properties.int())
+    tileMargin.default = 1,1
+    tileMargin.doc = "the spacing between pixels"
+
+    colorLow = ampcor.properties.array()
+    colorLow.default = [0.2, 0.2, 0.2]
+    colorLow.doc = "the color that corresponds to low values"
+
+    colorHigh = ampcor.properties.array()
+    colorHigh.default = [0.89, 0.52, 0.22] # pyre orange
+    colorHigh.default = [1.0, 0.0, 0.0]
+    colorHigh.doc = "the color that corresponds to high values"
 
     # colormap
     bins = ampcor.properties.int(default=5)
+    bins.doc = "the number of value bins in the color map"
+
+    # the raster grid spacing
+    rulers = ampcor.properties.tuple(schema=ampcor.properties.int())
+    rulers.default = 500, 500
+    rulers.doc = "the raster grid spacing"
 
 
     # behaviors
@@ -40,11 +66,79 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         """
         Produce a visualization of the coarse correlation surface
         """
+        # prime my content
+        content = self.gammaCoarse()
         # build the page
-        page = self.page(title="the correlation surface", content=self.gammaCoarse)
+        page = self.page(title="the correlation surface", content=content)
 
         # open the output file
-        with open(f"gamma_coarse.html", "w") as stream:
+        with open(f"coarse_gamma.html", "w") as stream:
+            # render the document and write it
+            print('\n'.join(self.weaver.weave(document=page)), file=stream)
+
+        # all done
+        return 0
+
+
+    @ampcor.export(tip="static visualization of the coarse correlation surface")
+    def coarse(self, plexus, **kwds):
+        """
+        Produce a visualization of the coarse correlation surface
+        """
+        # get the correlator
+        correlator = self.flow.correlator
+        # it has access to the secondary raster shape
+        rasterShape = correlator.secondary.shape
+        # and the workplan
+        map, plan = correlator.plan()
+
+        # the number of pairs
+        pairs = len(plan.tiles)
+        # and the padding
+        pad = correlator.padding
+        # determine the shape of the {gamma} arena
+        shape = (pairs, 2*pad[0]+1, 2*pad[1]+1)
+        # and its origin
+        origin = (0, -pad[0], -pad[1])
+        # print the values
+        for spot in map[1]:
+            # so the user can scroll
+            print(spot)
+
+        # make an empty arena
+        gamma = ampcor.products.newArena()
+        # configure it
+        gamma.setSpec(origin=origin, shape=shape)
+        gamma.data = "coarse_gamma.dat"
+        # attach it to its data file
+        gamma.open()
+
+        # prime my content
+        content = self.renderGamma(gamma=gamma, locations=map[1], rasterShape=rasterShape)
+        # build the page
+        page = self.page(title="the correlation surface", content=content)
+
+        # open the output file
+        with open(f"coarse_gamma.html", "w") as stream:
+            # render the document and write it
+            print('\n'.join(self.weaver.weave(document=page)), file=stream)
+
+        # all done
+        return 0
+
+
+    @ampcor.export(tip="static visualization of the zoomed correlation surface")
+    def zoomed(self, plexus, **kwds):
+        """
+        Produce a visualization of the zoomed correlation surface
+        """
+        # prime my content
+        content = self.gammaZoomed()
+        # build the page
+        page = self.page(title="the zoomed correlation surface", content=content)
+
+        # open the output file
+        with open(f"zoomed_gamma.html", "w") as stream:
             # render the document and write it
             print('\n'.join(self.weaver.weave(document=page)), file=stream)
 
@@ -57,8 +151,10 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         """
         Visualize the workplan
         """
+        # prime my content
+        contnent = self.workplan()
         # build the page
-        page = self.page(title="the workplan", content=self.workplan)
+        page = self.page(title="the workplan", content=content)
 
         # open the output file
         with open(f"plan.html", "w") as stream:
@@ -69,14 +165,15 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return 0
 
 
-
     @ampcor.export(tip="static visualization of the workplan")
     def offsets(self, plexus, **kwds):
         """
         Visualize the sequence of shift proposed by ampcor
         """
+        # prime my content
+        content = self.shifts()
         # build the page
-        page = self.page(title="the shifts", content=self.shifts)
+        page = self.page(title="the shifts", content=content)
 
         # open the output file
         with open(f"offsets.html", "w") as stream:
@@ -85,7 +182,6 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
 
         # all done
         return 0
-
 
 
     def __init__(self, **kwds):
@@ -218,68 +314,14 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def gammaCoarse(self):
+    def renderGamma(self, gamma, locations, rasterShape):
         """
-        Build a visualization of the coarse correlation surface
+        Draw the given correlation surface
         """
-        # wrapper
-        yield '<!-- the plot frame -->'
-        yield '<div class="iVu">'
-
-        # the drawing
-        yield from self.gammaCoarseDraw()
-        # draw the legend
-        yield from self.legend(min=.0, max=1.00)
-
-        # close up the wrapper
-        yield "</div>"
-
-        # all done
-        return
-
-
-    def gammaCoarseDraw(self):
-        """
-        """
-        # get the correlator
-        correlator = self.flow.correlator
-        # unpack the shapes
-        chip = correlator.chip
-        pad = correlator.padding
-        # get the secondary raster
-        secondary = correlator.secondary
-        # get and open the offsets
-        offsets = correlator.offsets.open()
-
-        height, width = secondary.shape
-        # add the plot element
-        yield f'<!-- the map -->'
-        yield f'<div class="plot">'
-        # yield f'    style="height: {self.viewport[1]}px; width: {self.viewport[0]}px">'
-        yield f'  <svg class="gamma" version="1.1"'
-        yield f'       height="{height}px"'
-        yield f'       width="{width}px"'
-        yield f'       xmlns="http://www.w3.org/2000/svg">'
-
-        # ask the correlator for the workplan
-        map, plan = correlator.plan()
-        # the number of pairs
-        pairs = len(plan.tiles)
-        # hence the shape of the {gamma} arena is
-        gammaShape = (pairs, 2*pad[0]+1, 2*pad[1]+1)
-        # with origin at
-        gammaOrigin = (0, -pad[0], -pad[1])
-
-        for spot in map[1]:
-            print(spot)
-
-        # make a default instance
-        gamma = ampcor.products.newArena()
-        # configure it
-        gamma.setSpec(origin=gammaOrigin, shape=gammaShape)
-        gamma.data = "coarse_gamma.dat"
-        # attach it to its file
-        gamma.open()
+        # unpack the raster shape
+        height, width = rasterShape
+        # get the number of pairs
+        pairs = len(locations)
 
         # to find the max correlation values
         highs = [ 0 ] * pairs
@@ -305,54 +347,140 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
             # to make a grid
             grid = GeometricGrid(max=highs[pid], bins=self.bins)
             # and a color map
-            colormaps[pid] = ColorMap(grid=grid)
+            colormaps[pid] = ColorMap(grid=grid, start=self.colorLow, end=self.colorHigh)
 
-        # make a horizontal grid
-        hgrid = ' '.join([ f"M 0 {y} h {width}" for y in range(0, height, 500) ])
-        # and render it
-        yield f'    <path class="hgrid-major" d="{hgrid}" />'
+        # the outermost container
+        yield f'<div class="iVu">'
 
-        # make a verical grid
-        vgrid = ' '.join([ f"M {x} 0 v {height}" for x in range(0, width, 500) ])
-        # and render it
-        yield f'    <path class="vgrid-major" d="{vgrid}" />'
+        # sign on
+        yield f'<!-- the correlation surface plot -->'
+        # rendering a gamma
+        yield f'<div class="plot">'
+        yield f'  <svg class="gamma" version="1.1" xmlns="http://www.w3.org/2000/svg"'
+        yield f'       height="{height}px"'
+        yield f'       width="{width}px"'
+        yield f'    >'
+        # render a grid
+        yield from self.renderGrid(shape=rasterShape)
+        # render the arena
+        yield from self.renderArena(arena=gamma, locations=locations, colormaps=colormaps)
+        # done with the rendering of the correlation surface
+        yield '  </svg>'
+        yield '</div>'
+
+        # make a grid
+        grid = GeometricGrid(bins=self.bins)
+        # and use it to make a color map for the legend
+        colormap = ColorMap(grid=grid, start=self.colorLow, end=self.colorHigh)
+        # make a legend
+        legend = Legend(colormap=colormap)
+        # ask for its bounding box
+        lbox = legend.box
+
+        # render he legend
+        yield f'<!-- the legend for the correlation surface values -->'
+        yield f'<svg class="gamma_legend" version="1.1" xmlns="http://www.w3.org/2000/svg"'
+        yield f'     width="{lbox[0]}px" height="{lbox[1]}px"'
+        yield f'    >'
+        # render
+        yield from legend.render()
+        # close up the legend
+        yield "</svg>"
+
+        # close {iVu}
+        yield '</div>'
+
+        # all done
+        return
+
+
+    def renderArena(self, arena, locations, colormaps):
+        """
+        Generate a rendering of the data in an {arena} at the specified {locations}
+        """
+        # unpack the rendering characteristics
+        tileSize = self.tileSize
+        tileMargin = self.tileMargin
+        # form the total space allocated to a tile
+        tileBox = tuple(s + 2*m for s,m in zip(tileSize, tileMargin))
+
+        # index the {arena}
+        for idx in arena.layout:
+            # unpack the index partially
+            pid, *tdx = idx
+
+            # build the coordinates that correspond to this tile by looking up the central spot
+            center = locations[pid]
+            # and shifting by the tile index
+            pixel = tuple(c + i for c,i in zip(center, tdx))
+
+            # we render pixels as tiles by zooming and shifting; the math below guarantees that
+            # the center of the tile at index (0,0) sits on the pixel that corresponds to this
+            # tile; form the coordinates of the upper left hand corner of the tile box
+            boxOrigin = tuple(c - b//2 + i*b for c,b,i in zip(center, tileBox, tdx))
+            # the tile origin is the box origin shifted by the margin
+            tileOrigin = tuple(b + m for b,m in zip(boxOrigin, tileMargin))
+
+            # get the data value
+            value = arena[idx]
+            # get the color that corresponds to this value
+            color = colormaps[pid].color(value=value)
+
+            # render
+            yield f''
+            # sign on
+            yield f'<!-- arena: {tuple(idx)} <- {value}  @{color} -->'
+            # make a colored tile
+            yield f'<rect y="{tileOrigin[0]}" x="{tileOrigin[1]}"'
+            yield f'      height="{tileSize[0]}" width="{tileSize[1]}" rx="1" ry="1"'
+            yield f'      fill="{color}" stroke="none"'
+            yield f'  >'
+            # decorate it so the user can get tile details by hovering over it
+            yield f'  <title>'
+            yield f'pixel: {pixel}'
+            yield f'index: {tuple(idx)}'
+            yield f'value: {value}'
+            yield f'  </title>'
+            # done with tile
+            yield f'</rect>'
+
+        # all done
+        return
+
+
+    def renderGrid(self, shape):
+        """
+        Draw a grid on the raster display
+        """
+        # unpack the shape
+        height, width = shape
+        # and the rulers
+        vSpacing, hSpacing = self.rulers
+
+        # if the user hasn't disable the horizontal grid
+        if vSpacing is not None and vSpacing > 0:
+            # make a horizontal grid
+            hgrid = ' '.join([ f"M 0 {y} h {width}" for y in range(0, height, vSpacing) ])
+            # and render it
+            yield f'    <path class="hgrid-major" d="{hgrid}" />'
+
+        # similarly for the vertical grid
+        if hSpacing is not None and hSpacing > 0:
+            # make it
+            vgrid = ' '.join([ f"M {x} 0 v {height}" for x in range(0, width, hSpacing) ])
+            # and render it
+            yield f'    <path class="vgrid-major" d="{vgrid}" />'
 
         # print the coordinates of the grid intersections
         yield '<!-- grid intersections -->'
-        for line in range(0, height, 500):
-            for sample in range(0, width, 500):
+        for line in range(0, height, vSpacing):
+            for sample in range(0, width, hSpacing):
                 yield f'<text class="grid"'
                 yield f'  y="{line}" x="{sample}" '
                 yield f'  >'
                 yield f'(line={line}, sample={sample})'
                 yield f'</text>'
 
-        # now, go through all the entries in the product
-        for pid, dx, dy in gamma.layout:
-            # get the value of {gamma}
-            cor = gamma[pid, dx, dy]
-            # my color
-            color = colormaps[pid].color(cor)
-            # get the secondary pixel that corresponds to this {pid}
-            spot = map[1][pid]
-            # shift to get my center
-            line = spot[0] + 7*dx
-            sample = spot[1] + 7*dy
-            yield f'    <rect class="gamma_value"'
-            yield f'      x="{sample}" y="{line}"'
-            yield f'      width="{5}" height="{5}" rx="1" ry="1"'
-            yield f'      fill="{color}"'
-            yield f'      >'
-            yield f'      <title class="gamma_detail">'
-            yield f'pos: ({spot[0] + dx}, {spot[1] + dy})'
-            yield f'shift: ({dx}, {dy})'
-            yield f'gamma: {cor:.2g}'
-            yield f'      </title>'
-            yield f'    </rect>'
-
-        # close up the wrapper
-        yield '  </svg>'
-        yield '</div>'
         # all done
         return
 
@@ -408,7 +536,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         # the page header
         yield from self.header(title=title)
         # draw the frame
-        yield from content()
+        yield from content
         # the page footer
         yield from self.footer()
         # close up
@@ -473,112 +601,11 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return
 
 
-    def legend(self, min, max):
-        """
-        Generate the legend
-        """
-        yield f'<!-- the legend -->'
-        yield f'<svg class="gamma_legend" version="1.1"'
-        yield  '     width="70px" height="350px"'
-        yield  '     xmlns="http://www.w3.org/2000/svg">'
-
-        # the length scale in pixels
-        λ = 10
-        # set the margin
-        margin = 5
-        # get the bins
-        bins = self.bins
-        # the cursor
-        cursor = [margin, margin]
-
-        # make a grid
-        g = GeometricGrid(min=min, max=max, bins=bins, scale=2)
-        # and a color map that rides on this grid
-        c = ColorMap(g)
-
-        # draw the top tick mark
-        yield from self.tickmark(cursor)
-        # and its value
-        yield from self.tickvalue(cursor, value="max")
-
-        values = ["0.00"] + [""]*(bins-1) + ["max"]
-
-        bin = bins - 1
-        # now loop to get the rest
-        while bin >= 0:
-            # get the scaling factor for this bin
-            scale = g.powers[bin]
-            # compute the height of the tile
-            height = λ * scale
-            # get the tick mark value
-            tick = g.ticks[bin]
-            # compute the color
-            color = c.rgb(bin)
-            # make a tile
-            yield from self.legendTile(cursor=cursor, height=height, color=color)
-            # draw the tick mark
-            yield from self.tickmark(cursor)
-            # and its value
-            yield from self.tickvalue(cursor, value=values[bin])
-            # update the counter
-            bin -= 1
-
-        # close up the wrapper
-        yield "      </svg>"
-        # all done
-        return
-
-
-    def legendTile(self, cursor, height, color):
-        """
-        Make a legend tile
-        """
-        # make a rounded rectangle
-        yield f'<rect class="legend_tile"'
-        yield f'    x="{cursor[0]}" y="{cursor[1]}"'
-        yield f'    width="20" height="{height}"'
-        yield f'    rx="1" ry="1"'
-        yield f'    fill="{color}"'
-        yield f'  />'
-
-        # move the cursor
-        cursor[1] += height
-
-        # all done
-        return
-
-
-    def tickmark(self, cursor):
-        # move the cursor
-        cursor[1] += 1
-
-        # make a line
-        yield f'<path class="legend_tick"'
-        yield f'  d="M {cursor[0]-1} {cursor[1]} h 30"'
-        yield f'  />'
-
-        # move the cursor
-        cursor[1] += 1
-
-        # all done
-        return
-
-
-    def tickvalue(self, cursor, value):
-        # start the tag
-        yield f'<text class="legend_value"'
-        yield f'  x="{cursor[0]+35}" y="{cursor[1]+1}"'
-        yield f'  >'
-        # place the value
-        yield value
-        # close the tag
-        yield f'</text>'
-
-
 class GeometricGrid:
     """
     Underflow + N bins + overflow
     """
+
 
     def bin(self, value):
         """
@@ -655,7 +682,7 @@ class ColorMap:
         """
         Ask the grid for the bin, then lookup the color
         """
-        # exactly that...
+        # exactly that
         return self.rgb(self.grid.bin(value=value))
 
 
@@ -679,6 +706,7 @@ class ColorMap:
         return f'rgb({int(100*r)}%, {int(100*g)}%, {int(100*b)}%)'
 
 
+    # metamethods
     def __init__(self, grid, start=start, end=end, **kwds):
         # chain up
         super().__init__(**kwds)
@@ -693,6 +721,164 @@ class ColorMap:
         # assign a color to each bin by biasing a gradient with the width of the grid bins
         self.colors = [ [ s + (e-s)*t for s,e in zip(start, end)] for t in ticks]
 
+        # all done
+        return
+
+
+class Legend:
+    """
+    An object that can render a legend
+    """
+
+
+    # public state
+    # sizes in pixels
+    λ = 20, 15        # atomic entry size
+    pad = 5,5         # my padding
+    ticks = 30, 1     # my tick marks
+    valueWidth = 4    # the width of a legend label
+    fontSize = 10     # the size of the font used to render the tick values
+
+    @property
+    def box(self):
+        """
+        Compute my bounding box
+        """
+        # get my grid
+        g = self.colormap.grid
+        # my stretch size is
+        height = (
+            # my top pad
+            self.pad[1] +
+            # my entry height multiplied by its replication factor
+            self.λ[1] * sum(g.powers) +
+            # the space taken by the tickmarks
+            3 * self.ticks[1] * len(g.ticks) +
+            # my bottom pad
+            self.pad[1]
+            )
+        # my fixed size
+        width = (
+            # my left pad
+            self.pad[0] +
+            # my tick marks are longer than the tiles :)
+            self.ticks[0] - self.ticks[1] +
+            # another margin
+            self.pad[1] +
+            # the width of my value formatting
+            self.valueWidth * self.fontSize +
+            # my right pad
+            self.pad[0]
+            )
+
+        # all done
+        return width, height
+
+
+    # interface
+    def render(self):
+        """
+        Render me
+        """
+        # get mey geometry
+        λ = self.λ
+        pad = self.pad
+        ticks = self.ticks
+
+        # get my color map
+        map = self.colormap
+        # and its grid
+        g = map.grid
+        # ask the grid for the number of bins
+        bins = g.bins
+
+        # compute my size
+        width, height = self.box
+
+        # initialize the cursor; this is the position of the first tick mark
+        cursor = [pad[0], height-pad[1]]
+
+        # go through the bins
+        for bin in range(bins):
+            # make the tick mark
+            yield from self.tickmark(cursor=cursor)
+            # render the tick value
+            yield from self.tickvalue(cursor=cursor, value=f"{g.ticks[bin]:4.2f}")
+            # move the cursor to the UL corner of the til
+            cursor[1] -= 3*self.ticks[1] + λ[1] * g.powers[bin]
+
+            # compute the height of this tile
+            height = λ[1] * g.powers[bin]
+            # get its color
+            color = map.rgb(bin=bin)
+            # render the tile
+            yield from self.tile(cursor=cursor, height=height, color=color)
+
+        # make the last tick mark
+        yield from self.tickmark(cursor=cursor)
+        # render the tick value
+        yield from self.tickvalue(cursor=cursor, value=f"{g.ticks[bins]:4.2f}")
+
+        # all done
+        return
+
+
+    # metamethods
+    def __init__(self, colormap, λ=λ, pad=pad, **kwds):
+        # chain up
+        super().__init__(**kwds)
+
+        # save the colormap
+        self.colormap = colormap
+        # and my geometry
+        self.λ = λ
+        self.pad = pad
+
+        # all done
+        return
+
+
+    # implementation details
+    def tile(self, cursor, height, color):
+        """
+        Render a bin
+        """
+        # make a rounded rectangle
+        yield f'<rect class="legend_tile"'
+        yield f'    x="{cursor[0]}" y="{cursor[1]}"'
+        yield f'    width="{self.λ[0]}" height="{height}"'
+        yield f'    rx="1" ry="1"'
+        yield f'    fill="{color}"'
+        yield f'  />'
+
+        # all done
+        return
+
+
+    def tickmark(self, cursor):
+        """
+        Render a tick mark
+        """
+        # make a line
+        yield f'<path class="legend_tick"'
+        yield f'  d="M {cursor[0]-self.ticks[1]} {cursor[1]-self.ticks[1]} h {self.ticks[0]}"'
+        yield f'  />'
+        # all done
+        return
+
+
+    def tickvalue(self, cursor, value):
+        """
+        Render the value associated with a tick
+        """
+        # open the text tag
+        yield f'<text class="legend_value"'
+        yield f'  x="{cursor[0]+self.ticks[0]+self.pad[1]}" y="{cursor[1]+2}"'
+        yield f'  >'
+        # place the value
+        yield value
+        # close the tag
+        yield f'</text>'
         # all done
         return
 
