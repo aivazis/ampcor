@@ -5,9 +5,10 @@
 # (c) 1998-2020 all rights reserved
 #
 
-
 # ampcor has a python package
 ampcor.packages := ampcor.pkg
+# and a ux bundle
+ampcor.webpack := ampcor.ux
 
 # other assets
 # {libampcor} and its bindings
