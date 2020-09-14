@@ -90,12 +90,18 @@ class UX:
         return server.documents.File(uri=uri, server=server, application=plexus)
 
 
+    def favicon(self, plexus, server, request, **kwds):
+        """
+        The client requested the app icon
+        """
+        # we don't have one
+        return server.responses.NotFound(server=server)
+
+
     def root(self, plexus, server, request, **kwds):
         """
         The client requested the root document
         """
-        # let me know
-        plexus.info.log("serving the root document")
         # form the uri
         uri = "/ux/{0.pyre_namespace}.html".format(plexus)
         # open the document and serve it
@@ -107,6 +113,7 @@ class UX:
         r"/(?P<version>query/meta/version)",
         r"/(?P<stop>action/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
+        r"/(?P<favicon>favicon.ico)",
         r"/(?P<root>.*)",
         ]))
 
