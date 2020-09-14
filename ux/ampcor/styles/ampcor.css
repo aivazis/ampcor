@@ -4,6 +4,42 @@
  * (c) 1998-2020 all rights reserved
  */
 
+/* the anchor for the react content */
+#ampcor {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* placeholder while the react components load*/
+div#placeholder {
+    color: #f37f19;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    display: flex;
+    flex-direction: column;
+}
+
+svg#placeholder_logo {
+    margin: 1.0em auto;
+    width: 216px;
+    height: 301px;
+
+    animation-name: fadeInOut;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+}
+
+p#placeholder_text {
+    font-family: "courier new";
+    font-size: 120%;
+    text-align: center;
+}
+
 * {
     margin: 0.0em;
     padding: 0.0em;
@@ -30,22 +66,6 @@ body {
     background-color: #1b1b1b;
 }
 
-/* the anchor for the react content */
-div#ampcor {
-    width: 100%;
-    height: 100%;
-}
-
-
-/* placeholder while the react components load*/
-p#placeholder {
-    color: #fff;
-
-    animation-name: fadeInOut;
-    animation-duration: 3s;
-    animation-iteration-count: infinite;
-}
-
 a:link {
     color: #666;
     text-decoration: none;
@@ -67,13 +87,23 @@ a:active {
 }
 
 /* animations */
-@keyframes fadeOut {
+@keyframes fadeIn {
     from {
         opacity: 0.0;
     }
 
     to {
         opacity: 1.0;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1.0;
+    }
+
+    to {
+        opacity: 0.0;
     }
 }
 
