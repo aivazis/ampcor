@@ -43,6 +43,9 @@ module.exports = {
     resolve: {
         modules: [sourceDir, "node_modules"],
         extensions: ['.js', '.jsx'],
+        alias: {
+            '~': sourceDir,
+        },
     },
 
     plugins: [

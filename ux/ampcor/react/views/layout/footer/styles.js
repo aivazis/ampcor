@@ -7,7 +7,7 @@
 
 
 // get colors
-import { theme } from 'palette'
+import { theme } from '~/palette'
 
 
 // publish
