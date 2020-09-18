@@ -13,7 +13,7 @@ import { theme } from '~/palette'
 // publish
 export default {
 
-    container: {
+    box: {
     },
 
     shape: {

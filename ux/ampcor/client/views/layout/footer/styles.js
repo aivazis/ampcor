@@ -51,7 +51,7 @@ export default {
 
     logo: {
         // the container
-        container: {
+        box: {
             // box
             flex: "none",
             width: "35px",

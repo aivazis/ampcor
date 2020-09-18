@@ -29,11 +29,10 @@ Z`
 // the bar at the bottom of every page
 const widget = ({style, ...xforms}) => (
     // the container
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
-         style={{...base.container, ...style.container}}>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" style={{...base.box, ...style.box}}>
         {/* the shape */}
-        <g {...base.shape} {...style.shape}>
-            <path {...xforms} d={flame}/>
+        <g {...base.shape} {...style.shape} {...xforms}>
+            <path d={flame}/>
         </g>
     </svg>
 )
