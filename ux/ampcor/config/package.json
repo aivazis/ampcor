@@ -7,7 +7,8 @@
     "author": "Michael Aivazis <michael.aivazis@para-sim.com>",
     "scripts": {
         "build": "webpack --mode development",
-        "dev": "webpack --mode development --watch"
+        "dev": "webpack --mode development",
+        "relay": "relay-compiler --src ./client --schema ./schema/ampcor.gql"
     },
     "devDependencies": {
         "@babel/core": "latest",
@@ -15,14 +16,18 @@
         "@babel/preset-react": "latest",
         "@babel/plugin-proposal-export-default-from": "latest",
         "babel-loader": "latest",
+        "babel-plugin-relay": "latest",
         "html-webpack-plugin": "latest",
         "webpack": "latest",
         "webpack-cli": "latest"
     },
     "dependencies": {
+        "graphql": "latest",
         "react": "latest",
         "react-dom": "latest",
+        "react-relay": "latest",
         "react-router": "latest",
-        "react-router-dom": "latest"
+        "react-router-dom": "latest",
+        "relay-compiler": "latest"
     }
 }

@@ -11,6 +11,7 @@
 
 
     "plugins": [
+        "relay",
         "@babel/plugin-proposal-export-default-from",
     ],
 }
