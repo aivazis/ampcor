@@ -11,7 +11,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 // local geography
 const rootDir = __dirname
-const sourceDir = path.join(rootDir, 'react')
+const sourceDir = path.join(rootDir, 'client')
 const buildDir = path.join(rootDir, 'build')
 
 
