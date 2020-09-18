@@ -48,23 +48,15 @@ export default {
     kill: {
         // the link
         action: {
-            margin: "auto 0em auto auto",
-        },
-
-        // the rendering box
-        box: {
-            // size
-            width: "1em",
-            height: "1em",
+            // placement
             margin: "auto 0.5em auto auto",
         },
 
+        // the ontainer
+        box: {},
+
         // rendering
-        path: {
-            stroke: "hsl(28deg, 90%, 53%)",
-            stroke: "hsl(0deg, 90%, 53%)",
-            strokeWidth: "10px",
-        },
+        path: {},
     },
 
 }

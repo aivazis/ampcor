@@ -9,6 +9,7 @@
 // externals
 import React from 'react'
 import Link from 'react-router-dom'
+import Kill from '~/widgets/kill'
 // locals
 import styles from './styles'
 
@@ -23,13 +24,7 @@ const header = () => (
         </div>
 
         {/* the kill button */}
-        <a style={styles.kill.action} href="/actions/meta/stop">
-            <svg style={styles.kill.box} version="1.1" xmlns="http://www.w3.org/2000/svg">
-                <g style={styles.kill.path} transform="scale(0.1 0.1)">
-                    <path d="M 0 0 L 100 100 M 0 100 L 100 0" />
-                </g>
-            </svg>
-        </a>
+        <Kill style={styles.kill} transform="scale(0.1 0.1)"/>
 
     </header>
 )
