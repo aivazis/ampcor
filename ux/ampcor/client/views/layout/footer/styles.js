@@ -31,6 +31,17 @@ export default {
         flexDirection: "row",
     },
 
+    // the app version
+    version: {
+        // placement
+        margin: "auto auto 0.0em 1.0em",
+        padding: "0.0 0.0em",
+        // styling
+        color: theme.page.appversion,
+        textAlign: "left",
+    },
+
+    // the box with copyright note
     colophon: {
         margin: "auto 2.0em 0.0em auto",
         padding: "0.0 0.0em",
@@ -49,6 +60,7 @@ export default {
         textTransform: "uppercase",
     },
 
+    // the pyre logo
     logo: {
         // the container
         box: {
@@ -64,6 +76,12 @@ export default {
         shape: {
             fillOpacity: "0.5",
         },
+    },
+
+    // error messages
+    error: {
+        // styling
+        color: theme.journal.error,
     },
 }
 
