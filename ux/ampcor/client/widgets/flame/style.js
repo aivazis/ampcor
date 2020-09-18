@@ -1,0 +1,26 @@
+// -*- web -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2020 all rights reserved
+//
+
+
+// get colors
+import { theme } from '~/palette'
+
+
+// publish
+export default {
+
+    container: {
+    },
+
+    shape: {
+        stroke: "none",
+        fill: "hsl(28deg, 90%, 55%)",
+    },
+}
+
+
+// end of file

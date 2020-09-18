@@ -50,12 +50,20 @@ export default {
     },
 
     logo: {
-        // my box
-        flex: "none",
-        width: "35px",
-        height: "45px",
+        // the container
+        container: {
+            // box
+            flex: "none",
+            width: "35px",
+            height: "45px",
+            // placement
+            margin: "0.0em 0.5em 0.0em 0.0em",
+        },
 
-        margin: "0.0em 0.5em 0.0em 0.0em",
+        // the actual shape
+        shape: {
+            fillOpacity: "0.5",
+        },
     },
 }
 
