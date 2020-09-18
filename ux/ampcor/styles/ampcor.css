@@ -51,8 +51,7 @@ html {
 }
 
 body {
-    font-family: "HelveticaNeue-Light",
-                 "century gothic", "corbel", "geneva", "arial", "helvetica", sans-serif;
+    font-family: "geneva", "arial", "helvetica", sans-serif;
     font-size: 20px;
     font-weight: lighter;
 
