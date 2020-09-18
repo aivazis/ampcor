@@ -53,15 +53,14 @@ html {
 body {
     font-family: "geneva", "arial", "helvetica", sans-serif;
     font-size: 20px;
-    font-weight: lighter;
+    color: #666;
 
+    /* placement */
     height: 100%;
-    width: 980px;   /* the width of an iPad */
-    width: 49em;    /* 49em * 20 px/em = 980 px */
-    margin: 0.25em auto;
+    width: 100%;
+    margin: 0em;;
     padding: 0em;
 
-    color: #666;
     background-color: #1b1b1b;
 }
 

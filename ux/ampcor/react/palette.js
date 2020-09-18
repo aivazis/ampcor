@@ -30,7 +30,7 @@ const wheel = {
 const dark = {
     // the page
     page: {
-        background: "hsl(0deg, 0%, 90%)",
+        background: "hsl(0deg, 0%, 7%)",
     },
 
     // the header

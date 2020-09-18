@@ -17,17 +17,10 @@ export default {
         // scale 'em" down
         fontSize: "50%",
 
-        // position at the top of the page, unconditionally
-        position: "fixed",
-        top: "0",
-        left: "0",
-        right: "0",
-        zIndex: "9999",
-
         // my box
         flex: "none",
         height: "45px",
-        margin: "1.0em",
+        margin: "1.0em 1.0em auto 1.0em",
         padding: "0.5em",
 
         // styling
@@ -42,7 +35,7 @@ export default {
     // the application title box
     app: {
         // placement
-        margin: "auto auto auto 0em",
+        margin: "auto auto auto 0.5em",
 
         // styling
         fontFamily: "\"georgia\", \"times new roman\", \"serif\"",
@@ -63,6 +56,7 @@ export default {
             // size
             width: "1em",
             height: "1em",
+            margin: "auto 0.5em auto auto",
         },
 
         // rendering

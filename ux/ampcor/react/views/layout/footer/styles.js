@@ -17,16 +17,9 @@ export default {
         // scale 'em" down
         fontSize: "50%",
 
-        // position at the bottom of the page, unconditonally
-        position: "fixed",
-        bottom: "0",
-        left: "0",
-        right: "0",
-        zIndex: "9999",
-
         // my box
         flex: "none",
-        margin: "1.0em",
+        margin: "auto 1.0em 1.0em 1.0em",
         padding: "0.5em",
 
         // styling
@@ -62,7 +55,7 @@ export default {
         width: "35px",
         height: "45px",
 
-        margin: "0.0em 0.0em 0.0em 0.0em",
+        margin: "0.0em 0.5em 0.0em 0.0em",
     },
 }
 
