@@ -111,7 +111,7 @@ class UX:
     # private data
     regex = re.compile("|".join([
         r"/(?P<version>query/meta/version)",
-        r"/(?P<stop>action/meta/stop)",
+        r"/(?P<stop>actions/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
         r"/(?P<favicon>favicon.ico)",
         r"/(?P<root>.*)",
