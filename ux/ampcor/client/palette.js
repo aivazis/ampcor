@@ -31,6 +31,7 @@ const dark = {
     // the page
     page: {
         background: "hsl(0deg, 0%, 7%)",
+        appversion: "hsl(0deg, 0%, 25%)",
     },
 
     // the header
@@ -56,6 +57,11 @@ const dark = {
     widgets: {
         background: "hsl(0deg, 0%, 7%)",
     },
+
+    // journal colors
+    journal: {
+        error: "hsl(0deg, 90%, 50%)",
+    }
 }
 
 
