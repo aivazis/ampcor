@@ -8,21 +8,38 @@
 
 // externals
 import React from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 
 
 // locals
+// styles
 import styles from './styles'
+// common to all pages
 import Header from './header'
 import Footer from './footer'
+// landing pages
+import Flow from '../flow'
+import Gamma from '../gamma'
+import Plan from '../plan'
 
 
 // the layout
 const Layout = () => (
-    <div style={styles.layout}>
-        <Header/>
-        <Footer/>
-    </div>
+    <Router>
+        <div style={styles.layout}>
+            <Header/>
+            <Switch>
+                {/* the top level views */}
+                <Route path="/flow" component={Flow}/>
+                <Route path="/gamma" component={Gamma}/>
+                <Route path="/plan" component={Plan}/>
+
+                {/* default landing spot */}
+                <Route path="/" component={Flow}/>
+            </Switch>
+            <Footer/>
+        </div>
+    </Router>
 )
 
 
