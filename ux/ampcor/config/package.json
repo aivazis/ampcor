@@ -28,6 +28,7 @@
         "react-relay": "latest",
         "react-router": "latest",
         "react-router-dom": "latest",
+        "regenerator-runtime": "latest",
         "relay-compiler": "latest"
     }
 }
