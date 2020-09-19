@@ -7,6 +7,7 @@
 
 
 // externals
+import 'regenerator-runtime'
 import React from 'react'
 import { graphql, QueryRenderer } from 'react-relay'
 import { environment } from '~/context'
@@ -56,12 +57,12 @@ const footer = () => (
                             </div>
                         )
                     }
-                    // othetwise, unpack the version
+                    // otherwise, unpack the version
                     const {major, minor, micro, revision} = props.version
                     // and render it
                     return (
                         <div style={styles.version}>
-                                   {major}.{minor}.{micor} rev {revision}
+                                   ampcor server {major}.{minor}.{micro} rev {revision}
                         </div>
                     )
                 }}

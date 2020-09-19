@@ -39,8 +39,9 @@ const fetchQuery = (operation, variables,) =>
 const environment = new Environment({
     // set up a network
     network: Network.create(fetchQuery),
+    // and a store
     store: new Store(new RecordSource()),
-});
+})
 
 
 // publish
