@@ -13,14 +13,14 @@ import { theme } from '~/palette'
 // publish
 export default {
     // the overall container
-    footer : {
+    footer: {
         // scale 'em" down
         fontSize: "50%",
 
         // my box
         flex: "none",
-        margin: "auto 1.0em 1.0em 1.0em",
-        padding: "0.5em",
+        margin: "auto 1.0em 0.25em 1.0em",
+        padding: "0.25em",
 
         // styling
         backgroundColor: theme.colophon.background,

@@ -20,8 +20,8 @@ export default {
         // my box
         flex: "none",
         height: "45px",
-        margin: "1.0em 1.0em auto 1.0em",
-        padding: "0.5em",
+        margin: "0.25em 1.0em auto 1.0em",
+        padding: "0.25em",
 
         // styling
         backgroundColor: theme.banner.background,
