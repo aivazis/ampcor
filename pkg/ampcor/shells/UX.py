@@ -56,6 +56,27 @@ class UX:
 
 
     # handlers
+    def graphql(self, plexus, server, request, **kwds):
+        """
+        Handle a {graphql} request
+        """
+        # just return the version, for now
+        meta = ampcor.meta
+        # build the response
+        doc = {
+            "data": {
+                "version": {
+                    "major": meta.major,
+                    "minor": meta.minor,
+                    "micro": meta.micro,
+                    "revision": meta.revision,
+                }
+            }
+        }
+        # and hand it to the client as a {json} document
+        return server.documents.JSON(server=server, value=doc)
+
+
     def version(self, plexus, server, **kwds):
         """
         The client requested the version of the server
@@ -110,6 +131,7 @@ class UX:
 
     # private data
     regex = re.compile("|".join([
+        r"/(?P<graphql>graphql)",
         r"/(?P<version>query/meta/version)",
         r"/(?P<stop>actions/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
