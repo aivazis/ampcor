@@ -20,6 +20,7 @@ import Footer from './footer'
 // landing pages
 import Flow from '../flow'
 import Gamma from '../gamma'
+import Offsets from '../offsets'
 import Plan from '../plan'
 
 
@@ -32,6 +33,7 @@ const Layout = () => (
                 {/* the top level views */}
                 <Route path="/flow" component={Flow}/>
                 <Route path="/gamma" component={Gamma}/>
+                <Route path="/offsets" component={Offsets}/>
                 <Route path="/plan" component={Plan}/>
 
                 {/* default landing spot */}
