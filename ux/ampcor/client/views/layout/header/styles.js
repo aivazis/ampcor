@@ -53,7 +53,7 @@ export default {
         // the link
         action: {
             // placement: stick to the right edge
-            margin: "auto 0.5em auto 0.5em",
+            margin: "auto 0.5em 1.0em 0.5em",
         },
         // the ontainer
         box: {},
