@@ -3,11 +3,10 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // get colors
-import { theme } from '~/palette'
+import { wheel, theme } from '~/palette'
 
 
 // publish
@@ -31,14 +30,33 @@ export default {
         flexDirection: "row",
     },
 
-    // the app version
-    version: {
-        // placement
-        margin: "auto auto 0.0em 1.0em",
-        padding: "0.0 0.0em",
-        // styling
-        color: theme.page.appversion,
-        textAlign: "left",
+    // the server info
+    server: {
+        box: {
+            // placement
+            margin: "auto auto 0.0em 1.0em",
+            padding: "0.0em",
+        },
+
+        text: {
+            // font
+            fontFamily: "inconsolata",
+            // styling
+            color: theme.page.appversion,
+            textAlign: "left",
+        },
+
+        status: {
+            // when everything is ok
+            good: {
+                color: wheel.pyre.green,
+                opacity: "0.5",
+            },
+            // when there is an error retrieving the state of the server
+            error: {
+                color: theme.journal.error,
+            },
+        },
     },
 
     // the box with copyright note
