@@ -9,20 +9,34 @@
 // a color wheel
 const wheel = {
     // greys; the names are borrowed from {omni graffle}
-    obsidian: "#000",
-    basalt: "#333333",
-    gabro: "#424242",
-    steel: "#666",
-    shale: "#686868",
-    flint: "#8a8a8a",
-    granite: "#9a9a9a",
-    aluminum: "#a5a5a5",
-    concrete: "#b8b8b8",
-    soapstone: "#d6d6d6",
-    cement: "#eee",
-    marble: "#f1f1f1",
-    flour: "#fafafa",
-    chalk: "#ffffff",
+    gray: {
+        obsidian: "#000",
+        basalt: "#333333",
+        gabro: "#424242",
+        steel: "#666",
+        shale: "#686868",
+        flint: "#8a8a8a",
+        granite: "#9a9a9a",
+        aluminum: "#a5a5a5",
+        concrete: "#b8b8b8",
+        soapstone: "#d6d6d6",
+        cement: "#eee",
+        marble: "#f1f1f1",
+        flour: "#fafafa",
+        chalk: "#ffffff",
+    },
+
+    // pyre colors
+    pyre: {
+        blue: "hsl(203deg, 77%, 60%)",
+        green: "hsl(63deg, 40%, 50%)",
+        orange: "hsl(31deg, 80%, 58%)",
+    },
+
+    // journal colors
+    journal: {
+        error: "hsl(0deg, 90%, 50%)",
+    }
 }
 
 
@@ -66,9 +80,7 @@ const dark = {
     },
 
     // journal colors
-    journal: {
-        error: "hsl(0deg, 90%, 50%)",
-    }
+    journal: wheel.journal,
 }
 
 
