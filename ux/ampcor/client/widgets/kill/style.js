@@ -3,7 +3,6 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // get colors
@@ -14,7 +13,8 @@ import { theme } from '~/palette'
 export default {
     // the link
     action: {
-        margin: "auto 0em auto auto",
+        // size
+        flex: "none",
     },
 
     // the container
