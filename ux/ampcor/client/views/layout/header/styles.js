@@ -7,7 +7,7 @@
 
 
 // get the colors
-import { theme } from '~/palette'
+import { wheel, theme } from '~/palette'
 
 
 // publish
@@ -34,13 +34,17 @@ export default {
 
     // the application title box
     app: {
-        // placement
-        margin: "auto auto auto 0.5em",
-
-        // styling
-        fontFamily: "\"georgia\", \"times new roman\", \"serif\"",
+        // fornts
+        fontFamily: "georgia, \"times new roman\", serif",
         fontStyle: "italic",
         fontSize: "200%",
+
+        // placement
+        // don't let me gorw
+        flex: "none",
+        margin: "auto 0.5em 0.5em 0.5em",
+
+        // styling
         color: theme.banner.name,
     },
 
@@ -48,17 +52,50 @@ export default {
     kill: {
         // the link
         action: {
-            // placement
-            margin: "auto 0.5em auto auto",
+            // placement: stick to the right edge
+            margin: "auto 0.5em auto 0.5em",
         },
-
         // the ontainer
         box: {},
-
         // rendering
         path: {},
     },
 
+    // navigation
+    nav: {
+        // placement
+        margin: "auto auto 1.1em 0.5em",
+
+        // for my children
+        display: "flex",
+        flexDirection: "row",
+
+        link: {
+            // placement
+            padding: "0.0em 1.5em 0.0em 1.5em",
+            color: theme.banner.nav.link,
+            // borderRight: `1px solid ${theme.banner.nav.separator}`,
+        },
+
+        // the link to the current page get decorated slightly differently
+        current: {
+            color: theme.banner.nav.current,
+            borderBottom: `1px dotted ${theme.banner.nav.current}`,
+        },
+
+        last: {
+            // borderRight: "none",
+        },
+
+        name: {
+            // fonts
+            fontFamily: "menlo, \"courier new\", monospace",
+            fontSize: "120%",
+            whiteSpace: "nowrap",
+            textTransform: "lowercase",
+        },
+
+    },
 }
 
 

@@ -41,6 +41,13 @@ const dark = {
         separator: "hsl(0deg, 0%, 15%)",
         // contents
         name: "hsl(28deg, 90%, 55%)",
+        // menu
+        nav: {
+            link: "hsl(28deg, 20%, 50%)",
+            current: "hsl(28deg, 20%, 70%)",
+            inactive: "hsl(28deg, 20%, 20%)",
+            separator: "hsl(0deg, 0%, 35%)",
+        },
     },
 
     // the footer
