@@ -64,7 +64,7 @@ export default {
     // navigation
     nav: {
         // placement
-        margin: "auto auto 1.1em 0.5em",
+        margin: "auto auto 1.0em 0.5em",
 
         // for my children
         display: "flex",
@@ -89,8 +89,8 @@ export default {
 
         name: {
             // fonts
-            fontFamily: "menlo, \"courier new\", monospace",
-            fontSize: "120%",
+            fontFamily: "inconsolata",
+            fontSize: "140%",
             whiteSpace: "nowrap",
             textTransform: "lowercase",
         },
