@@ -9,14 +9,19 @@
 // externals
 import React from 'react'
 import ReactDom from 'react-dom'
+import { Provider } from 'react-redux'
 
 
+// my redux store
+import store from './store'
 // my root view
 import { Layout } from './views'
 
 // render
 ReactDom.render((
-    <Layout/>
+    <Provider store={store}>
+        <Layout/>
+    </Provider>
 ), document.querySelector('#ampcor'))
 
 
