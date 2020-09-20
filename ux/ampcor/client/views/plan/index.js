@@ -8,21 +8,39 @@
 
 // externals
 import React from 'react'
+import { connect } from 'react-redux'
 // locals
 import styles from './styles'
 
 
 // the area
-const plan = () => (
-    // the container
-    <section style={styles.plan}>
-        <div style={styles.placeholder}>the plan</div>
-    </section>
-)
+const plan = (props) => {
+    // notify the store about the page flip
+    props.flipPage('plan', 'the correlation workplan')
+    // build the container and return it
+    return (
+        // the container
+        <section style={styles.plan}>
+            <div style={styles.placeholder}>the plan</div>
+        </section>
+    )
+}
 
 
-// publish
-export default plan
+// store access
+const store = null
+
+// actions
+import { setCurrentPage } from '~/actions/navigation'
+// dispatch
+const actions = (dispatch) => ({
+    // navigational
+    flipPage: (page, title) => dispatch(setCurrentPage(page, title)),
+})
+
+
+// connect to the state store and publish
+export default connect(store, actions)(plan)
 
 
 // end of file
