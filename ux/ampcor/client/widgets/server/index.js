@@ -32,9 +32,9 @@ const server = ({style}) => {
     // merge the overall styles
     const base = {...style.box, ...styles.box, ...style.text, ...styles.text}
     // and the state colorization
-    const good = {...style.status.good, ...styles.status.good}
-    const error = {...style.status.error, ...styles.status.error}
-    const unknown = {...style.status.unknown, ...styles.status.unknown}
+    const statusGood = {...style.status.good, ...styles.status.good}
+    const statusError = {...style.status.error, ...styles.status.error}
+    const statusUnknown = {...style.status.unknown, ...styles.status.unknown}
 
     // build the componnent and return it
     return (
@@ -52,7 +52,7 @@ const server = ({style}) => {
                     if (error) {
                         // say so
                         return (
-                            <span style={{...base, ...error}}>
+                            <span style={{...base, ...statusError}}>
                                 could not get server version information
                             </span>
                         )
@@ -61,7 +61,7 @@ const server = ({style}) => {
                     if (!props) {
                         // the query hasn't completed yet
                         return (
-                            <div style={{...base, ...unknown}}>
+                            <div style={{...base, ...statusUnknown}}>
                                 retrieving version information...
                             </div>
                         )
@@ -70,7 +70,7 @@ const server = ({style}) => {
                     const {major, minor, micro, revision} = props.version
                     // and render it
                     return (
-                        <div style={{...base, ...good}} title={title} >
+                        <div style={{...base, ...statusGood}} title={title} >
                             ampcor server {major}.{minor}.{micro} rev {revision}
                         </div>
                     )
