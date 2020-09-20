@@ -77,20 +77,6 @@ class UX:
         return server.documents.JSON(server=server, value=doc)
 
 
-    def version(self, plexus, server, **kwds):
-        """
-        The client requested the version of the server
-        """
-        # get the package metadata
-        meta = ampcor.meta
-        # build a version tag
-        vtag = f"{meta.major}.{meta.minor}.{meta.micro} rev {meta.revision}"
-        # put it together
-        tag = f"{plexus.pyre_namespace} version {vtag}, built on {meta.date}"
-        # and hand it to the client
-        return server.documents.JSON(server=server, value=tag)
-
-
     def stop(self, plexus, **kwds):
         """
         The client is asking me to die
@@ -132,7 +118,6 @@ class UX:
     # private data
     regex = re.compile("|".join([
         r"/(?P<graphql>graphql)",
-        r"/(?P<version>query/meta/version)",
         r"/(?P<stop>actions/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
         r"/(?P<favicon>favicon.ico)",
