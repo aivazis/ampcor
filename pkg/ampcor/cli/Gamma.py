@@ -183,7 +183,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         Visualize the workplan
         """
         # prime my content
-        contnent = self.workplan()
+        content = self.workplan()
         # build the page
         page = self.page(title="the workplan", content=content)
 
