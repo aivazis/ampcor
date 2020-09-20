@@ -34,27 +34,32 @@ const header = ({page, title}) => {
             {/* the menu */}
             <nav style={styles.nav}>
                 <Link to="/flow" style={styles.nav.link}>
-                    <span style={decorate("flow")}>
+                    <span style={decorate("flow")}
+                          title="configure the ampcor workflow">
                         flow
                     </span>
                 </Link>
                 <Link to="/slc" style={styles.nav.link}>
-                    <span style={decorate("slc")}>
+                    <span style={decorate("slc")}
+                          title="display the input rasters">
                         slc
                     </span>
                 </Link>
                 <Link to="/offsets" style={styles.nav.link}>
-                    <span style={decorate('offsets')}>
+                    <span style={decorate('offsets')}
+                          title="visualize the estimated offsets">
                         offsets
                     </span>
                 </Link>
                 <Link to="/plan" style={styles.nav.link}>
-                    <span style={decorate('plan')} title="show the correlation plan" >
+                    <span style={decorate('plan')}
+                          title="show the correlation plan" >
                         plan
                     </span>
                 </Link>
                 <Link to="/gamma" style={{...styles.nav.link, ...styles.nav.last}}>
-                    <span style={decorate('gamma')}>
+                    <span style={decorate('gamma')}
+                          title="visualize the correlaton surface">
                         gamma
                     </span>
                 </Link>
