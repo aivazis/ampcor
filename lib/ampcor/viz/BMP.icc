@@ -1,0 +1,155 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_viz_BMP_icc)
+#error this file contains implementation details for ampcor::viz::BMP
+#else
+
+
+// metamethods
+ampcor::viz::BMP::
+BMP(long height, long width):
+    _width { width },
+    _height { height },
+    // lines are padded out to the nearest multiple of four bytes; so, the number of pad bytes
+    // at the end of every line is
+    _padBytesPerLine { (4 - (width*_pixelSz)%4) % 4 },
+    // compute the size of the payload
+    _payloadSz { _width * _height * _pixelSz + _height * _padBytesPerLine },
+    // and the total bitmap size is
+    _bitmapSz { _fileHeaderSz + _infoHeaderSz + _payloadSz }
+
+{}
+
+
+// interface
+// get the total size of the bitmap, in bytes
+auto
+ampcor::viz::BMP::
+bytes() const -> int
+{
+    return _bitmapSz;
+}
+
+
+template <class iteratorT>
+auto
+ampcor::viz::BMP::
+encode(iteratorT source) const -> buffer_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.viz.bmp.encode");
+
+    // allocate the buffer
+    auto data = new byte_type [_bitmapSz];
+
+    // start at the beginning
+    int cur = 0;
+    // the file header
+    // encode the file type
+    data[cur++] = 'B';
+    data[cur++] = 'M';
+    // encode the total file size in little endian
+    data[cur++] = _bitmapSz;
+    data[cur++] = _bitmapSz >> 8;
+    data[cur++] = _bitmapSz >> 16;
+    data[cur++] = _bitmapSz >> 24;
+    // write the reserved bytes
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // write the offset to the beginning of the payload
+    data[cur++] = _payloadOffset;
+    data[cur++] = _payloadOffset >> 8;
+    data[cur++] = _payloadOffset >> 16;
+    data[cur++] = _payloadOffset >> 24;
+
+    // the info header
+    // encode the info header size
+    data[cur++] = _infoHeaderSz;
+    data[cur++] = _infoHeaderSz >> 8;
+    data[cur++] = _infoHeaderSz >> 16;
+    data[cur++] = _infoHeaderSz >> 24;
+    // encode the width
+    data[cur++] = _width;
+    data[cur++] = _width >> 8;
+    data[cur++] = _width >> 16;
+    data[cur++] = _width >> 24;
+    // encode the height
+    data[cur++] = _height;
+    data[cur++] = _height >> 8;
+    data[cur++] = _height >> 16;
+    data[cur++] = _height >> 24;
+    // encode the number of bit planes
+    data[cur++] = 1;
+    data[cur++] = 1 >> 8;
+    // encode the number of bits per pixel
+    data[cur++] = 24;
+    data[cur++] = 24 >> 8;
+    // mark this as an uncompressed {BI_RGB} stream
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // encode the size of the payload; set to 0 for BI_RGB streams
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // the number of X pixels per meter; set to zero
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // the number of Y pixels per meter; set to zero
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // the number of colors used; set to zero
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    // the number of important colors; set to zero
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+    data[cur++] = 0;
+
+    // check that we are done with the header
+    assert(( cur == _payloadOffset ));
+
+    // get the data
+    for (auto row = 0; row < _height; ++row) {
+        for (auto col = 0; col < _width; ++col) {
+            // get the color triplet
+            auto [red, green, blue] = *source;
+            // write it in the file
+            data[cur++] = blue;
+            data[cur++] = green;
+            data[cur++] = red;
+            // point to the next one
+            ++source;
+        }
+        // done with this line; add the pad bytes
+        for (auto pad = 0; pad < _padBytesPerLine; ++pad) {
+            data[cur++] = 0;
+        }
+    }
+
+    // check that we made it to the end
+    assert(( cur == _bitmapSz ));
+
+    // all done
+    return buffer_type(data);
+}
+
+
+#endif
+
+// end of file
