@@ -13,11 +13,11 @@
 #include <ampcor/viz.h>
 
 
-// type aliase
+// type aliases
 using bmp_t = ampcor::viz::bmp_t;
 
 
-// generate a biitmap
+// generate a bitmap
 int main(int argc, char *argv[]) {
     // pick a height
     int height = 255;
