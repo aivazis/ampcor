@@ -13,7 +13,12 @@
 namespace ampcor::viz {
     // the microsoft bmp stream generator
     using bmp_t = BMP;
+
+    // the interpolators
+    template <class sourceT>
+    using uni1d_t = Uniform1D<sourceT>;
 }
+
 
 #endif
 

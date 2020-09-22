@@ -19,7 +19,11 @@
 #include "api.h"
 
 // local entities
+#include "kernels.h"
+// the micsrosoft BMP generator
 #include "BMP.h"
+// interpolators that map 1D data to color values
+#include "Uniform1D.h"
 
 
 # endif

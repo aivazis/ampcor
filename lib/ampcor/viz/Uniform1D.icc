@@ -1,0 +1,77 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_viz_Uniform1D_icc)
+#error this file contains implementation details for ampcor::viz::Uniform1D
+#else
+
+
+// metamethods
+template <class iteratorT>
+ampcor::viz::Uniform1D<iteratorT>::
+Uniform1D(source_reference source,
+          int bins,
+          double hue, double saturation,
+          double minBrightness, double maxBrightness,
+          double minData, double maxData) :
+    _bins { bins },
+    _hue { hue },
+    _saturation { saturation },
+    _minBrightness { minBrightness },
+    _maxBrightness { maxBrightness },
+    _scaleBrightness { (_maxBrightness - _minBrightness) / _bins },
+    _minData { minData },
+    _maxData { maxData },
+    _scaleData { (_maxData - _minData) / _bins },
+    _source { source }
+{}
+
+
+// interface
+template <class iteratorT>
+auto
+ampcor::viz::Uniform1D<iteratorT>::
+operator*() const -> rgb_type
+{
+    // get the value from the data source
+    auto value = *_source;
+
+    // on underflow or overflow
+    if ((value < _minData) || (value > _maxData)) {
+        // send black
+        return rgb_type { 0, 0, 0 };
+    }
+
+    // bin the value
+    int bin = (value - _minData) / _scaleData;
+    // compute the brightness
+    auto brightness = _minBrightness + bin * _scaleBrightness;
+
+    // wrap the conversion kernel
+    auto f = [this, brightness](int n) -> color_type {
+        return kernelHSBtoRGB(n, _hue, _saturation, brightness);
+    };
+
+    // build the rgb triplet and return it
+    return rgb_type { f(5), f(3), f(1) };
+}
+
+
+template <class iteratorT>
+auto
+ampcor::viz::Uniform1D<iteratorT>::
+operator++() -> void
+{
+    // make {_source} point to the next value
+    ++_source;
+    // all done
+    return;
+}
+
+
+#endif
+
+// end of file

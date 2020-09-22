@@ -8,9 +8,12 @@
 #if !defined(ampcor_viz_external_h)
 #define ampcor_viz_external_h
 
-// STL
+
+// externals
 #include <cassert>
-#include <array>
+#include <cmath>
+// STL
+#include <algorithm>
 #include <memory>
 
 // support
