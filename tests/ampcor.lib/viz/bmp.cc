@@ -17,9 +17,8 @@
 using bmp_t = ampcor::viz::bmp_t;
 
 
-// trivial driver
+// generate a biitmap
 int main(int argc, char *argv[]) {
-
     // pick a height
     int height = 255;
     // and a width
@@ -37,8 +36,11 @@ int main(int argc, char *argv[]) {
 
     // make a bitmap
     bmp_t bmp(height, width);
+
+    // point to the beginning of the data
+    auto start = data.begin();
     // encode
-    auto img = bmp.encode(data.begin());
+    auto img = bmp.encode(start);
 
     // open a file
     std::ofstream str("chip.bmp", std::ios::out | std::ios::binary);

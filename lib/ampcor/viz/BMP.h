@@ -9,11 +9,11 @@
 #define ampcor_viz_BMP_h
 
 
-// a grid with a payload that's a microsoft bitmap
+// a microsoft bitmap generator
 class ampcor::viz::BMP {
     // types
 public:
-    // just to make sure we are all om the same page
+    // just to make sure we are all on the same page
     using byte_type = char;
     // individual color values are one byte wide
     using color_type = byte_type;
@@ -34,7 +34,7 @@ public:
     inline auto bytes() const -> int;
 
     template <class iteratorT>
-    inline auto encode(iteratorT source) const -> buffer_type;
+    inline auto encode(iteratorT & source) const -> buffer_type;
 
     // implementation details: data
 private:

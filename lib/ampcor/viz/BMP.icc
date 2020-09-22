@@ -38,11 +38,8 @@ bytes() const -> int
 template <class iteratorT>
 auto
 ampcor::viz::BMP::
-encode(iteratorT source) const -> buffer_type
+encode(iteratorT & source) const -> buffer_type
 {
-    // make a channel
-    pyre::journal::info_t channel("ampcor.viz.bmp.encode");
-
     // allocate the buffer
     auto data = new byte_type [_bitmapSz];
 
