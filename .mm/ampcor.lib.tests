@@ -24,7 +24,7 @@ tests.ampcor.lib.correlators.clean += \
 
 tests.ampcor.lib.dom.clean += slc.dat offsets.dat
 
-tests.ampcor.lib.viz.clean += chip.bmp
+tests.ampcor.lib.viz.clean += chip.bmp uni1d.bmp
 
 # the {slc_t} product tests must be executed in a specific order
 tests.ampcor.lib.dom.slc_get.pre := tests.ampcor.lib.dom.slc_set
