@@ -22,11 +22,14 @@ public:
     using rgb_type = std::tuple<color_type, color_type, color_type>;
 
     // the buffers i generated are shared pointers to character arrays
-    using buffer_type = std::shared_ptr<const byte_type>;
+    using buffer_type = const byte_type *;
 
     // metamethods
 public:
-    inline BMP(long height, long width);
+    // destructor
+    inline ~BMP();
+    // constructor
+    inline BMP(int height, int width);
 
     // interface
 public:
@@ -38,28 +41,28 @@ public:
 
     // implementation details: data
 private:
-    long _width;
-    long _height;
-    long _padBytesPerLine;
-    long _payloadSz;
-    long _bitmapSz;
+    int _width;
+    int _height;
+    int _padBytesPerLine;
+    int _payloadSz;
+    int _bitmapSz;
+    // my data buffer
+    byte_type * _data;
 
     // known at compile time
     static constexpr int _fileHeaderSz = 14;
     static constexpr int _infoHeaderSz = 40;
+    static constexpr int _bitPlanes = 24;
     static constexpr int _payloadOffset = _fileHeaderSz + _infoHeaderSz;
     static constexpr int _pixelSz = sizeof(rgb_type);
 
-    // default metamethods
-public:
-    // destructor
-    ~BMP() = default;
-
+    // disabled metamethods
+private:
     // constructors
-    BMP(const BMP &) = default;
-    BMP(BMP &&) = default;
-    BMP & operator=(const BMP &) = default;
-    BMP & operator=(BMP &&) = default;
+    BMP(const BMP &) = delete;
+    BMP(BMP &&) = delete;
+    BMP & operator=(const BMP &) = delete;
+    BMP & operator=(BMP &&) = delete;
 };
 
 

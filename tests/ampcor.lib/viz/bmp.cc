@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         // ask for the stream size
         auto bytes = bmp.bytes();
         // write
-        str.write(img.get(), bytes);
+        str.write(img, bytes);
     }
 
     // all done
