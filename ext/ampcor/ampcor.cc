@@ -42,6 +42,9 @@ PYBIND11_MODULE(ampcor, m) {
 
     // correlators
     ampcor::py::sequential(m);
+
+    // viz
+    ampcor::py::viz(m);
 }
 
 

@@ -36,6 +36,9 @@ namespace ampcor::py {
 
     // access to the correlators
     void sequential(py::module &);
+
+    // viz
+    void viz(py::module &);
 }
 
 
