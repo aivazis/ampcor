@@ -82,10 +82,10 @@ class Arena(ampcor.flow.product,
         Grant access to a slice of data of the given {shape} starting at {origin}
         """
         # go through each rank
-        for o,s, l in zip(origin, shape, self.shape):
+        for o,s, l,h in zip(origin, shape, self.origin, self.shape):
             # and check
-            if o < 0 : return
-            if o+s >= l: return
+            if o < l : return
+            if o+s > l+h: return
         # ask my spec
         return self.spec.slice(origin, shape)
 
