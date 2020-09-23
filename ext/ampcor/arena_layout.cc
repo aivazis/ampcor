@@ -34,6 +34,12 @@ arena_layout(py::module &m) {
 
     // add the arena layout interface
     pyArenaLayout
+        // constructor from a tuple
+        .def(py::init([](const arena_shape_t & shape, const arena_index_t origin) {
+            // make one and return it
+            return arena_layout_t { shape, origin };
+        }))
+
         // properties
         .def_property_readonly("origin",
                                // the getter
@@ -80,6 +86,11 @@ arena_layout(py::module &m) {
 
     // add the arena index interface
     pyArenaIndex
+        // constructor from a tuple
+        .def(py::init([](py::tuple idx) {
+                 // make one and return it
+                 return arena_index_t { py::int_(idx[0]), py::int_(idx[1]), py::int_(idx[2])};
+             }))
         // access to individual ranks
         .def("__getitem__",
              // return the value of the requested rank
@@ -103,6 +114,11 @@ arena_layout(py::module &m) {
 
     // add the arena shape interface
     pyArenaShape
+        // constructor from a tuple
+        .def(py::init([](py::tuple idx) {
+            // make one and return it
+            return arena_shape_t { py::int_(idx[0]), py::int_(idx[1]), py::int_(idx[2]) };
+        }))
         // sizes of things: number of pixels
         .def_property_readonly("cells",
                                // the getter
