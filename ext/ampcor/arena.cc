@@ -16,6 +16,12 @@
 namespace ampcor::py {
     // the product spec
     using arena_t = ampcor::dom::arena_t<float>;
+    // its layout
+    using layout_t = arena_t::layout_type;
+    // its indices
+    using index_t = layout_t::index_type;
+    // and its shape
+    using shape_t = layout_t::shape_type;
 }
 
 
@@ -67,7 +73,7 @@ arena(py::module &m) {
                                "the layout of the arena raster"
                                )
 
-        // and the shape
+        // the shape
         .def_property_readonly("shape",
                                // the getter
                                [](const arena_t spec) {
@@ -76,6 +82,17 @@ arena(py::module &m) {
                                },
                                // the docstring
                                "the shape of the arena raster"
+                               )
+
+        // and the origin
+        .def_property_readonly("origin",
+                               // the getter
+                               [](const arena_t spec) {
+                                   // easy enough
+                                   return spec.layout().origin();
+                               },
+                               // the docstring
+                               "the origin of the arena raster"
                                )
 
         // sizes of things: number of pixels
@@ -94,20 +111,33 @@ arena(py::module &m) {
                                )
         // make a slice
         .def("slice",
-             //
-             [](const arena_t & arena, py::tuple pyOrigin, py::tuple pyShape) {
-                 // type alises
-                 using index_t = arena_t::layout_type::index_type;
-                 using shape_t = arena_t::layout_type::shape_type;
-
-                 // build the index
-                 index_t idx { pyOrigin[0].cast<int>(), pyOrigin[1].cast<int>() };
-                 // build the shape
-                 shape_t shp { pyShape[0].cast<size_t>(), pyShape[1].cast<size_t>() };
-
-                 // all done
-                 return arena.layout().box(idx, shp);
+             // from the native objects
+             [](const arena_t & arena, index_t origin, shape_t shape) {
+                 // make the slice and return it
+                 return arena.layout().box(origin, shape);
              },
+             // the docstring
+             "make a slice at {origin} with the given {shape}",
+             // the signature
+             "origin"_a, "shape"_a
+             )
+
+         // make a slice
+         .def("slice",
+              // from tuples
+              [](const arena_t & arena, py::tuple pyOrigin, py::tuple pyShape) {
+                  // type alises
+                  using index_t = arena_t::layout_type::index_type;
+                  using shape_t = arena_t::layout_type::shape_type;
+
+                  // build the index
+                  index_t idx { pyOrigin[0].cast<int>(), pyOrigin[1].cast<int>() };
+                  // build the shape
+                  shape_t shp { pyShape[0].cast<size_t>(), pyShape[1].cast<size_t>() };
+
+                  // all done
+                  return arena.layout().box(idx, shp);
+              },
              // the docstring
              "make a slice at {origin} with the given {shape}",
              // the signature
@@ -131,7 +161,7 @@ arena_constructor(py::tuple pyOrigin, py::tuple pyShape) -> arena_t
     int xShape = py::int_(pyShape[1]);
     int yShape = py::int_(pyShape[2]);
     // and convert
-    arena_t::layout_type::shape_type shape { pairs, xShape, yShape};
+    shape_t shape { pairs, xShape, yShape};
 
     // extract the origin
     int pOrig = py::int_(pyOrigin[0]);
@@ -139,10 +169,10 @@ arena_constructor(py::tuple pyOrigin, py::tuple pyShape) -> arena_t
     int yOrig = py::int_(pyOrigin[2]);
 
     // and convert
-    arena_t::layout_type::index_type origin { pOrig, xOrig, yOrig };
+    index_t origin { pOrig, xOrig, yOrig };
 
     // turn into a layout
-    arena_t::layout_type layout { shape, origin };
+    layout_t layout { shape, origin };
 
     // make a product specification and return it
     return arena_t { layout };
