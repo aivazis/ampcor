@@ -43,6 +43,10 @@ public:
     template <typename... Args>
     constexpr Product(spec_const_reference, Args&&...);
 
+    // accessors
+public:
+    constexpr auto spec() const -> spec_const_reference;
+
     // interface
 public:
     // {size} is too overloaded, so we use {cells} to denote the number of cells in the
@@ -58,6 +62,10 @@ public:
 public:
     // my read/write flag
     static constexpr auto readOnly() -> bool;
+
+    // implementation details
+private:
+    spec_type _spec;
 
     // default metamethods
 public:
