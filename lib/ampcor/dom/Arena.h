@@ -39,6 +39,9 @@ public:
     constexpr auto cells() const -> std::size_t;
     constexpr auto bytes() const -> std::size_t;
 
+    // build the layout of a specific tile
+    constexpr auto tile(int tid) const -> layout_type;
+
     // implementation details: data
 private:
     const layout_type _layout;

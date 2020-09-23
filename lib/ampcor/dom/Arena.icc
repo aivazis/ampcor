@@ -22,6 +22,16 @@ Arena(layout_const_reference layout):
 template <typename pixelT>
 constexpr auto
 ampcor::dom::Arena<pixelT>::
+layout() const -> layout_const_reference
+{
+    // my layout knows
+    return _layout;
+}
+
+
+template <typename pixelT>
+constexpr auto
+ampcor::dom::Arena<pixelT>::
 cells() const -> std::size_t
 {
     // easy enough
@@ -39,13 +49,26 @@ bytes() const -> std::size_t
 }
 
 
+// a layout that describes a specific tile
 template <typename pixelT>
 constexpr auto
 ampcor::dom::Arena<pixelT>::
-layout() const -> layout_const_reference
+tile(int tid) const -> layout_type
 {
-    // my layout knows
-    return _layout;
+    // get my origin
+    auto origin = layout().origin();
+    // and my shape
+    auto shape = layout().shape();
+
+    // a shift to get the origin of the target tile
+    layout_type::index_type delta { tid, 0, 0 };
+    // so
+    auto tileOrigin = origin + delta;
+    // the shape of a tile
+    layout_type::shape_type  tileShape { 1, shape[1], shape[2] };
+
+    // put it all together
+    return _layout.box(tileOrigin , tileShape);
 }
 
 
