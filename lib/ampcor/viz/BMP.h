@@ -22,7 +22,7 @@ public:
     using rgb_type = std::tuple<color_type, color_type, color_type>;
 
     // the buffers i generated are shared pointers to character arrays
-    using buffer_type = const byte_type *;
+    using buffer_type = byte_type *;
 
     // metamethods
 public:
@@ -30,12 +30,19 @@ public:
     inline ~BMP();
     // constructor
     inline BMP(int height, int width);
+    // move semantics
+    inline BMP(BMP &&);
+    BMP & operator=(BMP &&);
 
-    // interface
+    // accessors
 public:
     // the total size of the bitmap
     inline auto bytes() const -> int;
+    inline auto data() const -> buffer_type;
 
+    // interface
+public:
+    // read data from {source} and encode it in the bitmap
     template <class iteratorT>
     inline auto encode(iteratorT & source) const -> buffer_type;
 
@@ -60,9 +67,7 @@ private:
 private:
     // constructors
     BMP(const BMP &) = delete;
-    BMP(BMP &&) = delete;
     BMP & operator=(const BMP &) = delete;
-    BMP & operator=(BMP &&) = delete;
 };
 
 

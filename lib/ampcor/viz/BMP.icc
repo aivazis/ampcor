@@ -36,6 +36,51 @@ BMP(int height, int width):
 {}
 
 
+// move constructor
+ampcor::viz::BMP::
+BMP(BMP&& other) :
+    _width { other._width },
+    _height { other._height },
+    _padBytesPerLine { other._padBytesPerLine },
+    _payloadSz { other._payloadSz },
+    _bitmapSz { other._bitmapSz },
+    _data { other._data }
+{
+    // invalidate {other}
+    other._data = nullptr;
+}
+
+
+// move assignment operator
+ampcor::viz::BMP &
+ampcor::viz::BMP::
+operator=(BMP&& other)
+{
+    // if i'm reading from my self
+    if (this == &other) {
+        // bail
+        return *this;
+    }
+
+    // release my buffer
+    delete [] _data;
+
+    // steal everything
+    _width = other._width;
+    _height = other._height;
+    _padBytesPerLine = other._padBytesPerLine;
+    _payloadSz = other._payloadSz;
+    _bitmapSz = other._bitmapSz;
+    _data = other._data;
+
+    // invalidate {other}
+    other._data = 0;
+
+    // all done
+    return *this;
+}
+
+
 // interface
 // get the total size of the bitmap, in bytes
 auto
@@ -46,11 +91,26 @@ bytes() const -> int
 }
 
 
+// access the data buffer
+auto
+ampcor::viz::BMP::
+data() const -> buffer_type
+{
+    return _data;
+}
+
+
 template <class iteratorT>
 auto
 ampcor::viz::BMP::
 encode(iteratorT & source) const -> buffer_type
 {
+    // if i don't own any memory
+    if (_data == nullptr) {
+        // i can't do anything
+        return nullptr;
+    }
+
     // start at the beginning
     int cur = 0;
     // the file header
