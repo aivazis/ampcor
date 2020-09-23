@@ -126,14 +126,19 @@ arena(py::module &m) {
          .def("slice",
               // from tuples
               [](const arena_t & arena, py::tuple pyOrigin, py::tuple pyShape) {
-                  // type alises
+                  // type aliases
                   using index_t = arena_t::layout_type::index_type;
                   using shape_t = arena_t::layout_type::shape_type;
 
                   // build the index
-                  index_t idx { pyOrigin[0].cast<int>(), pyOrigin[1].cast<int>() };
+                  index_t idx {
+                      py::int_(pyOrigin[0]), py::int_(pyOrigin[1]), py::int_(pyOrigin[2])
+                  };
+
                   // build the shape
-                  shape_t shp { pyShape[0].cast<size_t>(), pyShape[1].cast<size_t>() };
+                  shape_t shp {
+                      py::int_(pyShape[0]), py::int_(pyShape[1]), py::int_(pyShape[2])
+                  };
 
                   // all done
                   return arena.layout().box(idx, shp);
