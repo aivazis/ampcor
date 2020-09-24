@@ -8,25 +8,16 @@
 
 // get colors
 import { wheel, theme } from '~/palette'
+// get the base styles
+import base from '~/views/styles'
 
 
 // publish
 export default {
     // the container
     gamma: {
-        // my box
-        flex: "1",
-        margin: "0.0em 1.0em",
-        padding: "0.0em",
-        height: "100%",
-
-        // styling
-        backgroundColor: theme.page.background,
-        // border: `1px solid ${wheel.granite}`,
-
-        // my children
-        display: "flex",
-        flexDirection: "row",
+        // inherit
+        ...base.panel,
     },
 
     placeholder: {

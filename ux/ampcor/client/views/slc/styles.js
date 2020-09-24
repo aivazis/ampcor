@@ -8,24 +8,42 @@
 
 // get colors
 import { wheel, theme } from '~/palette'
+// get the base styles
+import base from '~/views/styles'
 
 
 // publish
 export default {
     // the container
     slc: {
-        // my box
-        flex: "1",
-        margin: "0.0em 1.0em",
+        // inherit
+        ...base.panel,
+    },
+
+    viewport: {
         padding: "0.0em",
+        margin: "0.0em",
+        width: "100%",
+        height: "100%",
+        border: `1px solid ${wheel.gray.bassalt}`,
+        overflow: "auto",
+    },
 
-        // styling
-        backgroundColor: theme.page.background,
-        // border: `1px solid ${wheel.granite}`,
+    tile: {
+        // visibility: "hidden",
+        flex: "none",
+        width: "500px",
+        height: "500px",
+    },
 
-        // my children
+    ref: {
+        flex: "none",
+        width: "20000px",
+        height: "40000px",
         display: "flex",
         flexDirection: "row",
+        flexWrap: "wrap",
+        overflow: "hidden",
     },
 
     placeholder: {
