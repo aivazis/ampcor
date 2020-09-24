@@ -56,6 +56,15 @@ class UX:
 
 
     # handlers
+    def tile(self, plexus, server, request, **kwds):
+        """
+        Build and serve a bitmap of a coarse amplitude ref tile
+        """
+        uri = "/ux/uni1d.bmp"
+        # send a bitmap to the client
+        return server.documents.File(uri=uri, server=server, application=plexus)
+
+
     def graphql(self, plexus, server, request, **kwds):
         """
         Handle a {graphql} request
@@ -117,6 +126,7 @@ class UX:
 
     # private data
     regex = re.compile("|".join([
+        r"/(?P<tile>exp/tile)",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>actions/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",

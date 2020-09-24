@@ -19,6 +19,7 @@ import Header from './header'
 import Footer from './footer'
 // landing pages
 import Flow from '../flow'
+import EXP from '../exp'
 import SLC from '../slc'
 import Gamma from '../gamma'
 import Offsets from '../offsets'
@@ -33,6 +34,7 @@ const Layout = () => (
             <Switch>
                 {/* the top level views */}
                 <Route path="/flow" component={Flow}/>
+                <Route path="/exp" component={EXP}/>
                 <Route path="/slc" component={SLC}/>
                 <Route path="/gamma" component={Gamma}/>
                 <Route path="/offsets" component={Offsets}/>

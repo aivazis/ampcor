@@ -39,6 +39,12 @@ const header = ({page, title}) => {
                         flow
                     </span>
                 </Link>
+                <Link to="/exp" style={styles.nav.link}>
+                    <span style={decorate("exp")}
+                          title="a sample tiled plot">
+                        exp
+                    </span>
+                </Link>
                 <Link to="/slc" style={styles.nav.link}>
                     <span style={decorate("slc")}
                           title="display the input rasters">
