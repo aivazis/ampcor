@@ -17,4 +17,15 @@ def dispatcher(**kwds):
     return Dispatcher(**kwds)
 
 
+# the app engine
+def panel(**kwds):
+    """
+    The application engine
+    """
+    # get the factory
+    from .Panel import Panel
+    # instantiate and return
+    return Panel(**kwds)
+
+
 # end of file

@@ -46,13 +46,20 @@ class Dispatcher:
 
 
     # metamethods
-    def __init__(self, docroot, pfs, **kwds):
+    def __init__(self, plexus, docroot, pfs, **kwds):
         # chain up
         super().__init__(**kwds)
         # save the location of my document root so i can serve static assets
         self.docroot = docroot.discover()
         # attach it to the app's private filesystem
         pfs['ux'] = docroot
+
+        # make a spec for the app engine
+        spec = 'ux'
+        # use it to build a name for it
+        name = f"{plexus.pyre_name}.{spec}"
+        # make an instance of the application engine
+        self.panel = ampcor.ux.panel(name=name, spec=spec, plexus=plexus, globalAliases=True)
 
         # all done
         return
