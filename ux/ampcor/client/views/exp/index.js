@@ -19,7 +19,10 @@ const exp = (props) => {
             <div style={styles.viewport}>
                 <div style={styles.plot}>
                     {Array(40*80).fill().map( (x,i) => (
-                         <img src={`/exp/tile-${i}`} style={styles.tile} loading="lazy" />
+                         <img key={`tile-${i}`}
+                              loading="lazy"
+                              src={`/exp/tile-${i}`} style={styles.tile}
+                         />
                      ))}
                 </div>
             </div>
