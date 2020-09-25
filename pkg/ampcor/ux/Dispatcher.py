@@ -13,7 +13,7 @@ import ampcor
 
 
 # the main request dispatcher
-class UX:
+class Dispatcher:
     """
     The handler of web requests
     """
@@ -46,11 +46,14 @@ class UX:
 
 
     # metamethods
-    def __init__(self, docroot, **kwds):
+    def __init__(self, docroot, pfs, **kwds):
         # chain up
         super().__init__(**kwds)
         # save the location of my document root so i can serve static assets
-        self.docroot = docroot
+        self.docroot = docroot.discover()
+        # attach it to the app's private filesystem
+        pfs['ux'] = docroot
+
         # all done
         return
 
@@ -63,6 +66,34 @@ class UX:
         uri = "/ux/uni1d.bmp"
         # send a bitmap to the client
         return server.documents.File(uri=uri, server=server, application=plexus)
+
+
+    def ref(self, plexus, server, request, match, **kwds):
+        """
+        Build and serve a tile from the {ref} SLC input data product
+        """
+        # get the tile
+        tile = int(match["reftile"])
+        # and the zoom level
+        zoom = int(match["refzoom"])
+        # show me
+        plexus.info.log(f"tile: {tile} at zoom level {zoom}")
+        # all done
+        return server.documents.OK(server=server)
+
+
+    def rac(self, plexus, server, request, **kwds):
+        """
+        Build and serve a bitmap of a coarse amplitude ref tile
+        """
+        # tell me
+        plexus.info.log(" rac: preparing raster")
+        # ask the plexus for its {mdy} panel
+        mdy = plexus.pyre_repertoir.resolve(plexus=plexus, spec="mdy")
+        # ask it to build me a bitmap
+        data = mdy.rac(plexus=plexus)
+        # and hand it to the client
+        return server.documents.BMP(server=server, value=data)
 
 
     def graphql(self, plexus, server, request, **kwds):
@@ -127,6 +158,8 @@ class UX:
     # private data
     regex = re.compile("|".join([
         r"/(?P<tile>exp/tile)",
+        r"/(?P<ref>slc/ref/(?P<refzoom>[0-9]+)/tile-(?P<reftile>[0-9]+))",
+        r"/(?P<rac>ref/amplitude/coarse)",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>actions/meta/stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",

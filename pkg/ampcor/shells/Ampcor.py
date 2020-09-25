@@ -86,12 +86,8 @@ class Ampcor(pyre.plexus, family='ampcor.shells.plexus'):
                 break
         # if all goes well and we reach the intended folder without errors
         else:
-            # expand the directory structure below my document root and mount it
-            pfs['ux'] = docroot.discover()
-            # get my dispatcher
-            from .UX import UX
-            # instantiate and attach
-            self._ux = UX(docroot=docroot)
+            # instantiate and attach my dispatcher
+            self._ux = ampcor.ux.dispatcher(docroot=docroot, pfs=pfs)
 
         # all done
         return pfs
