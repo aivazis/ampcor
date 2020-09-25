@@ -7,15 +7,12 @@
 
 // externals
 import React from 'react'
-import { connect } from 'react-redux'
 // locals
 import styles from './styles'
 
 
 // the area
 const gamma = (props) => {
-    // notify the store about the page flip
-    props.flipPage('gamma', 'the correlation surface')
     // the container
     return (
         <section style={styles.gamma}>
@@ -25,20 +22,8 @@ const gamma = (props) => {
 }
 
 
-// store access
-const store = null
-
-// actions
-import { setCurrentPage } from '~/actions/navigation'
-// dispatch
-const actions = (dispatch) => ({
-    // navigational
-    flipPage: (page, title) => dispatch(setCurrentPage(page, title)),
-})
-
-
-// connect to the state store and publish
-export default connect(store, actions)(gamma)
+// publish
+export default gamma
 
 
 // end of file

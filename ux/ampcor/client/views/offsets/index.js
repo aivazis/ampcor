@@ -7,15 +7,12 @@
 
 // externals
 import React from 'react'
-import { connect } from 'react-redux'
 // locals
 import styles from './styles'
 
 
 // the area
 const offsets = (props) => {
-    // notify the store about the page flip
-    props.flipPage('offsets', 'the estimated offsets')
     // build the container and return it
     return (
         // the container
@@ -26,20 +23,8 @@ const offsets = (props) => {
 }
 
 
-// store access
-const store = null
-
-// actions
-import { setCurrentPage } from '~/actions/navigation'
-// dispatch
-const actions = (dispatch) => ({
-    // navigational
-    flipPage: (page, title) => dispatch(setCurrentPage(page, title)),
-})
-
-
-// connect to the state store and publish
-export default connect(store, actions)(offsets)
+// publish
+export default offsets
 
 
 // end of file

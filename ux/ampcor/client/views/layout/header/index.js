@@ -8,19 +8,23 @@
 
 // externals
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { connect } from 'react-redux'
+import { Link, useLocation } from 'react-router-dom'
 import Kill from '~/widgets/kill'
 // locals
 import styles from './styles'
 
 
+// assemble the style for the link
+const decorate = (name, location) => {
+    return location.startsWith('/' + name) ?
+           {...styles.nav.name, ...styles.nav.current} : styles.nav.name
+}
+
+
 // the top bar
-const header = ({page, title}) => {
-    // link decorator
-    const decorate = (name) => {
-        return name === page ? {...styles.nav.name, ...styles.nav.current} : styles.nav.name
-    }
+const header = () => {
+    // get the current page
+    const location = useLocation().pathname
 
     // build the component and return it
     return (
@@ -34,37 +38,37 @@ const header = ({page, title}) => {
             {/* the menu */}
             <nav style={styles.nav}>
                 <Link to="/flow" style={styles.nav.link}>
-                    <span style={decorate("flow")}
+                    <span style={decorate("flow", location)}
                           title="configure the ampcor workflow">
                         flow
                     </span>
                 </Link>
                 <Link to="/exp" style={styles.nav.link}>
-                    <span style={decorate("exp")}
+                    <span style={decorate("exp", location)}
                           title="a sample tiled plot">
                         exp
                     </span>
                 </Link>
                 <Link to="/slc" style={styles.nav.link}>
-                    <span style={decorate("slc")}
+                    <span style={decorate("slc", location)}
                           title="display the input rasters">
                         slc
                     </span>
                 </Link>
                 <Link to="/offsets" style={styles.nav.link}>
-                    <span style={decorate('offsets')}
+                    <span style={decorate("offsets", location)}
                           title="visualize the estimated offsets">
                         offsets
                     </span>
                 </Link>
                 <Link to="/plan" style={styles.nav.link}>
-                    <span style={decorate('plan')}
+                    <span style={decorate("plan", location)}
                           title="show the correlation plan" >
                         plan
                     </span>
                 </Link>
                 <Link to="/gamma" style={{...styles.nav.link, ...styles.nav.last}}>
-                    <span style={decorate('gamma')}
+                    <span style={decorate("gamma", location)}
                           title="visualize the correlaton surface">
                         gamma
                     </span>
@@ -79,14 +83,8 @@ const header = ({page, title}) => {
 }
 
 
-// grab the page title from the store
-const getPage = ({navigation}) => ({
-    page: navigation.get('page'),
-    title: navigation.get('title'),
-})
-
 // publish
-export default connect(getPage)(header)
+export default header
 
 
 // end of file

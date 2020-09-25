@@ -7,15 +7,12 @@
 
 // externals
 import React from 'react'
-import { connect } from 'react-redux'
 // locals
 import styles from './styles'
 
 
 // the ampcor workflow
 const flow = (props) => {
-    // notify the store about the page flip
-    props.flipPage('flow', 'the ampcor workflow')
     // build the container and return it
     return (
         <section style={styles.flow}>
@@ -25,20 +22,8 @@ const flow = (props) => {
 }
 
 
-// store access
-const store = null
-
-// actions
-import { setCurrentPage } from '~/actions/navigation'
-// dispatch
-const actions = (dispatch) => ({
-    // navigational
-    flipPage: (page, title) => dispatch(setCurrentPage(page, title)),
-})
-
-
-// connect to the state store and publish
-export default connect(store, actions)(flow)
+// publish
+export default flow
 
 
 // end of file

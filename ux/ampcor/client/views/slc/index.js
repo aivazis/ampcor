@@ -7,38 +7,32 @@
 
 // externals
 import React from 'react'
-import { connect } from 'react-redux'
 // locals
 import styles from './styles'
 
 
 // explore the input SLCs
 const slc = (props) => {
-    // notify the store about the page flip
-    props.flipPage('slc', 'the ampcor workflow')
     // build the container and return it
     return (
         <section style={styles.slc}>
-            <div style={styles.placeholder}>the input rasters</div>
+            <div style={styles.viewport}>
+                <div style={styles.plot}>
+                    {Array(40*80).fill().map( (x,i) => (
+                         <img key={`tile-${i}`}
+                              loading="lazy"
+                              src={`/slc/ref/0/tile-${i}`} style={styles.tile}
+                         />
+                     ))}
+                </div>
+            </div>
         </section>
     )
 }
 
 
-// store access
-const store = null
-
-// actions
-import { setCurrentPage } from '~/actions/navigation'
-// dispatch
-const actions = (dispatch) => ({
-    // navigational
-    flipPage: (page, title) => dispatch(setCurrentPage(page, title)),
-})
-
-
-// connect to the state store and publish
-export default connect(store, actions)(slc)
+// publish
+export default slc
 
 
 // end of file

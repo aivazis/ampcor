@@ -26,11 +26,9 @@
         "immutable": "latest",
         "react": "latest",
         "react-dom": "latest",
-        "react-redux": "latest",
         "react-relay": "latest",
         "react-router": "latest",
         "react-router-dom": "latest",
-        "redux": "latest",
         "regenerator-runtime": "latest",
         "relay-compiler": "latest"
     }

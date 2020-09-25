@@ -36,7 +36,7 @@ export default {
         height: "500px",
     },
 
-    ref: {
+    plot: {
         flex: "none",
         width: "20000px",
         height: "40000px",
