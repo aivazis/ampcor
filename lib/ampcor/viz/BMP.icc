@@ -103,13 +103,15 @@ data() const -> buffer_type
 template <class iteratorT>
 auto
 ampcor::viz::BMP::
-encode(iteratorT & source) const -> buffer_type
+encode(iteratorT & source, bool topdown) const -> buffer_type
 {
     // if i don't own any memory
     if (_data == nullptr) {
         // i can't do anything
         return nullptr;
     }
+
+    auto flip = topedown ? -1 : 1;
 
     // start at the beginning
     int cur = 0;
@@ -145,10 +147,10 @@ encode(iteratorT & source) const -> buffer_type
     _data[cur++] = _width >> 16;
     _data[cur++] = _width >> 24;
     // encode the height
-    _data[cur++] = _height;
-    _data[cur++] = _height >> 8;
-    _data[cur++] = _height >> 16;
-    _data[cur++] = _height >> 24;
+    _data[cur++] = flip * _height;
+    _data[cur++] = flip * _height >> 8;
+    _data[cur++] = flip * _height >> 16;
+    _data[cur++] = flip * _height >> 24;
     // encode the number of bit planes
     _data[cur++] = 1;
     _data[cur++] = 1 >> 8;

@@ -44,7 +44,7 @@ public:
 public:
     // read data from {source} and encode it in the bitmap
     template <class iteratorT>
-    inline auto encode(iteratorT & source) const -> buffer_type;
+    inline auto encode(iteratorT & source, bool topdown = true) const -> buffer_type;
 
     // implementation details: data
 private:
