@@ -18,6 +18,7 @@
 
 // support
 #include <pyre/journal.h>
+#include <ampcor/dom.h>
 
 
 #endif

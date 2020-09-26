@@ -20,11 +20,13 @@
 
 // local entities
 #include "kernels.h"
-// the micsrosoft BMP generator
+// the microsoft BMP generator
 #include "BMP.h"
 // interpolators that map 1D data to color values
 #include "Uniform1D.h"
 
+// a detector for SLC pixels
+#include "SLCDetector.h"
 
 # endif
 

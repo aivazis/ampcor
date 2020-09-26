@@ -18,6 +18,9 @@ namespace ampcor::viz {
     // i generate {r,g,b} triplets
     using rgb_t = std::tuple<color_t, color_t, color_t>;
 
+    // iterator that detects SLC tiles on the fly
+    class SLCDetector;
+
     // microsoft bmp
     class BMP;
 
