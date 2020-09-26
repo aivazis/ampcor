@@ -32,14 +32,13 @@ export default {
     tile: {
         // visibility: "hidden",
         flex: "none",
+        // the sizes here are defaults; they get overriden when more/better is known
         width: "500px",
         height: "500px",
     },
 
     plot: {
         flex: "none",
-        width: "20000px",
-        height: "40000px",
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
