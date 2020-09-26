@@ -7,13 +7,11 @@
 
 // externals
 import React from 'react'
-import { graphql, QueryRenderer } from 'react-relay'
-import { environment } from '~/context'
 
 
 // locals
 import styles from './styles'
-
+import Query from '~/widgets/query'
 
 // the query that gets me the server state
 const q = graphql`
@@ -36,46 +34,36 @@ const server = ({style}) => {
     const statusError = {...style.status.error, ...styles.status.error}
     const statusUnknown = {...style.status.unknown, ...styles.status.unknown}
 
+    // get the time
+    const now = new Date()
+    // use it to make a timestamp
+    const title = `last checked on ${now.toString()}`
+
+    // the handlers
+    const whileLoading = () => <span style={{...base, ...statusUnknown}}>loading...</span>
+
+    const onError = () => (
+        <span style={{...base, ...statusError}}>
+            couldn't get server version information
+        </span>
+    )
+
     // build the componnent and return it
     return (
         // the server version; retrieved from the server
-        <QueryRenderer
-            query={q}
-            variables={{}}
-            environment={environment}
-            render={({error, props, ...rest}) => {
-                    // get the time
-                    const now = new Date()
-                    // use it to make a timestamp
-                    const title = `last checked on ${now.toString()}`
-                    // if something went wrong
-                    if (error) {
-                        // say so
-                        return (
-                            <span style={{...base, ...statusError}}>
-                                could not get server version information
-                            </span>
-                        )
-                    }
-                    // if no information was passed in
-                    if (!props) {
-                        // the query hasn't completed yet
-                        return (
-                            <div style={{...base, ...statusUnknown}}>
-                                retrieving version information...
-                            </div>
-                        )
-                    }
-                    // otherwise, unpack the version
-                    const {major, minor, micro, revision} = props.version
-                    // and render it
-                    return (
-                        <div style={{...base, ...statusGood}} title={title} >
-                            ampcor server {major}.{minor}.{micro} rev {revision}
-                        </div>
-                    )
-                }}
-        />
+        <Query query={q} variables={{}} onError={onError} whileLoading={whileLoading}>
+            {({version}) => {
+                 // unpack the version
+                 const {major, minor, micro, revision} = version
+                 // render
+                 return (
+                     <div style={{...base, ...statusGood}} title={title} >
+                         ampcor server {version.major}.{version.minor}.{version.micro}
+                         rev {version.revision}
+                     </div>
+                 )
+             }}
+        </Query>
     )
 }
 
