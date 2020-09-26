@@ -9,6 +9,7 @@ schema {
 
 type Query {
   version: Version
+  flow: Workflow
 }
 
 
@@ -17,6 +18,132 @@ type Version {
   minor: Int!
   micro: Int!
   revision: String!
+}
+
+
+type Ampcor implements Node & Producer & Workflow {
+  # for node
+  id: ID!
+  name: String!
+  family: String!
+  # for producer
+  inputs: [Specification!]!
+  outputs: [Specification!]!
+  # for workflow
+  factories: [Producer!]!
+
+  # my inputs
+  reference: SLC
+  secondary: SLC
+  # my output
+  offsets: Offsets
+  # my factory
+  correlator: Correlator
+}
+
+
+type SLC implements Node & Specification {
+  # for node
+  id: ID!
+  name: String!
+  family: String!
+  # for specification
+  exists: Boolean!
+
+  # the path to my data
+  data: String!
+  # my shape
+  shape: [Int!]!
+}
+
+
+type Offsets implements Node & Specification {
+  # for node
+  id: ID!
+  name: String!
+  family: String!
+  # for specification
+  exists: Boolean!
+
+  # the path to my data
+  data: String!
+}
+
+
+type Correlator implements Node & Producer {
+  # for node
+  id: ID!
+  name: String!
+  family: String!
+  # for producer
+  inputs: [Product!]!
+  outputs: [Product!]!
+}
+
+
+# the concrete entities
+# products
+type Product implements Node & Specification {
+  # for node
+  id: ID!
+  name: String!
+  family: STring!
+}
+
+
+# factories
+type Factory implements Node & Producer {
+  # for node
+  id: ID!
+  name: String!
+  family: String!
+  # for producer
+  inputs: [Product!]!
+  outputs: [Product!]!
+}
+
+
+# the abstractions
+
+"""
+Things that are retrievable by their globally unique id
+"""
+interface Node {
+  # the guid
+  id: ID!
+  # all pyre components have a name
+  name: String!
+  # and a family
+  family: String!
+}
+
+
+"""
+The product interface
+"""
+interface Specification {
+  # flag to indicate that I have data
+  exists: Boolean!
+}
+
+
+"""
+The factory interface
+"""
+interface Producer {
+  # factories have inputs
+  inputs: [Specification!]!
+  # and outputs
+  outputs: [Specification!]!
+}
+
+
+"""
+A workflow is a container of both products and factories
+"""
+interface Workflow {
+  # in addition to inputs and outputs, workflows contain factories
+  factories: [Producer!]!
 }
 
 
