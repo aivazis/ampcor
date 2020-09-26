@@ -215,6 +215,47 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         return 0
 
 
+    @ampcor.export(tip="visualize a coarse ref tile")
+    def rac(self, plexus, **kwds):
+        """
+        Produce a visualization of a reference coarse amplitude tile
+        """
+        # get the correlator
+        correlator = self.flow.correlator
+        # get the chip shape
+        chip = correlator.chip
+        # and the workplan
+        map, plan = correlator.plan()
+
+        # form the shape of the coarse reference arena
+        shape = (len(plan.tiles), chip[0], chip[1])
+        # and it origin
+        origin = (0, 0, 0)
+        # make an empty arena
+        ref = ampcor.products.newArena()
+        # configure it
+        ref.setSpec(origin=origin, shape=shape)
+        ref.data = "coarse_ref.dat"
+        # and get the payload
+        ref.open()
+
+        # pick a tile
+        tid = 4
+        # get the pairing info
+        _, rt, st = plan.tiles[tid]
+        # show
+        plexus.info.log(f"tile {tid}: {tuple(rt.origin)}+{tuple(rt.shape)}")
+        # make the bitmap
+        bitmap = ampcor.libampcor.viz.arenaTile(ref.raster, tid)
+
+        # open a file
+        f = open(f"tile-{tid:06}.bmp", "wb")
+        f.write(bitmap)
+
+        # all done
+        return memoryview(bitmap)
+
+
     def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
@@ -225,6 +266,8 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         weaver.language = "html"
         # and attach it
         self.weaver = weaver
+
+        print(f"gamma: flow: {self.flow}")
 
         # all done
         return
