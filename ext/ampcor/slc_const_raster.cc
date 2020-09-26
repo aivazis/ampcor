@@ -13,7 +13,11 @@
 
 // type aliases
 namespace ampcor::py {
+    // the raster
     using slc_const_raster_t = ampcor::dom::slc_const_raster_t;
+
+    // its parts
+    using value_t = slc_const_raster_t::value_type;
 }
 
 // helpers
@@ -72,6 +76,36 @@ slc_const_raster(py::module &m) {
                                },
                                // the docstring
                                "the shape of the SLC"
+                               )
+        // compute the range of values in the raster
+        .def_property_readonly("range",
+                               // the getter
+                               [](const slc_const_raster_t & slc) {
+                                   // initialize the values; don't bother with square roots for now
+                                   auto min = std::norm(slc[0]);
+                                   auto max = min;
+
+                                   // go through all the values
+                                   for (auto v: slc) {
+                                       // compute the magnitude
+                                       auto r = std::norm(v);
+                                       // if it's bigger than the current max
+                                       if (r > max) {
+                                           // save it
+                                           max = r;
+                                       }
+                                       // if it's smaller that the current min
+                                       if (r < min) {
+                                           // save it
+                                           min = r;
+                                       }
+                                   }
+
+                                   // build the answer and return
+                                   return std::pair(std::sqrt(min), std::sqrt(max));
+                               },
+                               //   the docstring
+                               "compute the range of values in the raster"
                                )
 
         // metamethods
