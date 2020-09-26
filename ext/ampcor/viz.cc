@@ -22,10 +22,17 @@ namespace ampcor::py {
     // uses
     using arena_const_reference = const arena_t &;
 
+    // slc
+    using slc_t = ampcor::dom::slc_const_raster_t;
+    // uses
+    using slc_const_reference = const slc_t &;
+
     // bitmap
     using bmp_t = ampcor::viz::bmp_t;
-    // color map
-    using uni1d_t = ampcor::viz::uni1d_t<arena_t::const_iterator>;
+    // slc color map
+    using slc_uni1d_t = ampcor::viz::uni1d_t<ampcor::viz::slc_detector_t>;
+    // arena color map
+    using arena_uni1d_t = ampcor::viz::uni1d_t<arena_t::const_iterator>;
 }
 
 
@@ -50,7 +57,6 @@ viz(py::module & m) {
         })
         // done
         ;
-
 
     // generate a bitmap for a specific real arena tile
     pyviz.def("arenaTile",
@@ -109,11 +115,11 @@ viz(py::module & m) {
               auto start = tile.cbegin();
 
               // make the color map
-              uni1d_t cmap(start,
-                           bins,
-                           hue, saturation,
-                           minB,maxB,
-                           min, max);
+              arena_uni1d_t cmap(start,
+                                 bins,
+                                 hue, saturation,
+                                 minB,maxB,
+                                 min, max);
 
               // make a bitmap object
               bmp_t bmp(shape[1], shape[2]);
@@ -127,7 +133,73 @@ viz(py::module & m) {
           "arena"_a, "tileid"_a,
           // the docstring
           "generate a BMP for the {arena} tile at the given {tileid}"
-          );
+          )
+
+        // generate a bitmap out of an SLC tile
+        .def("slc",
+             // the functions
+             [](slc_const_reference slc,
+                std::pair<int, int> tileOrigin, std::pair<int, int> tileShape,
+                int zoom, std::pair<float, float> range) -> bmp_t {
+                 // make a channel
+                 pyre::journal::debug_t channel("ampcor.viz.slc");
+
+                 // unpack the range
+                 auto [minv, maxv] = range;
+
+                 // pick the number of bins
+                 int bins = 1 << 5;
+                 // pick hue and saturation
+                 auto hue = 0;
+                 auto saturation = 0;
+                 // pick a brightness range
+                 auto minB = 0.2;
+                 auto maxB = 1.0;
+
+                 // isolate the portion of the raster i care about
+                 slc_t::index_type boxOrigin = { tileOrigin.first, tileOrigin.second };
+                 slc_t::shape_type boxShape = { tileShape.first, tileShape.second };
+                 // make the tile
+                 auto tile = slc.box(boxOrigin, boxShape);
+                 // make an iterator to its beginning
+                 auto start = tile.cbegin();
+                 // and an amplitude calculator
+                 ampcor::viz::slc_detector_t detector(start);
+
+                 channel
+                     << pyre::journal::newline
+                     << "origin: " << boxOrigin << pyre::journal::newline
+                     << "shape: " << boxShape << pyre::journal::newline
+                     << "bins: " <<  bins << pyre::journal::newline
+                     << "hue: " <<  hue << pyre::journal::newline
+                     << "saturation: " <<  saturation << pyre::journal::newline
+                     << "minimum brightness: " <<  minB << pyre::journal::newline
+                     << "maximum brightness: " <<  maxB << pyre::journal::newline
+                     << "minimum value: " << minv << pyre::journal::newline
+                     << "maximum value: " << maxv << pyre::journal::newline
+                     << pyre::journal::endl;
+                 // make the color map
+                 slc_uni1d_t cmap(detector,
+                                  bins,
+                                  hue, saturation,
+                                  minB,maxB,
+                                  minv, maxv);
+
+                 // make a bitmap object
+                 bmp_t bmp(boxShape[0], boxShape[1]);
+                 // encode the data using the color map
+                 bmp.encode(cmap);
+
+                 // and return it
+                 return bmp;
+             },
+             // the signature
+             "raster"_a, "origin"_a, "shape"_a, "zoom"_a, "range"_a,
+             // the doctring
+             "make a bitmap out the specified SLC tile"
+             )
+        // done
+        ;
 
 
     // all done
