@@ -18,12 +18,10 @@ const exp = (props) => {
         <section style={styles.exp}>
             <div style={styles.viewport}>
                 <div style={styles.plot}>
-                    {Array(40*80).fill().map( (x,i) => (
-                         <img key={`tile-${i}`}
-                              loading="lazy"
-                              src={`/exp/tile-${i}`} style={styles.tile}
-                         />
-                     ))}
+                    <img key={"tile-0"}
+                         loading="lazy"
+                         src={"/exp/tile-0"} style={styles.tile}
+                    />
                 </div>
             </div>
         </section>
