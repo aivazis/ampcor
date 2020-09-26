@@ -49,21 +49,20 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
 
     # interface
     def refTile(self, plexus, server, request, match, **kwds):
-        # get the tile
-        tile = int(match["refTile"])
-        # its width
-        width = int(match["refTileWidth"])
-        # and height
-        height = int(match["refTileHeight"])
-        # and the zoom level
-        zoom = int(match["refzoom"])
+        # extract the zoom level
+        zoom = int(match["refTileZoom"])
+        # the origin
+        origin = tuple(map(int, match["refTileOrigin"].split("x")))
+        # and the shape
+        shape = tuple(map(int, match["refTileShape"].split("x")))
+
         # get my {ref} wrapper
         ref = self.ref
         # ask it for the value range
-        range = (0, 100) # or use {ref.range}, if you don't mind waiting a bit...
+        range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
         # build the bitmap
         bitmap = ampcor.libampcor.viz.slc(raster=ref.raster,
-                                          tile=tile, shape=(height,width), zoom=zoom,
+                                          origin=origin, shape=shape, zoom=zoom,
                                           range=range)
         # and respond
         return server.documents.BMP(server=server, bmp=memoryview(bitmap))

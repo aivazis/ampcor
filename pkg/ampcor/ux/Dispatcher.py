@@ -159,7 +159,7 @@ class Dispatcher:
     # private data
     regex = re.compile("|".join([
         r"/(?P<tile>exp/tile)",
-        r"/(?P<ref>slc/ref/(?P<refzoom>[0-9]+)/tile-(?P<refTileHeight>[0-9]+)px-(?P<refTileWidth>[0-9]+)px-(?P<refTile>[0-9]+))",
+        r"/(?P<ref>slc/ref/tile-(?P<refTileZoom>[0-9])@(?P<refTileOrigin>[0-9]+x[0-9]+)\+(?P<refTileShape>[0-9]+x[0-9]+))",
         r"/(?P<rac>ref/amplitude/coarse)",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>actions/meta/stop)",
