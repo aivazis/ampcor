@@ -111,7 +111,7 @@ encode(iteratorT & source, bool topdown) const -> buffer_type
         return nullptr;
     }
 
-    auto flip = topedown ? -1 : 1;
+    auto flip = topdown ? -1 : 1;
 
     // start at the beginning
     int cur = 0;
