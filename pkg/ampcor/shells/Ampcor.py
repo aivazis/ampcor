@@ -87,7 +87,7 @@ class Ampcor(pyre.plexus, family='ampcor.shells.plexus'):
         # if all goes well and we reach the intended folder without errors
         else:
             # instantiate and attach my dispatcher
-            self._ux = ampcor.ux.dispatcher(docroot=docroot, pfs=pfs)
+            self._ux = ampcor.ux.dispatcher(plexus=self, docroot=docroot, pfs=pfs)
 
         # all done
         return pfs
