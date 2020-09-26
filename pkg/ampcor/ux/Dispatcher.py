@@ -75,18 +75,12 @@ class Dispatcher:
         return server.documents.File(uri=uri, server=server, application=plexus)
 
 
-    def ref(self, plexus, server, request, match, **kwds):
+    def ref(self, **kwds):
         """
         Build and serve a tile from the {ref} SLC input data product
         """
-        # get the tile
-        tile = int(match["reftile"])
-        # and the zoom level
-        zoom = int(match["refzoom"])
-        # show me
-        plexus.info.log(f"tile: {tile} at zoom level {zoom}")
-        # all done
-        return server.documents.OK(server=server)
+        # ask the panel
+        return self.panel.refTile(**kwds)
 
 
     def rac(self, plexus, server, request, **kwds):
@@ -165,7 +159,7 @@ class Dispatcher:
     # private data
     regex = re.compile("|".join([
         r"/(?P<tile>exp/tile)",
-        r"/(?P<ref>slc/ref/(?P<refzoom>[0-9]+)/tile-(?P<reftile>[0-9]+))",
+        r"/(?P<ref>slc/ref/(?P<refzoom>[0-9]+)/tile-(?P<refTileHeight>[0-9]+)px-(?P<refTileWidth>[0-9]+)px-(?P<refTile>[0-9]+))",
         r"/(?P<rac>ref/amplitude/coarse)",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>actions/meta/stop)",
