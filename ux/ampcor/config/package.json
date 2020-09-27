@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "ampcor embedded ux",
     "license": "BSD-3-Clause",
-    "repository": "https://githib.com/aivazis/ampcor",
+    "repository": "https://github.com/aivazis/ampcor",
     "author": "Michael Aivazis <michael.aivazis@para-sim.com>",
     "scripts": {
         "build": "webpack --mode development",
@@ -23,10 +23,10 @@
     },
     "dependencies": {
         "graphql": "latest",
-        "immutable": "latest",
-        "react": "latest",
-        "react-dom": "latest",
-        "react-relay": "latest",
+        "lazysizes": "latest",
+        "react": "experimental",
+        "react-dom": "experimental",
+        "react-relay": "experimental",
         "react-router": "latest",
         "react-router-dom": "latest",
         "regenerator-runtime": "latest",
