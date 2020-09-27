@@ -26,12 +26,17 @@ const slc = (props) => {
     const cols = Math.floor(rasterWidth/tileWidth)
     const rows = Math.floor(rasterHeight/tileHeight)
 
+    // get the styling of the bitmap container
+    var plotStyle = {...styles.plot}
     // add size information to the {plot{ style sheet
-    styles.plot.width = `${cols*tileWidth}px`
-    styles.plot.height = `${rows*tileHeight}px`
+    plotStyle.width = `${cols*tileWidth}px`
+    plotStyle.height = `${rows*tileHeight}px`
+
+    // get the styling of individual tiles
+    var tileStyle = {...styles.tile}
     // and to the {tile} sheet
-    styles.tile.width = `${tileWidth}px`
-    styles.tile.height = `${tileHeight}px`
+    tileStyle.width = `${tileWidth}px`
+    tileStyle.height = `${tileHeight}px`
 
     // the zoom level
     const zoom = 0
@@ -74,9 +79,12 @@ const slc = (props) => {
     return (
         <section style={styles.slc}>
             <div style={styles.viewport}>
-                <div style={styles.plot}>
+                <div style={plotStyle}>
                     {tiles.map(tile => (
-                        <img key={`${tile}`} loading="lazy" src={uri+tile} style={styles.tile}/>
+                         <img key={`${tile}`}
+                              loading="lazy" className="lazyload" data-src={uri+tile}
+                              style={tileStyle}
+                         />
                     ))}
                 </div>
             </div>
