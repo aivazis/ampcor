@@ -8,16 +8,14 @@
 
 // externals
 import React from 'react'
-import ReactDom from 'react-dom'
+import ReactDOM from 'react-dom'
 
 
 // my root view
 import { Layout } from './views'
 
 // render
-ReactDom.render((
-    <Layout/>
-), document.querySelector('#ampcor'))
+ReactDOM.unstable_createRoot(document.getElementById('ampcor')).render(<Layout />)
 
 
 // end of file
