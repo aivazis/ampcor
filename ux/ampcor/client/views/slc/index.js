@@ -13,79 +13,88 @@ import styles from './styles'
 
 // explore the input SLCs
 const slc = (props) => {
-    // the raster size; hardwired, until this information is retrievable
-    const rasterWidth = 10344
-    const rasterHeight = 36864
-    // our tile size
-    const tileWidth = 500
-    const tileHeight = 500
-    // this is the shape of the slc
+    // unputs that are hardwired for now
+    // the zoom level
+    const zoom = 0
+    // the raster shape
+    const rasterShape = [ 36864, 10344 ]
+    // our tile shape
+    const tileShape = [ 512, 512 ]
+
+    // this is the shape of the slc, rounded down to the nearest tile multiple
     // N.B.: this clips the tiles that ride on the right and bottom margin of the data set;
     // they aren't whole tiles, so they either need a dynamically generated margin or more
     // complicated request logic
-    const cols = Math.floor(rasterWidth/tileWidth)
-    const rows = Math.floor(rasterHeight/tileHeight)
+    const gridShape = Array(2).fill().map((_,i) => Math.floor(rasterShape[i]/tileShape[i]))
+    //  the plot shape rounded down to the nearest tile
+    const plotShape = Array(2).fill().map((_, i) => gridShape[i]*tileShape[i])
 
-    // get the styling of the bitmap container
+    // make a copy of the styling of the bitmap container
     var plotStyle = {...styles.plot}
-    // add size information to the {plot{ style sheet
-    plotStyle.width = `${cols*tileWidth}px`
-    plotStyle.height = `${rows*tileHeight}px`
+    // add size information to the {plot} style sheet
+    plotStyle.width = `${plotShape[1]}px`
+    plotStyle.height = `${plotShape[0]}px`
 
-    // get the styling of individual tiles
+    // make a copy of the styling of individual tiles
     var tileStyle = {...styles.tile}
-    // and to the {tile} sheet
-    tileStyle.width = `${tileWidth}px`
-    tileStyle.height = `${tileHeight}px`
-
-    // the zoom level
-    const zoom = 0
-    // build the tile uri stem
-    const uri = `/slc/ref/`
-    // and the tile size spec
-    const tileSpec = `+${tileHeight}x${tileWidth}`
+    // and record the {tile} shape
+    tileStyle.width = `${tileShape[1]}px`
+    tileStyle.height = `${tileShape[0]}px`
 
     // tile specification factory
-    const tspec = (first, ...rest) =>
+    const assembleTileSpec = (first, ...rest) =>
         rest.reduce(
             (accum, val) => `${accum}x${val}`,
             `${first}`
         )
+
+    // build the tile uri stem
+    const uri = `/slc/ref/`
+    // assemble the tile shape spec
+    const tileShapeSpec = assembleTileSpec(...tileShape)
+
+    // given the origin of a tile, build its uri
+    const tileUri = (origin) => `tile-${zoom}@` + assembleTileSpec(...origin) + `+${tileShapeSpec}`
+    // and its title
+    const tileTitle = (origin) =>
+        `showing a (${tileShape}) pixel tile of SLC amplitude at (${origin})`
 
     // the cartesian product calculator
     const cartesian = (first, ...rest) =>
         rest.reduce(
             (prefix, arg, foo) =>
                 prefix.flatMap( prefixEntry =>
-                    arg.map(idx => [prefixEntry, shape[foo+1]*idx].flat())
+                    arg.map(idx => [prefixEntry, tileShape[foo+1]*idx].flat())
                 ),
             // convert {first} into an array of consecutive integers
-            first.map(idx => shape[0]*idx)
+            first.map(idx => tileShape[0]*idx)
         )
 
-    // make an array with all the column indices
-    const colIndices = Array(cols).fill().map((_, idx) => idx)
-    // and another with all the row indices
-    const rowIndices = Array(rows).fill().map((_, idx) => idx)
-    // turn the tile shape into an array too
-    const shape = [tileHeight, tileWidth]
+    // build an array of indices
+    const indices = Array(2).fill().map((_, i) => Array(gridShape[i]).fill().map((_, j) => j))
+    // use this to build an array of tile origin in SLC coordinates
+    const tileOrigins = cartesian(...indices)
 
-    // build the tile specifications
-    const tiles = cartesian(rowIndices, colIndices).map(
-        origin => `tile-${zoom}@` + tspec(...origin) + `+${tileHeight}x${tileWidth}`
-    )
 
     // build the container, fill it, and return it
     return (
         <section style={styles.slc}>
             <div style={styles.viewport}>
                 <div style={plotStyle}>
-                    {tiles.map(tile => (
-                         <img key={`${tile}`}
-                              loading="lazy" className="lazyload" data-src={uri+tile}
-                              style={tileStyle}
-                         />
-                    ))}
+                    {tileOrigins.map(origin => {
+                         // assemble the tile name
+                         const tileName = tileUri(origin)
+                         // the tile uri
+                         const tileURI = uri + tileName
+                         // render
+                         return (
+                             <img key={tileName}
+                                  loading="lazy" className="lazyload" data-src={tileURI}
+                                  alt={tileTitle(origin)}
+                                  style={tileStyle}
+                             />
+                         )}
+                     )}
                 </div>
             </div>
         </section>
