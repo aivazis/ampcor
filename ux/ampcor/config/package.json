@@ -18,6 +18,7 @@
         "babel-loader": "latest",
         "babel-plugin-relay": "latest",
         "html-webpack-plugin": "latest",
+        "relay-compiler": "latest",
         "webpack": "latest",
         "webpack-cli": "latest"
     },
@@ -29,7 +30,6 @@
         "react-relay": "experimental",
         "react-router": "latest",
         "react-router-dom": "latest",
-        "regenerator-runtime": "latest",
-        "relay-compiler": "latest"
+        "regenerator-runtime": "latest"
     }
 }
