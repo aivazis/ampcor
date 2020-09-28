@@ -118,14 +118,14 @@ class Dispatcher:
         return server.documents.JSON(server=server, value=doc)
 
 
-    def stop(self, plexus, **kwds):
+    def stop(self, plexus, server, **kwds):
         """
         The client is asking me to die
         """
         # log it
         plexus.info.log("shutting down")
         # and exit
-        raise SystemExit(0)
+        return server.documents.Exit(server=server)
 
 
     def document(self, plexus, server, request, **kwds):
@@ -162,7 +162,7 @@ class Dispatcher:
         r"/(?P<ref>slc/ref/tile-(?P<refTileZoom>[0-9])@(?P<refTileOrigin>[0-9]+x[0-9]+)\+(?P<refTileShape>[0-9]+x[0-9]+))",
         r"/(?P<rac>ref/amplitude/coarse)",
         r"/(?P<graphql>graphql)",
-        r"/(?P<stop>actions/meta/stop)",
+        r"/(?P<stop>stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
         r"/(?P<favicon>favicon.ico)",
         r"/(?P<root>.*)",
