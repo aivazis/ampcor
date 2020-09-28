@@ -14,7 +14,10 @@ import styles from './styles'
 // the area
 const stop = (props) => {
     // ask the server to shut down
-    fetch('/stop')
+    fetch('/stop').catch(
+        // swallow any errors
+        (error) => null
+    )
 
     // the container
     return (
