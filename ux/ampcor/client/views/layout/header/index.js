@@ -7,24 +7,35 @@
 
 
 // externals
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Kill from '~/widgets/kill'
 // locals
 import styles from './styles'
 
 
-// assemble the style for the link
-const decorate = (name, location) => {
-    return location.startsWith('/' + name) ?
-           {...styles.nav.name, ...styles.nav.current} : styles.nav.name
-}
-
-
 // the top bar
 const header = () => {
+    // tie the visibility of header elements to my state
+    const [visibility, setVisibility] = useState("visible")
+    // make a function that sets the visibility to {hidden}; we will hand this to the {kill} widget
+    const hide = () => setVisibility("hidden")
+
+    // get the {nav} style and adjust the visibility of its container
+    var navStyle = {...styles.nav.box, visibility}
+    // get the {kill} widget styling
+    var killStyle = {...styles.kill}
+    // and adjust the visibility of its container as well
+    killStyle.box.visibility = visibility
+
     // get the current page
     const location = useLocation().pathname
+
+    // assemble the style for the link
+    const decorate = name => (
+        location.startsWith('/' + name) ?
+        {...styles.nav.name, ...styles.nav.current} : styles.nav.name
+    )
 
     // build the component and return it
     return (
@@ -36,39 +47,39 @@ const header = () => {
             </div>
 
             {/* the menu */}
-            <nav style={styles.nav}>
+            <nav style={navStyle}>
                 <Link to="/flow" style={styles.nav.link}>
-                    <span style={decorate("flow", location)}
+                    <span style={decorate("flow")}
                           title="configure the ampcor workflow">
                         flow
                     </span>
                 </Link>
                 <Link to="/exp" style={styles.nav.link}>
-                    <span style={decorate("exp", location)}
+                    <span style={decorate("exp")}
                           title="a sample tiled plot">
                         exp
                     </span>
                 </Link>
                 <Link to="/slc" style={styles.nav.link}>
-                    <span style={decorate("slc", location)}
+                    <span style={decorate("slc")}
                           title="display the input rasters">
                         slc
                     </span>
                 </Link>
                 <Link to="/offsets" style={styles.nav.link}>
-                    <span style={decorate("offsets", location)}
+                    <span style={decorate("offsets")}
                           title="visualize the estimated offsets">
                         offsets
                     </span>
                 </Link>
                 <Link to="/plan" style={styles.nav.link}>
-                    <span style={decorate("plan", location)}
+                    <span style={decorate("plan")}
                           title="show the correlation plan" >
                         plan
                     </span>
                 </Link>
                 <Link to="/gamma" style={{...styles.nav.link, ...styles.nav.last}}>
-                    <span style={decorate("gamma", location)}
+                    <span style={decorate("gamma")}
                           title="visualize the correlaton surface">
                         gamma
                     </span>
@@ -76,7 +87,7 @@ const header = () => {
             </nav>
 
             {/* the kill button */}
-            <Kill style={styles.kill} transform="scale(0.1 0.1)"/>
+            <Kill style={killStyle} onKill={hide} transform="scale(0.1 0.1)"/>
 
         </header>
     )

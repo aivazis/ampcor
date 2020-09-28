@@ -40,7 +40,7 @@ export default {
         fontSize: "200%",
 
         // placement
-        // don't let me gorw
+        // don't let me grow
         flex: "none",
         margin: "auto 0.5em 0.5em 0.5em",
 
@@ -55,7 +55,7 @@ export default {
             // placement: stick to the right edge
             margin: "auto 0.5em 1.0em 0.5em",
         },
-        // the ontainer
+        // the container
         box: {},
         // rendering
         path: {},
@@ -63,12 +63,16 @@ export default {
 
     // navigation
     nav: {
-        // placement
-        margin: "auto auto 1.0em 0.5em",
 
-        // for my children
-        display: "flex",
-        flexDirection: "row",
+        // the container
+        box: {
+            // placement
+            margin: "auto auto 1.0em 0.5em",
+
+            // for my children
+            display: "flex",
+            flexDirection: "row",
+        },
 
         link: {
             // placement

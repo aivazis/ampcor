@@ -18,9 +18,10 @@ const mark = `M 0 0 L 100 100 M 0 100 L 100 0`
 
 
 // the bar at the bottom of every page
-const widget = ({style, ...xforms}) => (
+const widget = ({style, onKill, ...xforms}) => (
     // the action
-    <Link to ="/stop"
+    <Link to="/stop"
+          onClick={onKill}
           style={{...base.action, ...style.action}}
           title="kill the server; you'll have to close this window yourself, though">
         {/* the box */}
