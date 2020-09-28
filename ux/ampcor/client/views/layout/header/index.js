@@ -37,6 +37,16 @@ const header = () => {
         {...styles.nav.name, ...styles.nav.current} : styles.nav.name
     )
 
+    // the table of page links
+    const links = [
+        { name: "flow", titile: "configure the ampcor workflow" },
+        { name: "exp", titile: "my sandbox" },
+        { name: "slc", titile: "display the input rasters" },
+        { name: "offsets", titile: "visualize the estimated offsets" },
+        { name: "plan", titile: "show the correlation plan" },
+        { name: "gamma", titile: "visualize the correlaton surface" },
+        ]
+
     // build the component and return it
     return (
         // the container
@@ -48,42 +58,23 @@ const header = () => {
 
             {/* the menu */}
             <nav style={navStyle}>
-                <Link to="/flow" style={styles.nav.link}>
-                    <span style={decorate("flow")}
-                          title="configure the ampcor workflow">
-                        flow
-                    </span>
-                </Link>
-                <Link to="/exp" style={styles.nav.link}>
-                    <span style={decorate("exp")}
-                          title="a sample tiled plot">
-                        exp
-                    </span>
-                </Link>
-                <Link to="/slc" style={styles.nav.link}>
-                    <span style={decorate("slc")}
-                          title="display the input rasters">
-                        slc
-                    </span>
-                </Link>
-                <Link to="/offsets" style={styles.nav.link}>
-                    <span style={decorate("offsets")}
-                          title="visualize the estimated offsets">
-                        offsets
-                    </span>
-                </Link>
-                <Link to="/plan" style={styles.nav.link}>
-                    <span style={decorate("plan")}
-                          title="show the correlation plan" >
-                        plan
-                    </span>
-                </Link>
-                <Link to="/gamma" style={{...styles.nav.link, ...styles.nav.last}}>
-                    <span style={decorate("gamma")}
-                          title="visualize the correlaton surface">
-                        gamma
-                    </span>
-                </Link>
+                {links.map( (link, index) => {
+                     // link styling
+                     const linkStyle = (
+                         (index === links.length-1)
+                         ? {...styles.nav.link, ...styles.nav.last}
+                         : styles.nav.link )
+                     // entry styling
+                     const entryStyle = decorate(link.name)
+                     // render
+                     return (
+                         <Link key={link.name} to={link.name} style={linkStyle}>
+                             <span style={entryStyle} title={link.title}>
+                                 {link.name}
+                             </span>
+                         </Link>
+                     )}
+                 )}
             </nav>
 
             {/* the kill button */}
