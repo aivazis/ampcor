@@ -29,7 +29,7 @@ import Stop from '../stop'
 
 
 // the layout
-const Layout = () => (
+const Layout = ({version}) => (
     <Router>
         <div style={styles.layout}>
             <Header/>
@@ -47,7 +47,7 @@ const Layout = () => (
                 {/* default landing spot */}
                 <Route path="/" component={Flow}/>
             </Switch>
-            <Footer/>
+            <Footer version={version}/>
         </div>
     </Router>
 )

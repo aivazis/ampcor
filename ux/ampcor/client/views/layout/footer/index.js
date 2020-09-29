@@ -15,12 +15,12 @@ import styles from './styles'
 
 
 // the bar at the bottom of every page
-const footer = () => (
+const footer = ({version}) => (
     // the container
     <footer style={styles.footer}>
 
         {/* render the state of the data server */}
-        <Server style={styles.server}/>
+        <Server version={version} style={styles.server}/>
 
         {/* the box with the copyright note */}
         <div style={styles.colophon}>
