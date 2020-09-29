@@ -267,8 +267,6 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         # and attach it
         self.weaver = weaver
 
-        print(f"gamma: flow: {self.flow}")
-
         # all done
         return
 
