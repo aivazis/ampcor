@@ -24,6 +24,7 @@ import SLC from '../slc'
 import Gamma from '../gamma'
 import Offsets from '../offsets'
 import Plan from '../plan'
+import Loading from '../loading'
 import Stop from '../stop'
 
 
@@ -40,6 +41,7 @@ const Layout = () => (
                 <Route path="/gamma" component={Gamma}/>
                 <Route path="/offsets" component={Offsets}/>
                 <Route path="/plan" component={Plan}/>
+                <Route path="/loading" component={Loading}/>
                 {/* the closing page */}
                 <Route path="/stop" component={Stop}/>
                 {/* default landing spot */}
