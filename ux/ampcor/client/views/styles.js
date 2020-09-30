@@ -3,7 +3,6 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // get colors
@@ -13,6 +12,7 @@ import { wheel, theme } from '~/palette'
 // publish
 export default {
 
+    // the container
     panel: {
         // my box
         flex: "1",
@@ -26,6 +26,15 @@ export default {
         overflow: "hidden",
         display: "flex",
         flexDirection: "row",
+    },
+
+
+    // the area with the temporary message for the pages that are under construction
+    placeholder: {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
     },
 }
 

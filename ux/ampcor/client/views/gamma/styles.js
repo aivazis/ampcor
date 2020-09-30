@@ -3,7 +3,6 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // get colors
@@ -21,10 +20,8 @@ export default {
     },
 
     placeholder: {
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        // inherit
+        ...base.placeholder,
     },
 
 }
