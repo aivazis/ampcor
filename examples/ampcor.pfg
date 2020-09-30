@@ -1,0 +1,21 @@
+;
+; michael a.g. aïvázis <michael.aivazis@para-sim.com>
+; parasim
+; (c) 1998-2020 all rights reserved
+;
+
+
+; overall application configuration
+ampcor.plexus:
+    ; machine layout
+    shell:
+        hosts = 1 ; number of hosts
+        tasks = 1 ; number of tasks per host
+        gpus = 0  ; number of gpus per task
+
+    ; pin the port for serving web content
+    nexus.services.web:
+        address=ip4:0.0.0.0:8001
+
+
+; end of file

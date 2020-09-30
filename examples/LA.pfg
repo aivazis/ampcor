@@ -112,13 +112,4 @@ tiles.tiny:
     cover.functor.shift = -111, 256
 
 
-; overall application configuration
-ampcor.plexus:
-    ; machine layout
-    shell:
-        hosts = 1 ; number of hosts
-        tasks = 1 ; number of tasks per host
-        gpus = 0  ; number of gpus per task
-
-
 ; end of file
