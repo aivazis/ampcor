@@ -29,13 +29,15 @@ import Stop from '../stop'
 
 
 // the layout
-const Layout = ({version}) => (
+const Layout = ({version, flow}) => (
     <Router>
         <div style={styles.layout}>
             <Header/>
             <Switch>
                 {/* the top level views */}
-                <Route path="/flow" component={Flow}/>
+                <Route path="/flow">
+                    <Flow flow={flow}/>
+                </Route>
                 <Route path="/exp" component={EXP}/>
                 <Route path="/slc" component={SLC}/>
                 <Route path="/gamma" component={Gamma}/>
@@ -45,7 +47,9 @@ const Layout = ({version}) => (
                 {/* the closing page */}
                 <Route path="/stop" component={Stop}/>
                 {/* default landing spot */}
-                <Route path="/" component={Flow}/>
+                <Route path="/" >
+                    <Flow flow={flow}/>
+                </Route>
             </Switch>
             <Footer version={version}/>
         </div>

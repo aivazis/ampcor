@@ -29,10 +29,15 @@ const App = () => {
     // define the top level query
     const FlowQuery = graphql`
         query ampcorFlowQuery {
+            # server version information
             version {
                 ...server_version
             }
-
+            flow {
+                ... on Ampcor {
+                    ...flow_meta
+                }
+            }
         }
     `
     // schedule it
@@ -43,9 +48,10 @@ const App = () => {
             fetchPolicy: 'store-or-network'
         },
     )
+
     // render the app layout
     return (
-        <Layout version={data.version} />
+        <Layout version={data.version} flow={data.flow} />
     )
 }
 

@@ -30,7 +30,10 @@ class GraphQL:
         variables = payload.get("variables")
 
         # show me, for now
-        plexus.info.log(f"{query}")
+        plexus.info.line(f"operation: {operation}")
+        plexus.info.line(f"{query}")
+        plexus.info.line(f"variables: {variables}")
+        plexus.info.log()
 
         # just return the version, for now
         meta = ampcor.meta
@@ -42,8 +45,33 @@ class GraphQL:
                     "minor": meta.minor,
                     "micro": meta.micro,
                     "revision": meta.revision,
-                }
-            }
+                },
+
+                "flow": {
+                    "id": "client:root:flow",
+                    "__typename": "Ampcor",
+                    "name": "LA",
+                    "family": "ampcor.workflows.ampcor",
+
+                    "reference": {
+                        "id": "client:root:flow:reference",
+                        # "__typename": "SLC",
+                        "name": "20061231",
+                        "family": "ampcor.products.slc.slc",
+                        "shape": [36864, 10344],
+                        "exists": True,
+                    },
+
+                    "secondary": {
+                        "id": "client:root:flow:secondary",
+                        # "__typename": "SLC",
+                        "name": "20070215",
+                        "family": "ampcor.products.slc.slc",
+                        "shape": [36864, 10344],
+                        "exists": True,
+                    },
+                },
+            },
         }
         # and hand it to the client as a {json} document
         return server.documents.JSON(server=server, value=doc)
