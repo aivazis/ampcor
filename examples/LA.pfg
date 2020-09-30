@@ -14,7 +14,7 @@ LA:
     ; the output of this process, configured above
     offsetMap = offsets#sparse
     ; the factory
-    correlator = mga#tiles.small
+    correlator = mga#tiles.large
 
 
 ; inputs
