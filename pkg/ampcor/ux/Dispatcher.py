@@ -11,6 +11,9 @@ import re
 # support
 import ampcor
 
+# the query handler
+from .GraphQL import GraphQL
+
 
 # the main request dispatcher
 class Dispatcher:
@@ -61,6 +64,9 @@ class Dispatcher:
         # make an instance of the application engine
         self.panel = ampcor.ux.panel(name=name, spec=spec, plexus=plexus, globalAliases=True)
 
+        # instantiate the {GraphQL} handler
+        self.gql = GraphQL()
+
         # all done
         return
 
@@ -97,25 +103,12 @@ class Dispatcher:
         return server.documents.BMP(server=server, value=data)
 
 
-    def graphql(self, plexus, server, request, **kwds):
+    def graphql(self, **kwds):
         """
         Handle a {graphql} request
         """
-        # just return the version, for now
-        meta = ampcor.meta
-        # build the response
-        doc = {
-            "data": {
-                "version": {
-                    "major": meta.major,
-                    "minor": meta.minor,
-                    "micro": meta.micro,
-                    "revision": meta.revision,
-                }
-            }
-        }
-        # and hand it to the client as a {json} document
-        return server.documents.JSON(server=server, value=doc)
+        # delegate to my {graphql} handler
+        return self.gql.respond(**kwds)
 
 
     def stop(self, plexus, server, **kwds):
