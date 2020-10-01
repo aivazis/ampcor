@@ -3,13 +3,12 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // externals
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import Kill from '~/widgets/kill'
+import { Kill } from '~/widgets'
 // locals
 import styles from './styles'
 
