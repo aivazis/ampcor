@@ -8,19 +8,18 @@
 // externals
 import 'regenerator-runtime'
 import React from 'react'
-import Flame from '~/widgets/flame'
-import Server from '~/widgets/server'
+import { Flame, Server } from '~/widgets'
 // locals
 import styles from './styles'
 
 
 // the bar at the bottom of every page
-const footer = ({version}) => (
+const footer = () => (
     // the container
     <footer style={styles.footer}>
 
         {/* render the state of the data server */}
-        <Server version={version} style={styles.server}/>
+        <Server style={styles.server}/>
 
         {/* the box with the copyright note */}
         <div style={styles.colophon}>
