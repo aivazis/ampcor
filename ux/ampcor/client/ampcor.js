@@ -20,14 +20,13 @@ import { RelayEnvironmentProvider } from 'react-relay/hooks'
 
 // locals
 import { environment } from '~/context'
-// my root view
-import { Layout } from './views'
+import { Layout, Loading } from '~/views'
 
 
 // the outer component that sets up access to the {relay} environmet
 const Root = () => (
     <RelayEnvironmentProvider environment={environment}>
-        <Suspense fallback="loading ... ">
+        <Suspense fallback={Loading}>
             <Layout />
         </Suspense>
     </RelayEnvironmentProvider>
