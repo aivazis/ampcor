@@ -10,39 +10,21 @@ import React from 'react'
 import { graphql, useFragment } from 'react-relay/hooks'
 // locals
 import styles from './styles'
+import { useFlowContext } from '~/context'
 
 
 // the ampcor workflow
-const flow = ({flow}) => {
-    // the data request
-    const data = useFragment(
-        graphql`
-            fragment flow_meta on Ampcor {
-                name
-                family
-                reference {
-                    name
-                    family
-                    shape
-                    exists
-                }
-                secondary {
-                    name
-                    family
-                    shape
-                    exists
-                }
-        }`,
-        flow
-    )
+const flow = () => {
+    // get the flow configuration
+    const config = useFlowContext()
 
     // unpack
     // the flow
-    const { name: flowName, family: flowFamily } = data
+    const { name: flowName, family: flowFamily } = config
     // the reference slc
-    const { name: refName, family: refFamily, shape: refShape} = data.reference
+    const { name: refName, family: refFamily, shape: refShape} = config.reference
     // and the secondary slc
-    const { name: secName, family: secFamily, shape: secShape} = data.secondary
+    const { name: secName, family: secFamily, shape: secShape} = config.secondary
 
     // build the container and return it
     return (
