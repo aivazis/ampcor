@@ -25,7 +25,7 @@ const slc = (props) => {
     // N.B.: this clips the tiles that ride on the right and bottom margin of the data set;
     // they aren't whole tiles, so they either need a dynamically generated margin or more
     // complicated request logic
-    const gridShape = Array(2).fill().map((_,i) => Math.floor(rasterShape[i]/tileShape[i]))
+    const gridShape = Array(2).fill().map((_, i) => Math.floor(rasterShape[i]/tileShape[i]))
     //  the plot shape rounded down to the nearest tile
     const plotShape = Array(2).fill().map((_, i) => gridShape[i]*tileShape[i])
 
@@ -69,12 +69,10 @@ const slc = (props) => {
             // convert {first} into an array of consecutive integers
             first.map(idx => tileShape[0]*idx)
         )
-
     // build an array of indices
     const indices = Array(2).fill().map((_, i) => Array(gridShape[i]).fill().map((_, j) => j))
     // use this to build an array of tile origin in SLC coordinates
     const tileOrigins = cartesian(...indices)
-
 
     // build the container, fill it, and return it
     return (
