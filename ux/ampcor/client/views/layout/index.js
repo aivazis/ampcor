@@ -15,12 +15,12 @@ import { useLazyLoadQuery } from 'react-relay/hooks'
 // styles
 import styles from './styles'
 import { FlowContext, useFlowConfigQuery } from '~/context'
-// common to all pages
-import Header from './header'
-import Footer from './footer'
 
 // views
-import { Flow, EXP, SLC, Gamma, Offsets, Plan, Loading, Stop } from '~/views'
+import {
+    Header, Footer,
+    Flow, EXP, SLC, Gamma, Offsets, Plan, Loading, Stop
+} from '~/views'
 
 
 // the layout
