@@ -8,7 +8,7 @@
 
 // publish
 export * from './flow'
-export environment from './Environment'
+export environment from './environment'
 
 
 // end of file
