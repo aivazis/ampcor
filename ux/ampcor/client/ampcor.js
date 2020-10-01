@@ -15,7 +15,7 @@ import 'lazysizes/plugins/native-loading/ls.native-loading'
 // the component framework
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom'
-import { RelayEnvironmentProvider, useLazyLoadQuery } from 'react-relay/hooks'
+import { RelayEnvironmentProvider } from 'react-relay/hooks'
 
 
 // locals
@@ -24,43 +24,11 @@ import { environment } from '~/context'
 import { Layout } from './views'
 
 
-// the inner component that schedules the startup query
-const App = () => {
-    // define the top level query
-    const FlowQuery = graphql`
-        query ampcorFlowQuery {
-            # server version information
-            version {
-                ...server_version
-            }
-            flow {
-                ... on Ampcor {
-                    ...flow_meta
-                }
-            }
-        }
-    `
-    // schedule it
-    const data = useLazyLoadQuery(
-        FlowQuery,                  // the query
-        {},                         // variables
-        {                           // configuration
-            fetchPolicy: 'store-or-network'
-        },
-    )
-
-    // render the app layout
-    return (
-        <Layout version={data.version} flow={data.flow} />
-    )
-}
-
-
 // the outer component that sets up access to the {relay} environmet
 const Root = () => (
     <RelayEnvironmentProvider environment={environment}>
         <Suspense fallback="loading ... ">
-            <App />
+            <Layout />
         </Suspense>
     </RelayEnvironmentProvider>
 )
