@@ -38,7 +38,7 @@ public:
     // implementation details: data
 private:
     source_reference _source;
-    const value_type _deg = 180 / std::atan(1.);
+    const value_type _deg = 180 / (4.*std::atan(1.));
 
     // default metamethods
 public:

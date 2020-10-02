@@ -22,8 +22,8 @@ auto
 ampcor::viz::SLCPhaser::
 operator*() -> value_type
 {
-    // easy enough: compute the phase and convert it to degrees
-    return std::arg(*_source) * _deg;
+    // easy enough: compute the phase and convert it to degrees in [0, 360)
+    return std::arg(*_source)*_deg + 180.;
 }
 
 
