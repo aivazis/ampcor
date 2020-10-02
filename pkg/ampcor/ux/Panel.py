@@ -6,6 +6,8 @@
 #
 
 
+# externals
+import re
 # support
 import ampcor
 
@@ -47,21 +49,60 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         return ref
 
 
-    # interface
-    def refTile(self, plexus, server, request, match, **kwds):
-        # extract the zoom level
-        zoom = int(match["refTileZoom"])
-        # the origin
-        origin = tuple(map(int, match["refTileOrigin"].split("x")))
-        # and the shape
-        shape = tuple(map(int, match["refTileShape"].split("x")))
+    @property
+    def sec(self):
+        """
+        Access to the raw secondary SLC input data product
+        """
+        # get my cache
+        sec = self._sec
+        # if it's valid
+        if sec:
+            # all done
+            return sec
 
-        # get my {ref} wrapper
-        ref = self.ref
+        # otherwise, get the secondary raster from the flow and wrap it
+        sec = SLC(slc=self.flow.secondary)
+        # cache it
+        self._sec = sec
+        # and return it
+        return sec
+
+
+    # interface
+    def slc(self, plexus, server, request, match, **kwds):
+        """
+        Render a tile from one of the input SLC data products
+        """
+        # parse the {request} uri
+        match = self.slcRegex.match(request.url)
+        # if something is wrong
+        if match is None:
+            # we have a bug; get a channel
+            channel = plexus.firewall
+            # and complain
+            channel.log(f"while scanning {request.url}")
+            channel.log(f"couldn't understand the URI")
+            # if fiewalls aren't fatal
+            return server.documents.NorFound(server=server)
+
+        # extract the slc
+        slc = match["slc"]
+        # the zoom level
+        zoom = int(match["zoom"])
+        # the signal
+        signal = match["signal"]
+        # the origin
+        origin = tuple(map(int, match["origin"].split("x")))
+        # and the shape
+        shape = tuple(map(int, match["shape"].split("x")))
+
+        # get the data product
+        product = getattr(self, slc)
         # ask it for the value range
         range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
         # build the bitmap
-        bitmap = ampcor.libampcor.viz.slc(raster=ref.raster,
+        bitmap = ampcor.libampcor.viz.slc(raster=product.raster,
                                           origin=origin, shape=shape, zoom=zoom,
                                           range=range)
         # and respond
@@ -88,5 +129,22 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
     _refinedGamma = None
     _zoomedGamma = None
     _zoomedComplexGamma = None
+
+    # the SLC request parser
+    slcRegex = re.compile("".join([
+        r"/slc/",
+        r"(?P<slc>(ref)|(sec))",
+        r"/",
+        r"(?P<signal>(ampl)|(phase)|(cmplx))",
+        r"/",
+        r"(?P<zoom>-?[0-9]+)",
+        r"/",
+        r"(?P<shape>[0-9]+x[0-9]+)",
+        r"/",
+        r"(?P<origin>[0-9]+x[0-9]+)",
+        r"$",
+    ]))
+
+
 
 # end of file

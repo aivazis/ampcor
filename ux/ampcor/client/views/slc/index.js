@@ -6,7 +6,7 @@
 
 
 // externals
-import React from 'react'
+import React, { useState } from 'react'
 // locals
 import styles from './styles'
 import { useFlowContext } from '~/context'
@@ -22,9 +22,13 @@ const slc = (props) => {
     // and the secondary slc
     const { shape: secShape } = config.secondary
 
-    // unputs that are hardwired for now
+    // inputs that are hardwired for now
     // the zoom level
-    const zoom = 0
+    const [zoom, setZoom] = useState(0)
+    // which input
+    const [slc, setSLC] = useState("ref")
+    // which signal to show
+    const [signal, setSIgnal] = useState("ampl")
     // our tile shape
     const tileShape = [512, 512]
 
@@ -55,16 +59,16 @@ const slc = (props) => {
             `${first}`
         )
 
-    // build the tile uri stem
-    const uri = `/slc/ref/`
     // assemble the tile shape spec
     const tileShapeSpec = assembleTileSpec(...tileShape)
 
+    // build the tile uri stem
+    const baseURI = `/slc/${slc}/${signal}/${zoom}/${tileShapeSpec}/`
+
     // given the origin of a tile, build its uri
-    const tileUri = (origin) => `tile-${zoom}@` + assembleTileSpec(...origin) + `+${tileShapeSpec}`
+    const tileURI = (origin) => baseURI + assembleTileSpec(...origin)
     // and its title
-    const tileTitle = (origin) =>
-        `showing a (${tileShape}) pixel tile of SLC amplitude at (${origin})`
+    const tileTitle = (origin) => `(${origin})+(${tileShapeSpec})`
 
     // the cartesian product calculator
     const cartesian = (first, ...rest) =>
@@ -88,13 +92,13 @@ const slc = (props) => {
                 <div style={plotStyle}>
                     {tileOrigins.map(origin => {
                          // assemble the tile name
-                         const tileName = tileUri(origin)
+                         const key = assembleTileSpec(origin)
                          // the tile uri
-                         const tileURI = uri + tileName
+                         const uri = tileURI(origin)
                          // render
                          return (
-                             <img key={tileName}
-                                  loading="lazy" className="lazyload" data-src={tileURI}
+                             <img key={key}
+                                  loading="lazy" className="lazyload" data-src={uri}
                                   alt={tileTitle(origin)}
                                   style={tileStyle}
                              />
