@@ -72,35 +72,21 @@ class Dispatcher:
 
 
     # handlers
-    def tile(self, plexus, server, request, **kwds):
+    def exp(self, plexus, server, request, **kwds):
         """
-        Build and serve a bitmap of a coarse amplitude ref tile
+        Serve a bitmap of a gaussian to use as a test image
         """
         uri = "/ux/uni1d.bmp"
         # send a bitmap to the client
         return server.documents.File(uri=uri, server=server, application=plexus)
 
 
-    def ref(self, **kwds):
+    def slc(self, **kwds):
         """
-        Build and serve a tile from the {ref} SLC input data product
+        Build and serve a tile from one of the SLC input data products
         """
         # ask the panel
-        return self.panel.refTile(**kwds)
-
-
-    def rac(self, plexus, server, request, **kwds):
-        """
-        Build and serve a bitmap of a coarse amplitude ref tile
-        """
-        # tell me
-        plexus.info.log(" rac: preparing raster")
-        # ask the plexus for its {mdy} panel
-        mdy = plexus.pyre_repertoir.resolve(plexus=plexus, spec="mdy")
-        # ask it to build me a bitmap
-        data = mdy.rac(plexus=plexus)
-        # and hand it to the client
-        return server.documents.BMP(server=server, value=data)
+        return self.panel.slc(**kwds)
 
 
     def graphql(self, **kwds):
@@ -151,9 +137,8 @@ class Dispatcher:
 
     # private data
     regex = re.compile("|".join([
-        r"/(?P<tile>exp/tile)",
-        r"/(?P<ref>slc/ref/tile-(?P<refTileZoom>[0-9])@(?P<refTileOrigin>[0-9]+x[0-9]+)\+(?P<refTileShape>[0-9]+x[0-9]+))",
-        r"/(?P<rac>ref/amplitude/coarse)",
+        r"/(?P<exp>exp)",
+        r"/(?P<slc>slc)",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
