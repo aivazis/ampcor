@@ -16,6 +16,7 @@ export default {
     panel: {
         // my box
         flex: "1",
+        position: "relative",
         margin: "1.0em",
         padding: "0.0em",
 
