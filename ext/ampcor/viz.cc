@@ -29,8 +29,9 @@ namespace ampcor::py {
 
     // bitmap
     using bmp_t = ampcor::viz::bmp_t;
-    // slc color map
+    // slc color maps
     using slc_uni1d_t = ampcor::viz::uni1d_t<ampcor::viz::slc_detector_t>;
+    using slc_phase1d_t = ampcor::viz::phase1d_t<ampcor::viz::slc_phaser_t>;
     // arena color map
     using arena_uni1d_t = ampcor::viz::uni1d_t<arena_t::const_iterator>;
 }
@@ -135,9 +136,9 @@ viz(py::module & m) {
           "generate a BMP for the {arena} tile at the given {tileid}"
           )
 
-        // generate a bitmap out of an SLC tile
-        .def("slc",
-             // the functions
+        // generate a bitmap out of the amplitude of an SLC tile
+        .def("slcAmplitude",
+             // the handler
              [](slc_const_reference slc,
                 std::pair<int, int> tileOrigin, std::pair<int, int> tileShape,
                 int zoom, std::pair<float, float> range) -> bmp_t {
@@ -198,6 +199,49 @@ viz(py::module & m) {
              // the doctring
              "make a bitmap out the specified SLC tile"
              )
+
+        // generate a bitmap out of the amplitude of an SLC tile
+        .def("slcPhase",
+             // the handler
+             [](slc_const_reference slc,
+                std::pair<int, int> tileOrigin, std::pair<int, int> tileShape,
+                int zoom) -> bmp_t {
+                 // make a channel
+                 pyre::journal::debug_t channel("ampcor.viz.slc");
+
+                 // pick the number of bins
+                 int bins = 1 << 5;
+                 // pick saturation and brightness
+                 auto saturation = 0.5;
+                 auto brightness = 0.5;
+
+                 // isolate the portion of the raster i care about
+                 slc_t::index_type boxOrigin = { tileOrigin.first, tileOrigin.second };
+                 slc_t::shape_type boxShape = { tileShape.first, tileShape.second };
+                 // make the tile
+                 auto tile = slc.box(boxOrigin, boxShape);
+                 // make an iterator to its beginning
+                 auto start = tile.cbegin();
+                 // and a phase calculator
+                 ampcor::viz::slc_phaser_t phaser(start);
+
+                 // make the color map
+                 slc_phase1d_t cmap(phaser, bins, saturation, brightness);
+
+                 // make a bitmap object
+                 bmp_t bmp(boxShape[0], boxShape[1]);
+                 // encode the data using the color map
+                 bmp.encode(cmap);
+
+                 // and return it
+                 return bmp;
+             },
+             // the signature
+             "raster"_a, "origin"_a, "shape"_a, "zoom"_a,
+             // the doctring
+             "make a bitmap out the specified SLC tile"
+             )
+
         // done
         ;
 
