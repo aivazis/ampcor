@@ -25,6 +25,7 @@
 // interpolators that map 1D data to color values
 #include "Phase1D.h"
 #include "Uniform1D.h"
+#include "Complex.h"
 
 // a detector for SLC pixels
 #include "SLCDetector.h"

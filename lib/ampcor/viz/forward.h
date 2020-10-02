@@ -30,6 +30,8 @@ namespace ampcor::viz {
     template <class iteratorT> class Uniform1D;
     // phase interpolator
     template <class iteratorT> class Phase1D;
+    // complex interpolator
+    template <class iteratorT> class Complex;
 }
 
 

@@ -21,6 +21,9 @@ namespace ampcor::viz {
     template <class sourceT>
     using uni1d_t = Uniform1D<sourceT>;
 
+    template <class sourceT>
+    using complex_t = Complex<sourceT>;
+
     // the SLC pixel detector
     using slc_detector_t = SLCDetector;
     // the phase calculator
