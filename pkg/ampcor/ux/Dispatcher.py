@@ -59,13 +59,13 @@ class Dispatcher:
 
         # make a spec for the app engine
         spec = 'ux'
-        # use it to build a name for it
+        # use the spec to build a name for my panel
         name = f"{plexus.pyre_name}.{spec}"
         # make an instance of the application engine
         self.panel = ampcor.ux.panel(name=name, spec=spec, plexus=plexus, globalAliases=True)
 
         # instantiate the {GraphQL} handler
-        self.gql = GraphQL()
+        self.gql = GraphQL(panel=self.panel)
 
         # all done
         return
