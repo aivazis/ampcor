@@ -10,6 +10,7 @@ import React, { useState } from 'react'
 // locals
 import styles from './styles'
 import { useFlowContext } from '~/context'
+import { SLCAmplitudeSelector, SLCComplexSelector, SLCPhaseSelector } from '~/widgets/slc'
 
 
 // explore the input SLCs
@@ -28,9 +29,14 @@ const slc = (props) => {
     // which input
     const [slc, setSLC] = useState("ref")
     // which signal to show
-    const [signal, setSIgnal] = useState("ampl")
+    const [signal, setSignal] = useState("ampl")
     // our tile shape
     const tileShape = [512, 512]
+
+    // set up mutators for the signal
+    const selectAmplitude = () => setSignal("ampl")
+    const selectComplex = () => setSignal("cmplx")
+    const selectPhase = () => setSignal("phase")
 
     // this is the shape of the slc, rounded down to the nearest tile multiple
     // N.B.: this clips the tiles that ride on the right and bottom margin of the data set;
@@ -89,10 +95,21 @@ const slc = (props) => {
     return (
         <section style={styles.slc}>
             <div style={styles.viewport}>
+                <div style={styles.tools.box}>
+                    <SLCAmplitudeSelector selected={signal} selector={selectAmplitude}
+                                          style={styles.tools}
+                                          xform="scale(.4 .4)" />
+                    <SLCPhaseSelector selected={signal} selector={selectPhase}
+                                      style={styles.tools}
+                                      xform="scale(.4 .4)" />
+                    <SLCComplexSelector selected={signal} selector={selectComplex}
+                                        style={styles.tools}
+                                        xform="scale(.4 .4)" />
+                </div>
                 <div style={plotStyle}>
                     {tileOrigins.map(origin => {
                          // assemble the tile name
-                         const key = assembleTileSpec(origin)
+                         const key = tileURI(origin)
                          // the tile uri
                          const uri = tileURI(origin)
                          // render

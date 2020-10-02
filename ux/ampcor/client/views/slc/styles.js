@@ -43,6 +43,38 @@ export default {
         height: "256px",
     },
 
+    tools: {
+        box: {
+            position: "absolute",
+            right: "0.5em",
+            top: "0.5em",
+            width: "2.0em",
+            height: "6.0em",
+            opacity: "0.75",
+
+            backgroundColor: wheel.gray.white,
+            border: `3px solid ${wheel.gray.white}`,
+
+            display: "flex",
+            flexDirection: "column",
+        },
+
+        tool: {
+            flex: "none",
+            width: "2.0em",
+            height: "2.0em",
+        },
+
+        frame: {
+        },
+
+        selected: {
+        },
+
+        shape: {
+        },
+    },
+
     placeholder: {
         // inherit
         ...base.placeholder,
