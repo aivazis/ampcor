@@ -20,6 +20,8 @@ from pyre import (
     grid,
     # workflow products and factories
     flow,
+    # shells
+    application, plexus,
     # miscellaneous
     primitives, tracking, units, weaver
     )
