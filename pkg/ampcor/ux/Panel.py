@@ -81,9 +81,9 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
             # we have a bug; get a channel
             channel = plexus.firewall
             # and complain
-            channel.log(f"while scanning {request.url}")
+            channel.line(f"while scanning '{request.url}'")
             channel.log(f"couldn't understand the URI")
-            # if fiewalls aren't fatal
+            # if firewalls aren't fatal
             return server.documents.NorFound(server=server)
 
         # extract the slc
@@ -99,14 +99,50 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
 
         # get the data product
         product = getattr(self, slc)
-        # ask it for the value range
-        range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
-        # build the bitmap
-        bitmap = ampcor.libampcor.viz.slc(raster=product.raster,
-                                          origin=origin, shape=shape, zoom=zoom,
-                                          range=range)
-        # and respond
-        return server.documents.BMP(server=server, bmp=memoryview(bitmap))
+
+        # if we are showing amplitude
+        if signal == "ampl":
+            # set the value range
+            range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
+            # get the bitmap factory
+            viz = ampcor.libampcor.viz.slcAmplitude
+            # build the bitmap
+            bitmap = viz(raster=product.raster,
+                         origin=origin, shape=shape, zoom=zoom,
+                         range=range)
+            # and respond
+            return server.documents.BMP(server=server, bmp=memoryview(bitmap))
+
+        # if we are showing phase
+        if signal == "phase":
+            # get the bitmap factory
+            viz = ampcor.libampcor.viz.slcPhase
+            # build the bitmap
+            bitmap = viz(raster=product.raster,
+                         origin=origin, shape=shape, zoom=zoom)
+            # and respond
+            return server.documents.BMP(server=server, bmp=memoryview(bitmap))
+
+        # if we are showing the full complex value
+        if signal == "cmplx":
+            # set the value range
+            range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
+            # get the bitmap factory
+            viz = ampcor.libampcor.viz.slc
+            # build the bitmap
+            bitmap = viz(raster=product.raster,
+                         origin=origin, shape=shape, zoom=zoom,
+                         range=range)
+            # and respond
+            return server.documents.BMP(server=server, bmp=memoryview(bitmap))
+
+        # otherwise, we have a bug; get a channel
+        channel = plexus.firewall
+        # and complain
+        channel.log(f"while scanning {request.url}")
+        channel.log(f"couldn't understand the signal type")
+        # if firewalls aren't fatal
+        return server.documents.NorFound(server=server)
 
 
     # implementation details
