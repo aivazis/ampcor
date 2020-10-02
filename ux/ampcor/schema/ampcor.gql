@@ -76,30 +76,8 @@ type Correlator implements Node & Producer {
   name: String!
   family: String!
   # for producer
-  inputs: [Product!]!
-  outputs: [Product!]!
-}
-
-
-# the concrete entities
-# products
-type Product implements Node & Specification {
-  # for node
-  id: ID!
-  name: String!
-  family: STring!
-}
-
-
-# factories
-type Factory implements Node & Producer {
-  # for node
-  id: ID!
-  name: String!
-  family: String!
-  # for producer
-  inputs: [Product!]!
-  outputs: [Product!]!
+  inputs: [Specification!]!
+  outputs: [Specification!]!
 }
 
 
