@@ -1,0 +1,64 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_viz_Phase1D_icc)
+#error this file contains implementation details for ampcor::viz::Phase1D
+#else
+
+
+// metamethods
+template <class iteratorT>
+ampcor::viz::Phase1D<iteratorT>::
+Phase1D(source_reference source,
+        int bins,
+        double saturation, double brightness) :
+    _bins { bins },
+    _saturation { saturation },
+    _brightness { brightness },
+    _scale { 360. / _bins},
+    _source { source }
+{}
+
+
+// interface
+template <class iteratorT>
+auto
+ampcor::viz::Phase1D<iteratorT>::
+operator*() const -> rgb_type
+{
+    // get the value from the data source and map it to [0, 360)
+    auto value = std::fmod(*_source, 360.);
+
+    // bin the value
+    int bin = value / _scale;
+    // compute the hue
+    auto hue = bin * _scale;
+
+    // wrap the conversion kernel
+    auto f = [this, hue](int n) -> color_type {
+        return kernelHSBtoRGB(n, hue, _saturation, _brightness);
+    };
+
+    // build the rgb triplet and return it
+    return rgb_type { f(5), f(3), f(1) };
+}
+
+
+template <class iteratorT>
+auto
+ampcor::viz::Phase1D<iteratorT>::
+operator++() -> void
+{
+    // make {_source} point to the next value
+    ++_source;
+    // all done
+    return;
+}
+
+
+#endif
+
+// end of file

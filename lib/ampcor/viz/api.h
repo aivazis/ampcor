@@ -16,6 +16,9 @@ namespace ampcor::viz {
 
     // the interpolators
     template <class sourceT>
+    using phase1d_t = Phase1D<sourceT>;
+
+    template <class sourceT>
     using uni1d_t = Uniform1D<sourceT>;
 
     // the SLC pixel detector

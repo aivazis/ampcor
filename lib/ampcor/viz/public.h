@@ -23,6 +23,7 @@
 // the microsoft BMP generator
 #include "BMP.h"
 // interpolators that map 1D data to color values
+#include "Phase1D.h"
 #include "Uniform1D.h"
 
 // a detector for SLC pixels

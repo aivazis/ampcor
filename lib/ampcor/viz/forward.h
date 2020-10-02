@@ -28,6 +28,8 @@ namespace ampcor::viz {
 
     // one dimensional linear interpolator
     template <class iteratorT> class Uniform1D;
+    // phase interpolator
+    template <class iteratorT> class Phase1D;
 }
 
 
