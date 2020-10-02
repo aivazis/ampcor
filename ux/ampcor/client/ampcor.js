@@ -70,7 +70,7 @@ const App = () => {
 // the outer component that sets up access to the {relay} environmet
 const Root = () => (
     <RelayEnvironmentProvider environment={environment}>
-        <Suspense fallback={Loading}>
+        <Suspense fallback={<Loading/>}>
             <App />
         </Suspense>
     </RelayEnvironmentProvider>
