@@ -9,7 +9,7 @@
 #define ampcor_viz_Phase1D_h
 
 
-// a uniform 1D interpolator
+// a phase interpolator
 template <class iteratorT>
 class ampcor::viz::Phase1D {
     // types
