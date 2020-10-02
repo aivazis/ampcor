@@ -137,8 +137,8 @@ class Dispatcher:
 
     # private data
     regex = re.compile("|".join([
-        r"/(?P<exp>exp)",
-        r"/(?P<slc>slc)",
+        r"/(?P<exp>exp)/",
+        r"/(?P<slc>slc)/",
         r"/(?P<graphql>graphql)",
         r"/(?P<stop>stop)",
         r"/(?P<document>(graphics/.+)|(styles/.+)|(fonts/.+)|(.+\.js))",
