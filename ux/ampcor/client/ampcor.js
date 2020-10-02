@@ -24,7 +24,6 @@ import styles from './styles'
 // context
 import { environment, FlowContext, useFlowConfigQuery } from '~/context'
 // views
-// views
 import {
     Header, Footer,
     Flow, EXP, SLC, Gamma, Offsets, Plan, Loading, Stop
@@ -41,23 +40,23 @@ const App = () => {
         <FlowContext.Provider value={data.flow}>
             <Router>
                 <div style={styles.layout}>
-                    <Header/>
+                    <Header />
                     <Switch>
                         {/* the top level views */}
-                        <Route path="/flow" component={Flow}/>
-                        <Route path="/exp" component={EXP}/>
-                        <Route path="/slc" component={SLC}/>
-                        <Route path="/gamma" component={Gamma}/>
-                        <Route path="/offsets" component={Offsets}/>
-                        <Route path="/plan" component={Plan}/>
+                        <Route path="/flow" component={Flow} />
+                        <Route path="/exp" component={EXP} />
+                        <Route path="/slc" component={SLC} />
+                        <Route path="/gamma" component={Gamma} />
+                        <Route path="/offsets" component={Offsets} />
+                        <Route path="/plan" component={Plan} />
 
                         {/* the closing page */}
-                        <Route path="/stop" component={Stop}/>
+                        <Route path="/stop" component={Stop} />
                         {/* the page to render while waiting for data to arrive */}
-                        <Route path="/loading" component={Loading}/>
+                        <Route path="/loading" component={Loading} />
 
                         {/* default landing spot */}
-                        <Route path="/" component={Flow}/>
+                        <Route path="/" component={Flow} />
                     </Switch>
                     <Footer />
                 </div>
@@ -70,7 +69,7 @@ const App = () => {
 // the outer component that sets up access to the {relay} environmet
 const Root = () => (
     <RelayEnvironmentProvider environment={environment}>
-        <Suspense fallback={<Loading/>}>
+        <Suspense fallback={<Loading />}>
             <App />
         </Suspense>
     </RelayEnvironmentProvider>
