@@ -1,0 +1,42 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_viz_SLCPhaser_icc)
+#error this file contains implementation details for ampcor::viz::SLCPhaser
+#else
+
+
+// metamethods
+// constructor
+ampcor::viz::SLCPhaser::
+SLCPhaser(source_reference source):
+    _source(source)
+{}
+
+
+// interface
+auto
+ampcor::viz::SLCPhaser::
+operator*() -> value_type
+{
+    // easy enough: compute the phase and convert it to degrees
+    return std::arg(*_source) * _deg;
+}
+
+
+auto
+ampcor::viz::SLCPhaser::
+operator++() -> void
+{
+    //  increment my source
+    ++_source;
+    // all done
+    return;
+}
+
+#endif
+
+// end of file

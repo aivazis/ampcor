@@ -20,6 +20,8 @@ namespace ampcor::viz {
 
     // the SLC pixel detector
     using slc_detector_t = SLCDetector;
+    // the phase calculator
+    using slc_phaser_t = SLCPhaser;
 }
 
 

@@ -20,6 +20,8 @@ namespace ampcor::viz {
 
     // iterator that detects SLC tiles on the fly
     class SLCDetector;
+    // iterator that computes SLC phase on the fly
+    class SLCPhaser;
 
     // microsoft bmp
     class BMP;

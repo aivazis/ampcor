@@ -27,6 +27,8 @@
 
 // a detector for SLC pixels
 #include "SLCDetector.h"
+// phase calculator
+#include "SLCPhaser.h"
 
 # endif
 
