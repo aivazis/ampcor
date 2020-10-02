@@ -30,7 +30,7 @@ ampcor::viz::Phase1D<iteratorT>::
 operator*() const -> rgb_type
 {
     // get the value from the data source and map it to [0, 360)
-    auto value = std::fmod(*_source, 360.);
+    auto value = *_source;
 
     // bin the value
     int bin = value / _scale;
