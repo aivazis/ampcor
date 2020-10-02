@@ -28,14 +28,6 @@ export default {
         overflow: "auto",
     },
 
-    tile: {
-        // visibility: "hidden",
-        flex: "none",
-        // the sizes here are defaults; they get overriden when more/better is known
-        width: "500px",
-        height: "500px",
-    },
-
     plot: {
         flex: "none",
         display: "flex",
@@ -44,11 +36,16 @@ export default {
         overflow: "hidden",
     },
 
+    tile: {
+        flex: "none",
+        // the sizes here are defaults; they get overriden when more/better is known
+        width: "256px",
+        height: "256px",
+    },
+
     placeholder: {
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        // inherit
+        ...base.placeholder,
     },
 
 }
