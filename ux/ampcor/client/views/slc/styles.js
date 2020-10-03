@@ -20,12 +20,8 @@ export default {
     },
 
     viewport: {
-        padding: "0.0em",
-        margin: "0.0em",
-        width: "100%",
-        height: "100%",
-        border: `1px solid ${wheel.gray.bassalt}`,
-        overflow: "auto",
+        // inherit
+        ...base.viewport,
     },
 
     plot: {
