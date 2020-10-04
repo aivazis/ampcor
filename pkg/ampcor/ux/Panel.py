@@ -101,9 +101,9 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         product = getattr(self, slc)
 
         # if we are showing amplitude
-        if signal == "ampl":
+        if signal == "amplitude":
             # set the value range
-            range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
+            range = (0, 1000) # or use {product.range}, if you don't mind waiting a bit...
             # get the bitmap factory
             viz = ampcor.libampcor.viz.slcAmplitude
             # build the bitmap
@@ -124,7 +124,7 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
             return server.documents.BMP(server=server, bmp=memoryview(bitmap))
 
         # if we are showing the full complex value
-        if signal == "cmplx":
+        if signal == "complex":
             # set the value range
             range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
             # get the bitmap factory
@@ -171,7 +171,7 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         r"/slc/",
         r"(?P<slc>(ref)|(sec))",
         r"/",
-        r"(?P<signal>(ampl)|(phase)|(cmplx))",
+        r"(?P<signal>(amplitude)|(phase)|(complex))",
         r"/",
         r"(?P<zoom>-?[0-9]+)",
         r"/",

@@ -11,6 +11,52 @@ import { wheel, theme } from '~/palette'
 import base from '~/views/styles'
 
 
+// tool styling; see '~/widgets/tool/*.js' for details
+const tool = {
+    // the base state
+    base: {
+        box: {
+            flex: "none",
+            width: "2em",
+            height: "2em",
+            color: theme.banner.name,
+            // backgroundColor: theme.page.background,
+        },
+
+        group: {
+            transform: "scale(0.4)",
+        },
+
+        frame: {
+            fill: wheel.gray.obsidian,
+            stroke: wheel.gray.steel,
+            strokeOpacity: 0.75,
+            strokeWidth: "5px",
+        },
+
+        icon: {
+            stroke: theme.banner.name,
+            strokeOpacity: 0.75,
+            strokeWidth: "5px",
+        },
+
+    },
+    inactive: {
+        frame: {
+            fillOpacity: .2,
+        },
+        icon: {
+            strokeOpacity: .2,
+        },
+    },
+    selected: {
+        frame: {
+            stroke: theme.banner.name,
+        },
+    }
+}
+
+
 // publish
 export default {
     // the container
@@ -39,35 +85,26 @@ export default {
         height: "256px",
     },
 
-    tools: {
-        box: {
+    // slc tool box styling
+    slcToolbox: {
+        toolbox: {
+            // positioning
             position: "absolute",
             right: "0.5em",
             top: "0.5em",
+            // size
             width: "2.0em",
-            height: "6.0em",
+            height: "6.3em", // 3 tools at 2em each, plus some space in between
+            // styling
             opacity: "0.75",
-
-            backgroundColor: wheel.gray.white,
-            border: `3px solid ${wheel.gray.white}`,
-
-            display: "flex",
-            flexDirection: "column",
+            // backgroundColor: theme.page.background,
+            // border: `1px solid ${wheel.gray.basalt}`,
         },
 
+        // tool styling; see '~/widgets/tool/*.js' for details
         tool: {
-            flex: "none",
-            width: "2.0em",
-            height: "2.0em",
-        },
-
-        frame: {
-        },
-
-        selected: {
-        },
-
-        shape: {
+            // start with the default established up top
+            ...tool
         },
     },
 
