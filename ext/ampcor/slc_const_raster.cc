@@ -81,28 +81,28 @@ slc_const_raster(py::module &m) {
         .def_property_readonly("range",
                                // the getter
                                [](const slc_const_raster_t & slc) {
-                                   // initialize the values; don't bother with square roots for now
-                                   auto min = std::norm(slc[0]);
-                                   auto max = min;
+                                   // the sampling fraction
+                                   auto skip = 1000;
+                                   // get the number of pixels
+                                   auto pixels = slc.cells();
+                                   // the normalization factor
+                                   auto samples = (1.0 * pixels) / skip;
 
-                                   // go through all the values
-                                   for (auto v: slc) {
-                                       // compute the magnitude
-                                       auto r = std::norm(v);
-                                       // if it's bigger than the current max
-                                       if (r > max) {
-                                           // save it
-                                           max = r;
-                                       }
-                                       // if it's smaller that the current min
-                                       if (r < min) {
-                                           // save it
-                                           min = r;
-                                       }
+                                   // initialize the values; don't bother with square roots for now
+                                   auto av2 = std::norm(slc[0]);
+                                   // sample the raster
+                                   for (auto i=0; i < pixels; i+=skip) {
+                                       // accumulate the value
+                                       av2 += std::norm(slc[i]) / samples;
                                    }
 
+                                   //  get the variance
+                                   auto var = std::sqrt(av2);
+                                   // set a scale
+                                   auto scale = 5.0;
+
                                    // build the answer and return
-                                   return std::pair(std::sqrt(min), std::sqrt(max));
+                                   return std::pair(var/scale, scale*var);
                                },
                                //   the docstring
                                "compute the range of values in the raster"
