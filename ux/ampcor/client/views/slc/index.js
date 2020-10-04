@@ -69,8 +69,8 @@ const slc = (props) => {
 
     // given the origin of a tile, build its uri
     const tileURI = (origin) => baseURI + assembleTileSpec(...origin)
-    // and its title
-    const tileTitle = (origin) => `(${origin})+(${tileShapeSpec})`
+    // and its title; disabled, for now
+    // const tileTitle = (origin) => `(${origin})+(${tileShapeSpec})`
 
     // the cartesian product calculator
     const cartesian = (first, ...rest) =>
@@ -106,7 +106,6 @@ const slc = (props) => {
                          return (
                              <img key={key}
                                   loading="lazy" className="lazyload" data-src={uri}
-                                  alt={tileTitle(origin)}
                                   style={tileStyle}
                              />
                          )
