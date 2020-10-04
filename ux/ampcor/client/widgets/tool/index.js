@@ -44,7 +44,7 @@ const tool = ({state, style, click, children}) => {
 
     // render
     return (
-        <button type="button" style={boxStyle} onClick={onClick} >
+        <div style={boxStyle} onClick={onClick} >
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" {...svgStyle} >
                 {/* box */}
                 <g {...groupStyle}>
@@ -56,7 +56,7 @@ const tool = ({state, style, click, children}) => {
                     </g>
                 </g>
             </svg>
-        </button>
+        </div>
     )
 }
 
