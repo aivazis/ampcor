@@ -24,7 +24,8 @@ const widget = ({click, state, ...rest}) => {
         <Tool click={pick} state={state[name]} {...rest}>
             {/* my icon */}
             <path d="M 71.5 37.5 A 25 27 0 1 0 71.5 62.5" />
-            <path d="M 37 28 v 45 M 48 24 v 53" />
+            <path d="M 41 26 v 49" />
+            {/* <path d="M 37 28 v 45 M 50 24 v 53" /> */}
         </Tool >
     )
 }
