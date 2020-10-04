@@ -11,26 +11,14 @@ import { wheel, theme } from '~/palette'
 
 // publish
 export default {
-    tool: {
-        cursor: "pointer",
-        width: "4.0em",
-        height: "4.0em",
+    toolbox: {
+        // for my children
+        display: "flex",
+        // vertical box, by default
+        flexDirection: "column",
+        // spread them out
+        justifyContent: "space-between",
     },
-
-    frame: {
-        stroke: wheel.gray.aluminum,
-        strokeWidth: "2px",
-    },
-
-    shape: {
-        stroke: theme.banner.name,
-        strokeWidth: "5px",
-    },
-
-    selected: {
-        stroke: theme.banner.name,
-    },
-
 }
 
 
