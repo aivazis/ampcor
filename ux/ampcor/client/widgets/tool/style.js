@@ -18,6 +18,7 @@ export default {
             cursor: "pointer",
             border: "none",
             fontSize: "20px",
+            backgroundColor: theme.banner.separator,
         },
 
         // the drawing context
