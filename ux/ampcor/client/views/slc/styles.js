@@ -29,6 +29,7 @@ const tool = {
 
         frame: {
             fill: wheel.gray.obsidian,
+            fillOpacity: 0.4,
             stroke: wheel.gray.steel,
             strokeOpacity: 0.75,
             strokeWidth: "5px",
@@ -51,6 +52,7 @@ const tool = {
     },
     selected: {
         frame: {
+            fillOpacity: 1.0,
             stroke: theme.banner.name,
         },
     }
@@ -90,8 +92,8 @@ export default {
         toolbox: {
             // positioning
             position: "absolute",
-            right: "0.5em",
-            top: "0.5em",
+            right: "1.0em",
+            top: "0.75em",
             // size
             width: "2.0em",
             height: "6.3em", // 3 tools at 2em each, plus some space in between
