@@ -264,8 +264,8 @@ viz(py::module & m) {
                  // pick the number of bins
                  int bins = 1 << 5;
                  // pick saturation and brightness
-                 auto saturation = 0.5;
-                 auto brightness = 0.5;
+                 auto saturation = 1.0;
+                 auto brightness = 1.0;
 
                  // isolate the portion of the raster i care about
                  slc_t::index_type boxOrigin = { tileOrigin.first, tileOrigin.second };
