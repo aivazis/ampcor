@@ -12,11 +12,19 @@ import styles from './style'
 
 
 // the tool
-const tool = ({state, style, children}) => {
+const tool = ({state, style, click, children}) => {
+    // build the event handler
+    const onClick = (state === "active") ? click : null
+
     // mix the container styles
     const boxStyle = {
         ...styles.base.box, ...styles?.[state].box,
         ...style?.base?.box, ...style?.[state]?.box
+    }
+    // mix the svg container styles
+    const svgStyle = {
+        ...styles.base.svg, ...styles?.[state].svg,
+        ...style?.base?.svg, ...style?.[state]?.svg
     }
     // mix the top level group styles
     const groupStyle = {
@@ -36,9 +44,8 @@ const tool = ({state, style, children}) => {
 
     // render
     return (
-        <button type="button" style={boxStyle}>
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
-                 {...styles.base.svg}>
+        <button type="button" style={boxStyle} onClick={onClick} >
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" {...svgStyle} >
                 {/* box */}
                 <g {...groupStyle}>
                     {/* the frame */}
