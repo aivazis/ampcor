@@ -103,7 +103,7 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         # if we are showing amplitude
         if signal == "amplitude":
             # set the value range
-            range = (0, 1000) # or use {product.range}, if you don't mind waiting a bit...
+            range = product.range
             # get the bitmap factory
             viz = ampcor.libampcor.viz.slcAmplitude
             # build the bitmap
@@ -126,7 +126,7 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         # if we are showing the full complex value
         if signal == "complex":
             # set the value range
-            range = (0, 1000) # or use {ref.range}, if you don't mind waiting a bit...
+            range = product.range
             # get the bitmap factory
             viz = ampcor.libampcor.viz.slc
             # build the bitmap
