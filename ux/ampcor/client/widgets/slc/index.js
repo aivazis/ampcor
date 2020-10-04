@@ -40,8 +40,6 @@ const slc = ({select, style}) => {
     // mix the toolbox style
     const toolboxStyle = { ...styles.toolbox, ...style.toolbox }
 
-    console.log(style)
-
     // render
     return (
         <div style={toolboxStyle}>
