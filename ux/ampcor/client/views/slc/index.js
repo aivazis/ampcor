@@ -11,6 +11,7 @@ import React, { useState } from 'react'
 import styles from './styles'
 import { useFlowContext } from '~/context'
 import SLC from '~/widgets/slc'
+import Zoom from '~/widgets/zoom'
 
 
 // explore the input SLCs
@@ -92,6 +93,8 @@ const slc = (props) => {
             <div style={styles.viewport}>
                 {/* the SLC signal toolbox */}
                 <SLC select={setSignal} style={styles.slcToolbox} />
+                {/* the zoom toolbox */}
+                <Zoom click={() => null} style={styles.zoomToolbox} />
                 {/* the SLC signal rendering area */}
                 <div style={plotStyle} >
                     {tileOrigins.map(origin => {

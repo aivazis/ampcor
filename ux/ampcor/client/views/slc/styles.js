@@ -110,6 +110,29 @@ export default {
         },
     },
 
+    // slc tool box styling
+    zoomToolbox: {
+        toolbox: {
+            // positioning
+            position: "absolute",
+            right: "1.0em",
+            bottom: "0.75em",
+            // size
+            width: "2.0em",
+            height: "4.0em", // 2 tools at 2em each, no space in between
+            // styling
+            opacity: "0.75",
+            // backgroundColor: theme.page.background,
+            // border: `1px solid ${wheel.gray.basalt}`,
+        },
+
+        // tool styling; see '~/widgets/tool/*.js' for details
+        tool: {
+            // start with the default established up top
+            ...tool
+        },
+    },
+
     placeholder: {
         // inherit
         ...base.placeholder,
