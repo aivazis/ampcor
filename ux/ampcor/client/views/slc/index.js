@@ -18,27 +18,40 @@ import Zoom from '~/widgets/zoom'
 const slc = (props) => {
     // get the flow configuration
     const config = useFlowContext()
-    // unpack
-    // the reference slc
-    const { shape: refShape } = config.reference
-    // and the secondary slc
-    const { shape: secShape } = config.secondary
+    // unpack the raster shapes
+    const rasterShapes = { ref: config.reference.shape, sec: config.secondary.shape }
 
-    // inputs that are hardwired for now
-    // the zoom level
-    const [zoom, setZoom] = useState(0)
-    // which input
+    // select the slc to show
     const [slc, setSLC] = useState("ref")
-    // which signal to show
-    const [signal, setSignal] = useState("amplitude")
-    // our tile shape
+    // extract its shape
+    const rasterShape = rasterShapes[slc]
+
+    // our tile shape; optimized so that each line is one page
     const tileShape = [512, 512]
+
+    // the zoom level suggestions for each axis
+    const maxZoom  = Math.min(
+        ...rasterShape.map((sz, i) => Math.floor(Math.log2(sz/tileShape[i])))
+    )
+
+    // start out at maximum zoom
+    const [zoom, setZoom] = useState(maxZoom)
+    // convert the zoom level to a scaling factor
+    const scale = 1 << zoom;
+
+    // the zoom in callback; clip at zoom level 0
+    const zoomin = () => (zoom > 0 ? setZoom(zoom-1) : null)
+    // the zoom out callback; clip at {maxZoom}
+    const zoomout = () => (zoom < maxZoom ? setZoom(zoom+1) : null)
+
+    // pick a signal to show
+    const [signal, setSignal] = useState("amplitude")
 
     // this is the shape of the slc, rounded down to the nearest tile multiple
     // N.B.: this clips the tiles that ride on the right and bottom margin of the data set;
     // they aren't whole tiles, so they either need a dynamically generated margin or more
     // complicated request logic
-    const gridShape = [0, 1].map(i => Math.floor(refShape[i] / tileShape[i]))
+    const gridShape = [0, 1].map(i => Math.floor(rasterShape[i] / tileShape[i] / scale))
     //  the plot shape rounded down to the nearest tile
     const plotShape = [0, 1].map(i => gridShape[i] * tileShape[i])
 
@@ -94,7 +107,7 @@ const slc = (props) => {
                 {/* the SLC signal toolbox */}
                 <SLC select={setSignal} style={styles.slcToolbox} />
                 {/* the zoom toolbox */}
-                <Zoom click={() => null} style={styles.zoomToolbox} />
+                <Zoom zoomin={zoomin} zoomout={zoomout} style={styles.zoomToolbox} />
                 {/* the SLC signal rendering area */}
                 <div style={plotStyle} >
                     {tileOrigins.map(origin => {
