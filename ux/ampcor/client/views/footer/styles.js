@@ -23,7 +23,7 @@ export default {
 
         // styling
         backgroundColor: theme.colophon.background,
-        borderTop: `1px solid ${theme.colophon.separator}`,
+        // borderTop: `1px solid ${theme.colophon.separator}`,
 
         // my children
         display: "flex",
