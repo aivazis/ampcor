@@ -14,25 +14,22 @@ import Out from './out'
 
 
 // the zoom toolbox
-const slc = ({click, style}) => {
-    // on click: do nothing special, for now
-    const pick = () => click()
-
+const widget = ({zoomin, zoomout, style}) => {
     // mix the toolbox style
     const toolboxStyle = { ...styles.toolbox, ...style.toolbox }
 
     // render
     return (
         <div style={toolboxStyle}>
-            <In style={style?.tool} click={pick} />
-            <Out style={style?.tool} click={pick} />
+            <In style={style?.tool} click={zoomin} />
+            <Out style={style?.tool} click={zoomout} />
         </div>
     )
 }
 
 
 // publish
-export default slc
+export default widget
 
 
 // end of file
