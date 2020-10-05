@@ -23,7 +23,5 @@ export Loading from './loading'
 // the page rendered when the user kills the server
 export Stop from './stop'
 
-export Layout from './layout'
-
 
 // end of file
