@@ -195,7 +195,12 @@ viz(py::module & m) {
                 std::pair<int, int> tileOrigin, std::pair<int, int> tileShape,
                 int zoom, std::pair<float, float> range) -> bmp_t {
                  // make a channel
-                 pyre::journal::debug_t channel("ampcor.viz.slc");
+                 pyre::journal::info_t channel("ampcor.viz.slc");
+
+                 // turn the zoom level into a scale
+                 auto scale = 1 << zoom;
+                 // and to the iteration step
+                 slc_t::index_type step { scale };
 
                  // unpack the range
                  auto [minv, maxv] = range;
@@ -210,12 +215,12 @@ viz(py::module & m) {
                  auto maxB = 1.0;
 
                  // isolate the portion of the raster i care about
-                 slc_t::index_type boxOrigin = { tileOrigin.first, tileOrigin.second };
-                 slc_t::shape_type boxShape = { tileShape.first, tileShape.second };
+                 slc_t::index_type boxOrigin = { scale*tileOrigin.first, scale*tileOrigin.second };
+                 slc_t::shape_type boxShape = { scale*tileShape.first, scale*tileShape.second };
                  // make the tile
                  auto tile = slc.box(boxOrigin, boxShape);
                  // make an iterator to its beginning
-                 auto start = tile.cbegin();
+                 auto start = tile.cbegin(step);
                  // and an amplitude calculator
                  ampcor::viz::slc_detector_t detector(start);
 
@@ -223,6 +228,7 @@ viz(py::module & m) {
                      << pyre::journal::newline
                      << "origin: " << boxOrigin << pyre::journal::newline
                      << "shape: " << boxShape << pyre::journal::newline
+                     << "step: " << step << pyre::journal::newline
                      << "bins: " <<  bins << pyre::journal::newline
                      << "hue: " <<  hue << pyre::journal::newline
                      << "saturation: " <<  saturation << pyre::journal::newline
@@ -239,7 +245,7 @@ viz(py::module & m) {
                                   minv, maxv);
 
                  // make a bitmap object
-                 bmp_t bmp(boxShape[0], boxShape[1]);
+                 bmp_t bmp(tileShape.first, tileShape.second);
                  // encode the data using the color map
                  bmp.encode(cmap);
 
