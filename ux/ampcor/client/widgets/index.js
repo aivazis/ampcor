@@ -7,7 +7,11 @@
 
 export Flame from './flame'
 export Kill from './kill'
+export Mosaic from './mosaic'
+export SLC from './slc'
 export Server from './server'
+export Tile from './tile'
+export Zoom from './zoom'
 
 
 // end of file
