@@ -23,8 +23,8 @@ const widget = ({click, state, ...rest}) => {
         // the container
         <Tool click={pick} state={state[name]} {...rest}>
             {/* my icon */}
-            <ellipse cx="50" cy="48" rx="27" ry="17" />
-            <path d="M 50 20 v 60" />
+            <path d="M 25 50 L 75 25 M 25 50 L 75 75" />
+            <path d="M 50 75 A 1 2 0 1 0 50 25" />
         </Tool >
     )
 }
