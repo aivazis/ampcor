@@ -147,7 +147,7 @@ const panel = ({uri, shape, style}) => {
             {/* the zoom toolbox */}
             <Zoom zoomin={zoomin} zoomout={zoomout} style={styles.zoomToolbox} />
             {/* the raster display */}
-            <Mosaic uri={seedURI} origins={origins} style={contentsStyle} />
+            <Mosaic uri={seedURI} origins={origins} style={contentsStyle} zoomin={zoomin} />
         </div>
     )
 }
