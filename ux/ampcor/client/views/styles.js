@@ -29,13 +29,6 @@ export default {
         flexDirection: "row",
     },
 
-    viewport: {
-        padding: "0.0em",
-        margin: "0.0em",
-        width: "100%",
-        height: "100%",
-        overflow: "auto",
-    },
 
     // the area with the temporary message for the pages that are under construction
     placeholder: {
