@@ -28,6 +28,17 @@ export default {
         overflow: "auto",
     },
 
+    canvas: {
+        // this must be sized by the code based on the raster shape
+        overflow: "hidden",   // hide anything that sticks out
+        width: "1000px",
+        height: "1000px",
+        // for my children
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
+
     tile: {
         // visibility: "hidden",
         flex: "none",

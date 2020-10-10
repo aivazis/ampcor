@@ -9,19 +9,23 @@
 import React from 'react'
 // locals
 import styles from './styles'
+import { Tile } from '~/widgets'
 
 
 // explore the input SLCs
 const exp = (props) => {
+    // the tile uri
+    const uri = "/exp/tile-0"
+
     // build the container and return it
     return (
         <section style={styles.exp}>
             <div style={styles.viewport}>
-                <div style={styles.plot}>
-                    <img key={"tile-0"}
-                         loading="lazy"
-                         src={"/exp/tile-0"} style={styles.tile}
-                    />
+                <div style={styles.canvas}>
+                    <Tile key="00" uri={uri} style={styles.tile} />
+                    <Tile key="01" uri={uri} style={styles.tile} />
+                    <Tile key="10" uri={uri} style={styles.tile} />
+                    <Tile key="11" uri={uri} style={styles.tile} />
                 </div>
             </div>
         </section>
