@@ -7,41 +7,25 @@
 
 // externals
 import path from 'path'
-import React, { useState } from 'react'
+import React from 'react'
 // locals
 import styles from './styles'
+import { MosaicContext } from '~/context'
 import { Mosaic, SLC, Zoom } from '~/widgets'
 
 
-// a panel that displays an SLC along with it controls
-const panel = ({uri, shape, style}) => {
-    // the shape of my tiles; optimized so that each line takes up one page
-    const tileShape = [512, 512]
-
-    // set up the maximum zoom level
-    const maxZoom = Math.max(
-        // divide each rank by the tile size, figure out how many times we can double the
-        // base tile along that rank, and make sure the smaller dimension dominates
-        Math.min(
-            ...shape.map((shp, idx) => Math.floor(Math.log2(shp/tileShape[idx])))
-        ),
-        // but clip it to zero, since very small raasters should be shown at full zoom
-        0
-    )
+// a panel that displays an SLC along with its controls
+const Panel = React.forwardRef(({uri, shape, tileShape, style}, mosaicRef) => {
+    // get the current zoom level so we can build the tile URI
+    const { zoom } = MosaicContext.useZoom()
 
     // the zoom control will manage the zoom level; we need state and callback
     // start out at maximum zoom
-    const [zoom, setZoom] = useState(maxZoom)
+
     // convert the zoom level into a scaling factor for the raster hsape
     const scale = 1 << zoom
-    // build the callbacks that tie the zoom controls to my state
-    // zoom in is clipped at level 0
-    const zoomin = () => (zoom > 0 ? setZoom(zoom-1) : null)
-    // zoom out is clipped at {maxZoom}
-    const zoomout = () => (zoom < maxZoom ? setZoom(zoom+1) : null)
-
     // the signal control selects the tile content; pick "amplitude" as the default
-    const [signal, setSignal] = useState("amplitude")
+    const [signal, setSignal] = React.useState("amplitude")
 
     // the shape of the tile grid is computed by rounding down the raster shape to
     // the nearest tile multiple
@@ -145,16 +129,42 @@ const panel = ({uri, shape, style}) => {
             {/* the SLC signal toolbox */}
             <SLC select={setSignal} style={styles.slcToolbox} />
             {/* the zoom toolbox */}
-            <Zoom zoomin={zoomin} zoomout={zoomout} style={styles.zoomToolbox} />
+            <Zoom style={styles.zoomToolbox} />
             {/* the raster display */}
-            <Mosaic uri={seedURI} origins={origins} style={contentsStyle} zoomin={zoomin} />
+            <Mosaic ref={mosaicRef} uri={seedURI} origins={origins} style={contentsStyle} />
         </div>
     )
+})
+
+
+// turn the panel into a mosaci context provider and publish
+export default (props) => {
+    // make a reference to a mosaic
+    const mosaicRef = React.useRef(null)
+
+    // the shape of my tiles; optimized so that each line takes up one page
+    const tileShape = [512, 512]
+
+    // currently, no interpolation
+    const minZoom = 0
+    // set up the maximum zoom level
+    const maxZoom = Math.max(
+        // divide each rank by the tile size, figure out how many times we can double the
+        // base tile along that rank, and make sure the smaller dimension dominates
+        Math.min(
+            ...props.shape.map((shp, idx) => Math.floor(Math.log2(shp/tileShape[idx])))
+        ),
+        // but clip it to zero, since very small raasters should be shown at full zoom
+        0
+    )
+
+    // setup the context provider
+    return (
+        <MosaicContext.Provider mosaicRef={mosaicRef} minZoom={0} maxZoom={maxZoom}>
+            <Panel ref={mosaicRef} tileShape={tileShape} {...props} />
+        </MosaicContext.Provider>
+    )
 }
-
-
-// publish
-export default panel
 
 
 // end of file
