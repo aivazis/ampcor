@@ -14,40 +14,34 @@ import { MosaicContext } from '~/context'
 import { Mosaic, SLC, Zoom } from '~/widgets'
 
 
+// fold an array with shape or origin information into a string
+const foldRanks = (first, ...rest) => rest.reduce(
+    // each operation takes the accumulated value and tacks on the next rank
+    (sofar, rank) => `${sofar}x${rank}`,
+    // when primed with the first rank
+    `${first}`
+)
+
+
 // a panel that displays an SLC along with its controls
-const Panel = React.forwardRef(({uri, shape, tileShape, style}, mosaicRef) => {
+const Panel = React.forwardRef(({uri, tileShape, style}, mosaicRef) => {
     // get the current zoom level so we can build the tile URI
     const { zoom } = MosaicContext.useZoom()
-
-    // the zoom control will manage the zoom level; we need state and callback
-    // start out at maximum zoom
+    // get the shape of the grid of tiles
+    const { gridShape, mosaicShape } = MosaicContext.useMosaic()
 
     // convert the zoom level into a scaling factor for the raster hsape
     const scale = 1 << zoom
+
     // the signal control selects the tile content; pick "amplitude" as the default
     const [signal, setSignal] = React.useState("amplitude")
+    // we now know enough to assemble the uri seed
+    const seedURI = path.join(uri, signal, zoom.toString(), foldRanks(...tileShape))
 
-    // the shape of the tile grid is computed by rounding down the raster shape to
-    // the nearest tile multiple
-    // N.B.: this clips the tiles that ride on the right and bottom margin of the data set;
-    // they aren't whole tiles, so they either need a dynamically generated margin or more
-    // complicated request logic
-    const gridShape = shape.map((shp, i) => Math.floor(shp / tileShape[i] / scale))
-    // from this, we can derive the shape of the mosaic
-    const mosaicShape = gridShape.map((shp, i) => shp * tileShape[i])
-
-    // rendering the tiles involving assembling the correct tile uri for each one
+    // rendering the tiles involves assembling the correct tile uri for each one
     // each tile spec has an index in the tile grid starting at (0,0) with shape {gridShape}
     // each rank in this index is multiplied by the {tileShape} to deduce the location of the
     // corresponding raster tile
-
-    // part of the problem requires folding an array with shape or origin information into a string
-    const foldRanks = (first, ...rest) => rest.reduce(
-        // each operation takes the accumulated value and tacks on the next rank
-        (sofar, rank) => `${sofar}x${rank}`,
-        // when primed with the first rank
-        `${first}`
-    )
 
     // part of the problem involves computing the exterior product of two arreys
     // e.g:
@@ -87,9 +81,6 @@ const Panel = React.forwardRef(({uri, shape, tileShape, style}, mosaicRef) => {
     // indices now has two arrays; each one is the set of origin coordinates along each
     // rank; so compute their {product} to get the origins of all the tiles
     const origins = product(...indices)
-
-    // we now know enough to assemble the uri seed
-    const seedURI = path.join(uri, signal, zoom.toString(), foldRanks(...tileShape))
 
     // style mixing
     // mix the panel style
@@ -138,12 +129,14 @@ const Panel = React.forwardRef(({uri, shape, tileShape, style}, mosaicRef) => {
 
 
 // turn the panel into a mosaci context provider and publish
-export default (props) => {
+// props:
+//           uri: the seed of the tile URI, up to selecting which input data product to show
+//     tileShape: the dimensions of each tile
+//   rasterShape: the dimensions of the raster
+//         style: the stylesheet
+export default ({rasterShape, tileShape, ...rest}) => {
     // make a reference to a mosaic
     const mosaicRef = React.useRef(null)
-
-    // the shape of my tiles; optimized so that each line takes up one page
-    const tileShape = [512, 512]
 
     // currently, no interpolation
     const minZoom = 0
@@ -152,16 +145,20 @@ export default (props) => {
         // divide each rank by the tile size, figure out how many times we can double the
         // base tile along that rank, and make sure the smaller dimension dominates
         Math.min(
-            ...props.shape.map((shp, idx) => Math.floor(Math.log2(shp/tileShape[idx])))
+            ...rasterShape.map((shp, idx) => Math.floor(Math.log2(shp/tileShape[idx])))
         ),
-        // but clip it to zero, since very small raasters should be shown at full zoom
+        // but clip it to zero, since very small rasters should be shown at full zoom
         0
     )
+    // start out at {maxZoom}
+    const initZoom = maxZoom
 
     // setup the context provider
     return (
-        <MosaicContext.Provider mosaicRef={mosaicRef} minZoom={0} maxZoom={maxZoom}>
-            <Panel ref={mosaicRef} tileShape={tileShape} {...props} />
+        <MosaicContext.Provider mosaicRef={mosaicRef}
+                                rasterShape={rasterShape} tileShape={tileShape}
+                                initZoom={initZoom} minZoom={minZoom} maxZoom={maxZoom} >
+            <Panel ref={mosaicRef} tileShape={tileShape} {...rest} />
         </MosaicContext.Provider>
     )
 }
