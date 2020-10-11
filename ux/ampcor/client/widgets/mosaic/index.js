@@ -7,14 +7,14 @@
 
 // externals
 import path from 'path'
-import React, { useRef, useState } from 'react'
+import React from 'react'
 // locals
 import styles from './style'
 import { Tile } from 'widgets'
 
 
 // currently, a tile is an {img} that's lazy loaded from a {uri}
-const widget = ({uri, origins, zoomin, style}) => {
+const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
     // content styling
     // mix the viewport style
     const viewportStyle = {
@@ -42,12 +42,10 @@ const widget = ({uri, origins, zoomin, style}) => {
     // given the origin of a tile, build its uri
     const tileURI = (origin) => path.join(uri, foldRanks(...origin))
 
-    // make a reference to attach to my container
-    const viewportRef = useRef(null)
     // on double click, center to the mouse coordinates
     const center = ({clientX, clientY}) => {
         // get the viewport
-        const viewport = viewportRef?.current
+        const viewport = mosaicRef?.current
         // if it has been rendered
         if (viewport) {
             // get the viewport boundinbox
@@ -62,11 +60,6 @@ const widget = ({uri, origins, zoomin, style}) => {
             // get the current scroll position
             const left = viewport.scrollLeft
             const top = viewport.scrollTop
-            // if i have a valid zoom callback
-            if (zoomin) {
-                // invoke it
-                // zoomin()
-            }
             // and scroll to the new location
             viewport.scroll({
                 top: top + y - height/2,
@@ -78,7 +71,7 @@ const widget = ({uri, origins, zoomin, style}) => {
 
     // render
     return (
-        <div ref={viewportRef} style={viewportStyle} onDoubleClick={center} >
+        <div ref={mosaicRef} style={viewportStyle} onDoubleClick={center} >
             <div style={mosaicStyle} >
                 {origins.map(origin => {
                      // form the tile uri
@@ -91,7 +84,7 @@ const widget = ({uri, origins, zoomin, style}) => {
             </div>
         </div>
     )
-}
+})
 
 
 // publish
