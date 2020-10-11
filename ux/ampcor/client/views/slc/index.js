@@ -23,7 +23,10 @@ const slc = (props) => {
     // select the slc to show
     const [slc, setSLC] = useState("ref")
     // extract its shape
-    const shape = rasterShapes[slc]
+    const rasterShape = rasterShapes[slc]
+
+    // specify the shape of idividual tiles
+    const tileShape = [512, 512]
 
     // build the tile uri stem
     const uri = `/slc/${slc}`
@@ -31,7 +34,10 @@ const slc = (props) => {
     // build the container, fill it, and return it
     return (
         <section style={styles.slc}>
-            <SLC uri={uri} shape={shape} style={styles?.slcPanel} />
+            {/* the panel */}
+            <SLC uri={uri}
+                 rasterShape={rasterShape} tileShape={tileShape}
+                 style={styles?.slcPanel} />
         </section>
     )
 }
