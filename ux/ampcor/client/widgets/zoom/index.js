@@ -6,7 +6,7 @@
 
 
 // externals
-import React, { useState } from 'react'
+import React from 'react'
 // locals
 import styles from './style'
 import In from './in'
@@ -14,15 +14,14 @@ import Out from './out'
 
 
 // the zoom toolbox
-const widget = ({zoomin, zoomout, style}) => {
+const widget = ({style}) => {
     // mix the toolbox style
     const toolboxStyle = { ...styles.toolbox, ...style.toolbox }
-
-    // render
+    // and render
     return (
         <div style={toolboxStyle}>
-            <In style={style?.tool} click={zoomin} />
-            <Out style={style?.tool} click={zoomout} />
+            <In style={style?.tool} />
+            <Out style={style?.tool} />
         </div>
     )
 }
