@@ -10,11 +10,34 @@ import path from 'path'
 import React from 'react'
 // locals
 import styles from './style'
+import { MosaicContext } from '~/context'
 import { Tile } from 'widgets'
 
 
 // currently, a tile is an {img} that's lazy loaded from a {uri}
 const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
+    // get access to the current pan shift
+    const [pan, setPan] = MosaicContext.usePan()
+
+    // schedule a scroll
+    React.useEffect(() => {
+        // check whether i have an adjustment
+        if (!pan) {
+            // and if not, do nothing
+            return
+        }
+        // otherwise, get the viewport
+        const viewport = mosaicRef.current
+        // scroll
+        viewport.scroll({
+            top: pan.top,
+            left: pan.left,
+            behavior: "smooth",
+        })
+        // clear the pan
+        setPan(null)
+    })
+
     // content styling
     // mix the viewport style
     const viewportStyle = {
