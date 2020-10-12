@@ -32,7 +32,7 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
         viewport.scroll({
             top: pan.top,
             left: pan.left,
-            behavior: "smooth",
+            behavior: "auto",
         })
         // clear the pan
         setPan(null)
@@ -87,7 +87,7 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
             viewport.scroll({
                 top: top + y - height/2,
                 left: left + x - width/2,
-                behavior: "smooth",
+                behavior: "auto",
             })
         }
     }
