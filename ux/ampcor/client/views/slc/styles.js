@@ -24,6 +24,19 @@ export default {
         ...base.placeholder,
     },
 
+    sourceToolbox: {
+        // positioning
+        position: "absolute",
+        zIndex: 100,
+        left: "1.0em",
+        top: "0.75em",
+        // size
+        width: "4.2em",
+        height: "2.0em",
+        // styling
+        opacity: "0.75",
+    },
+
 }
 
 

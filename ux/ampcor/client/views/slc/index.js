@@ -11,6 +11,7 @@ import React, { useState } from 'react'
 import styles from './styles'
 import { useFlowContext } from '~/context'
 import { SLC } from '~/panels'
+import { NamedTools } from '~/widgets'
 
 
 // explore the input SLCs
@@ -19,9 +20,11 @@ const slc = (props) => {
     const config = useFlowContext()
     // unpack the raster shapes
     const rasterShapes = { ref: config.reference.shape, sec: config.secondary.shape }
+    // make an array of their labels
+    const rasters = ["ref", "sec"]
 
     // select the slc to show
-    const [slc, setSLC] = useState("ref")
+    const [slc, setSLC] = useState(rasters[0])
     // extract its shape
     const rasterShape = rasterShapes[slc]
 
@@ -34,6 +37,8 @@ const slc = (props) => {
     // build the container, fill it, and return it
     return (
         <section style={styles.slc}>
+            {/* the raster selector */}
+            <NamedTools choices={rasters} select={setSLC} style={styles.sourceToolbox} />
             {/* the panel */}
             <SLC uri={uri}
                  rasterShape={rasterShape} tileShape={tileShape}
