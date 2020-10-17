@@ -1,0 +1,38 @@
+// -*- c++ -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2020 all rights reserved
+
+// code guard
+#if !defined(ampcor_cuda_meta_h)
+#define ampcor_cuda_meta_h
+
+
+// repository metadata
+#define AMPCOR_CUDA_date "@TODAY@"
+#define AMPCOR_CUDA_major @MAJOR@u
+#define AMPCOR_CUDA_minor @MINOR@u
+#define AMPCOR_CUDA_micro @MICRO@u
+#define AMPCOR_CUDA_revision "@REVISION@"
+
+
+// externals
+#include <string>
+#include <tuple>
+
+
+// declarations
+namespace ampcor::cuda::meta {
+    // type aliases
+    using string_t = std::string_t;
+    using version_t = std::tuple<int, int, int, string_t>;
+
+    // version info
+    auto version() -> version_t;
+    // compilation date
+    auto date() -> string_t;
+}
+
+
+//  end of file
