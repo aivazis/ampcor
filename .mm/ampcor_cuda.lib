@@ -1,0 +1,23 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
+# parasim
+# (c) 1998-2020 all rights reserved
+#
+
+# add the library to the pile
+ampcor.libraries += ampcor_cuda.lib
+
+# library configuration
+ampcor_cuda.lib.stem := ampcor_cuda
+ampcor_cuda.lib.extern := ampcor.lib pyre cuda
+ampcor_cuda.lib.prerequisites := ampcor.lib
+ampcor_cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
+ampcor_cuda.lib.cuda.flags += $(nvcc.std.c++17)
+
+
+# add a dependency to the cuda libraries
+cuda.libraries += cufft cudart cudadevrt
+
+
+# end of file
