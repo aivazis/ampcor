@@ -11,9 +11,9 @@
 
 // repository metadata
 #define AMPCOR_CUDA_date "@TODAY@"
-#define AMPCOR_CUDA_major @MAJOR@u
-#define AMPCOR_CUDA_minor @MINOR@u
-#define AMPCOR_CUDA_micro @MICRO@u
+#define AMPCOR_CUDA_major @MAJOR@
+#define AMPCOR_CUDA_minor @MINOR@
+#define AMPCOR_CUDA_micro @MICRO@
 #define AMPCOR_CUDA_revision "@REVISION@"
 
 
