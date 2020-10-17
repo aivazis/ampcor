@@ -11,9 +11,9 @@
 
 // repository metadata
 #define AMPCOR_date "@TODAY@"
-#define AMPCOR_major @MAJOR@u
-#define AMPCOR_minor @MINOR@u
-#define AMPCOR_micro @MICRO@u
+#define AMPCOR_major @MAJOR@
+#define AMPCOR_minor @MINOR@
+#define AMPCOR_micro @MICRO@
 #define AMPCOR_revision "@REVISION@"
 
 
@@ -26,12 +26,12 @@
 namespace ampcor::meta {
     // type aliases
     using string_t = std::string_t;
-    using version_t = std::tuple<unsigned int, unsigned int, unsigned int, string_t>;
+    using version_t = std::tuple<int, int, int, string_t>;
 
     // version info
     auto version() -> version_t;
     // compilation date
-    constexpr auto date() -> string_t;
+    auto date() -> string_t;
 }
 
 

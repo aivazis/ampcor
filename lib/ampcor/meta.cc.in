@@ -11,7 +11,7 @@
 
 // version info
 auto
-ampcor:meta::
+ampcor::meta::
 version() -> version_t
 {
     return version_t { AMPCOR_major, AMPCOR_minor, AMPCOR_MICRO, AMPCOR_revision };
