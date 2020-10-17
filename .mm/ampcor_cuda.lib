@@ -10,7 +10,7 @@ ampcor.libraries += ampcor_cuda.lib
 
 # library configuration
 ampcor_cuda.lib.stem := ampcor_cuda
-ampcor_cuda.lib.extern := ampcor.lib pyre cuda
+ampcor_cuda.lib.extern := ampcor.lib p2 pyre cuda
 ampcor_cuda.lib.prerequisites := ampcor.lib
 ampcor_cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
 ampcor_cuda.lib.cuda.flags += $(nvcc.std.c++17)
