@@ -37,19 +37,6 @@ namespace ampcor::py {
                 slc_const_reference, slc_const_reference, offsets_reference,
                 py::tuple, py::tuple, size_t, size_t, size_t)
         -> unique_pointer<sequential_t>;
-
-#if MGA
-    // add a reference tile
-    static inline auto
-    addTilePair(sequential_t &,
-                // the local and global pair collation orders
-                size_t, size_t,
-                // the reference tile
-                const slc_raster_t &, const slc_raster_t::layout_type &,
-                // the secondary tile
-                const slc_raster_t &, const slc_raster_t::layout_type &)
-        -> sequential_reference;
-#endif
 }
 
 
@@ -77,18 +64,7 @@ sequential(py::module &m) {
              "chip"_a, "window"_a,
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
-#if MGA
-        // add a pair of tiles
-        .def("addTilePair",
-             // the handler
-             addTilePair,
-             // the signature
-             "tid"_a, "pid"_a,
-             "referenceRaster"_a, "referenceTile"_a, "secondaryRaster"_a, "secondaryTile"_a,
-             // the docstring
-             "detect and trasfer a reference tile to the coarse arena"
-             )
-#endif
+
         // execute the correlation plan and adjust the offset map
         .def("adjust",
              // the handler
@@ -137,44 +113,6 @@ constructor(int rank,
     // build the worker and return it
     return std::unique_ptr<sequential_t>(worker);
 }
-
-
-#if MGA
-// add a reference tile to the worker's coarse arena
-auto
-ampcor::py::
-addTilePair(sequential_t & worker,
-            size_t tid, size_t pid,
-            const slc_raster_t & refRaster, const slc_raster_t::layout_type & refTile,
-            const slc_raster_t & secRaster, const slc_raster_t::layout_type & secTile )
-    -> sequential_reference
-{
-    // build the reference chip
-    auto refChip = refRaster.tile(refTile.origin(), refTile.shape());
-    // build the secondary chip
-    auto secChip = secRaster.tile(secTile.origin(), secTile.shape());
-
-    // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.reference");
-    // sign on
-    channel
-        << "addTilePair: tile " << tid  << ", originally " << pid << pyre::journal::newline
-        << "  reference: " << pyre::journal::newline
-        << "    origin: " << refChip.layout().origin() << pyre::journal::newline
-        << "    shape: " << refChip.layout().shape() << pyre::journal::newline
-        << "    data: " << refChip.data().get() << pyre::journal::newline
-        << "  secondary: " << pyre::journal::newline
-        << "    origin: " << secChip.layout().origin() << pyre::journal::newline
-        << "    shape: " << secChip.layout().shape() << pyre::journal::newline
-        << "    data: " << secChip.data().get() << pyre::journal::newline
-        << pyre::journal::endl(__HERE__);
-
-    // engage
-    worker.addTilePair(tid, pid, refChip, secChip);
-    // all done
-    return worker;
-}
-#endif
 
 
 // end of file
