@@ -13,9 +13,13 @@ ampcor.plexus:
         tasks = 1 ; number of tasks per host
         gpus = 0  ; number of gpus per task
 
-    ; control whether {web} shell spawns a browser when the server starts
+    ; control whether the {web} shell spawns a browser automatically every time the server starts
     pyre.shells.web # shell:
         auto = on
+
+    ; parallel machine configuration
+    mpi.shells.mpirun # shell:
+        hostfile = localhost
 
     ; pin the port for serving web content
     nexus.services.web:
