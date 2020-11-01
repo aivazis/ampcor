@@ -16,6 +16,36 @@ template <class slcT, class offsetsT>
 class ampcor::cuda::correlators::Sequential {
     // types
 public:
+    // my template parameters
+    using slc_type = slcT;
+    using offsets_t = offsetsT;
+    // typical uses
+    using slc_const_reference = const slc_type &;
+    using offsets_reference = offsets_type &;
+    // the product specs
+    using slc_spec = typename slc_type::spec_type;
+    using offsets_spec = typename offsets_type::spec_type;
+
+    // the slc pixel base type
+    using slc_value_type = typename slc_spec::value_type;
+    // the slc pixel type
+    using slc_pixel_type = typename slc_spec::pixel_type;
+
+    // my constructor and implementation depend on the layout of input tiles
+    using slc_layout_type = typename slc_spec::layout_type;
+    using slc_shape_type = typename slc_layout_type::shape_type;
+    using slc_index_type = typename slc_layout_type::index_type;
+    using slc_layout_const_reference = const slc_layout_type &;
+    using slc_shape_const_reference = const slc_shape_type &;
+    using slc_index_const_reference = const slc_index_type &;
+
+    // the specification of the portion of the work assigned to me uses output tiles
+    using offsets_layout_type = typename offsets_spec::layout_type;
+    using offsets_shape_type = typename offsets_layout_type::shape_type;
+    using offsets_index_type = typename offsets_layout_type::index_type;
+    using offsets_layout_const_reference = const offsets_layout_type &;
+    using offsets_shape_const_reference = const offsets_shape_type &;
+    using offsets_index_const_reference = const offsets_index_type &;
 
     // metamethods
 public:
