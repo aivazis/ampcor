@@ -13,14 +13,14 @@
 
 
 // meta-methods
-template <typename raster_t>
-ampcor::cuda::correlators::Sequential<raster_t>::
+template <class slcT, class offsetsT>
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 ~Sequential() {
 }
 
 
-template <typename raster_t>
-ampcor::cuda::correlators::Sequential<raster_t>::
+template <class slcT, class offsetsT>
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 Sequential(size_type pairs,
            const layout_type & refLayout, const layout_type & secLayout,
            size_type refineFactor, size_type refineMargin, size_type zoomFactor) :
