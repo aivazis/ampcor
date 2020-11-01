@@ -1,291 +1,113 @@
-// -*- C++ -*-
+// -*- c++ -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
-// parasim
 // (c) 1998-2020 all rights reserved
-//
 
-// configuration
-#include <portinfo>
+
 // externals
-#include <Python.h>
-// cuda
-#include <cufft.h>
-// support
-#include <pyre/journal.h>
+#include "external.h"
+// namespace setup
+#include "forward.h"
+// libampcor
+#include <ampcor/dom.h>
+// libampcor_cuda
 #include <ampcor_cuda/correlators.h>
-// access to the {ampcor} extension capsules
-#include <ampcor/capsules.h>
-
-// my declarations
-#include "capsules.h"
-#include "sequential.h"
 
 
-// alias SLC
-using slc_t = ampcor::dom::slc_t;
-// alias the sequential worker
-using sequential_t = ampcor::cuda::correlators::sequential_t<slc_t>;
+// type aliases
+namespace ampcor::cuda::py {
+    // the rasters
+    using slc_raster_t = ampcor::dom::slc_const_raster_t;
+    using offsets_raster_t = ampcor::dom::offsets_raster_t;
 
+    // usage
+    using slc_const_reference = const slc_raster_t &;
+    using offsets_reference = offsets_raster_t &;
 
-// constructor
-const char * const
-ampcor::extension::cuda::sequential::
-alloc__name__ = "sequential";
+    // the worker
+    using sequential_t = ampcor::cuda::correlators::sequential_t<slc_raster_t, offsets_raster_t>;
+    using sequential_reference = sequential_t &;
 
-const char * const
-ampcor::extension::cuda::sequential::
-alloc__doc__ = "instantiate a new sequential correlation worker";
-
-PyObject *
-ampcor::extension::cuda::sequential::
-alloc(PyObject *, PyObject *args)
-{
-    // the number of pairs
-    std::size_t pairs;
-    std::size_t refLines, refSamples;
-    std::size_t secLines, secSamples;
-    std::size_t refineMargin, refineFactor, zoomFactor;
-    // attempt to parse the arguments
-    int ok = PyArg_ParseTuple(args,
-                              "k(kk)(kk)kkk:sequential",
-                              &pairs,
-                              &refLines, &refSamples, &secLines, &secSamples,
-                              &refineMargin, &refineFactor, &zoomFactor
-                              );
-    // if something went wrong
-    if (!ok) {
-        // complain
-        return nullptr;
-    }
-
-    // build the reference tile shape
-    sequential_t::shape_type ref { refSamples, refLines };
-    // and the secondary tile shape
-    sequential_t::shape_type sec { secSamples, secLines };
-
-
-    // instantiate the worker
-    sequential_t * worker = new sequential_t(pairs, ref, sec,
-                                             refineFactor, refineMargin, zoomFactor);
-    // dress it up and return it
-    return PyCapsule_New(worker, capsule_t, free);
+    // for 2d shapes and indices
+    using tup2d = std::tuple<int, int>;
 }
 
 
-// read a reference tile and save it in the dataspace
-const char * const
-ampcor::extension::cuda::sequential::
-addReference__name__ = "addReference";
-
-const char * const
-ampcor::extension::cuda::sequential::
-addReference__doc__ = "process a reference tile";
-
-PyObject *
-ampcor::extension::cuda::sequential::
-addReference(PyObject *, PyObject *args)
-{
-    PyObject * pyWorker;
-    PyObject * pySLC;
-    std::size_t idx;
-    std::size_t beginLine, beginSample;
-    std::size_t endLine, endSample;
-    // attempt to parse the arguments
-    int ok = PyArg_ParseTuple(args,
-                              "O!O!k(kk)(kk):addReference",
-                              &PyCapsule_Type, &pyWorker,
-                              &PyCapsule_Type, &pySLC,
-                              &idx,
-                              &beginLine, &beginSample, &endLine, &endSample);
-    // if something went wrong
-    if (!ok) {
-        // complain
-        return nullptr;
-    }
-
-    // check the worker capsule
-    if (!PyCapsule_IsValid(pyWorker, capsule_t)) {
-        // give a reason
-        PyErr_SetString(PyExc_TypeError, "invalid worker capsule");
-        // and bail
-        return nullptr;
-    }
-    // and unpack it; can't be const
-    sequential_t & worker =
-        *reinterpret_cast<sequential_t *>(PyCapsule_GetPointer(pyWorker, capsule_t));
-
-    // make an alias for the SLC capsule
-    const char * const slcCapsule_t = ampcor::extension::slc::capsule_t;
-    // check the SLC capsule
-    if (!PyCapsule_IsValid(pySLC, slcCapsule_t)) {
-        // give a reason
-        PyErr_SetString(PyExc_TypeError, "invalid SLC capsule");
-        // and bail
-        return nullptr;
-    }
-    // and unpack it
-    const slc_t & slc =
-        *reinterpret_cast<const slc_t *>(PyCapsule_GetPointer(pySLC, slcCapsule_t));
-
-    // build a description of the slice for this tile
-    slc_t::index_type begin { beginLine, beginSample };
-    slc_t::index_type end { endLine, endSample };
-    // convert it into a slice
-    auto slice = slc.layout().slice(begin, end);
-
-    // ask the worker to add to its pile the reference tile described by {slice}
-    worker.addReferenceTile(idx, slc.constview(slice));
-
-    // all done
-    Py_INCREF(Py_None);
-    return Py_None;
+// helpers
+namespace ampcor::cuda::py {
+    // the constructor
+    static inline auto
+    constructor(int rank,
+                slc_const_reference, slc_const_reference, offsets_reference,
+                py::tuple, py::tuple, size_t, size_t, size_t)
+        -> unique_pointer<sequential_t>;
 }
 
 
-// read a secondary tile and save it in the dataspace
-const char * const
-ampcor::extension::cuda::sequential::
-addSecondary__name__ = "addSecondary";
-
-const char * const
-ampcor::extension::cuda::sequential::
-addSecondary__doc__ = "process a secondary tile";
-
-PyObject *
-ampcor::extension::cuda::sequential::
-addSecondary(PyObject *, PyObject *args)
-{
-    PyObject * pyWorker;
-    PyObject * pySLC;
-    std::size_t idx;
-    std::size_t beginLine, beginSample;
-    std::size_t endLine, endSample;
-    // attempt to parse the arguments
-    int ok = PyArg_ParseTuple(args,
-                              "O!O!k(kk)(kk):addSecondary",
-                              &PyCapsule_Type, &pyWorker,
-                              &PyCapsule_Type, &pySLC,
-                              &idx,
-                              &beginLine, &beginSample, &endLine, &endSample);
-    // if something went wrong
-    if (!ok) {
-        // complain
-        return nullptr;
-    }
-
-    // check the worker capsule
-    if (!PyCapsule_IsValid(pyWorker, capsule_t)) {
-        // give a reason
-        PyErr_SetString(PyExc_TypeError, "invalid Sequential worker capsule");
-        // and bail
-        return nullptr;
-    }
-    // and unpack it; can't be const
-    sequential_t & worker =
-        *reinterpret_cast<sequential_t *>(PyCapsule_GetPointer(pyWorker, capsule_t));
-
-    // make an alias for the SLC capsule
-    const char * const slcCapsule_t = ampcor::extension::slc::capsule_t;
-    // check the SLC capsule
-    if (!PyCapsule_IsValid(pySLC, slcCapsule_t)) {
-        // give a reason
-        PyErr_SetString(PyExc_TypeError, "invalid SLC capsule");
-        // and bail
-        return nullptr;
-    }
-    // and unpack it
-    const slc_t & slc =
-        *reinterpret_cast<const slc_t *>(PyCapsule_GetPointer(pySLC, slcCapsule_t));
-
-    // build a description of the slice for this tile
-    slc_t::index_type begin { beginLine, beginSample };
-    slc_t::index_type end { endLine, endSample };
-    // convert it into a slice
-    auto slice = slc.layout().slice(begin, end);
-
-    // ask the worker to add to its pile the secondary tile described by {slice}
-    worker.addSecondaryTile(idx, slc.constview(slice));
-
-    // all done
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-// perform pixel level adjustments to the registration map
-const char * const
-ampcor::extension::cuda::sequential::
-adjust__name__ = "adjust";
-
-const char * const
-ampcor::extension::cuda::sequential::
-adjust__doc__ = "perform pixel adjustments to the registration map";
-
-PyObject *
-ampcor::extension::cuda::sequential::
-adjust(PyObject *, PyObject *args)
-{
-    PyObject * pyWorker;
-    // attempt to parse the arguments
-    int ok = PyArg_ParseTuple(args,
-                              "O!:adjust",
-                              &PyCapsule_Type, &pyWorker);
-    // if something went wrong
-    if (!ok) {
-        // complain
-        return nullptr;
-    }
-
-    // check the worker capsule
-    if (!PyCapsule_IsValid(pyWorker, capsule_t)) {
-        // give a reason
-        PyErr_SetString(PyExc_TypeError, "invalid Sequential worker capsule");
-        // and bail
-        return nullptr;
-    }
-    // and unpack it; can't be const
-    sequential_t & worker =
-        *reinterpret_cast<sequential_t *>(PyCapsule_GetPointer(pyWorker, capsule_t));
-
-    // ask the worker to perform pixel level adjustments to the registration map
-    auto offsets = worker.adjust();
-
-    // get the number of pairs
-    auto pairs = worker.pairs();
-    // crate a new tuple
-    PyObject * results = PyTuple_New(pairs);
-    // go through all the pairs
-    for (auto pid = 0; pid < pairs; ++pid) {
-        // make a doublet
-        PyObject * shift = PyTuple_New(2);
-        // pack the two offets
-        PyTuple_SET_ITEM(shift, 0, PyFloat_FromDouble(offsets[2*pid + 0]));
-        PyTuple_SET_ITEM(shift, 1, PyFloat_FromDouble(offsets[2*pid + 1]));
-        // save the doublet in the results
-        PyTuple_SET_ITEM(results, pid, shift);
-    }
-
-    // all done
-    return results;
-}
-
-// destructors
+// add bindings to the sequential correlator
 void
-ampcor::extension::cuda::sequential::
-free(PyObject * capsule) {
-    // bail out if the capsule is not valid
-    if (!PyCapsule_IsValid(capsule, capsule_t)) return;
-    // get the matrix
-    sequential_t * worker =
-        reinterpret_cast<sequential_t *>(PyCapsule_GetPointer(capsule, capsule_t));
-    // deallocate
-    delete worker;
-    // and return
+ampcor::cuda::py::
+sequential(py::module &m) {
+    // the SLC interface
+    py::class_<sequential_t>(m, "Sequential")
+        // constructor
+        .def(// the wrapper
+             py::init([](int rank,
+                         slc_const_reference ref, slc_const_reference sec,
+                         offsets_reference map,
+                         py::tuple chip, py::tuple window,
+                         size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
+                 return constructor(rank,
+                                    ref, sec, map,
+                                    chip, window,
+                                    refineFactor, refineMargin, zoomFactor);
+             }),
+             // the signature
+             "rank"_a,
+             "reference"_a, "secondary"_a, "map"_a,
+             "chip"_a, "window"_a,
+             "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
+             )
+
+        // done
+        ;
+
+    // all done
     return;
 }
 
 
+// helpers
+// worker constructor
+auto
+ampcor::cuda::py::
+constructor(int rank,
+            slc_const_reference ref, slc_const_reference sec, offsets_reference map,
+            py::tuple chip, py::tuple window,
+            size_t refineFactor, size_t refineMargin, size_t zoomFactor )
+    -> unique_pointer<sequential_t>
+{
+    // unpack the chip
+    size_t chip_0 = py::int_(chip[0]);
+    size_t chip_1 = py::int_(chip[1]);
+    // unpack the padding
+    size_t win_0 = py::int_(window[0]);
+    size_t win_1 = py::int_(window[1]);
+
+    // build the shape of the reference tiles
+    sequential_t::slc_shape_type refShape { chip_0, chip_1 };
+    // build the shape of the secondary tiles
+    sequential_t::slc_shape_type secShape { win_0, win_1 };
+
+    // build a worker
+    auto worker = new sequential_t(rank,
+                                   ref, sec, map,
+                                   refShape, secShape,
+                                   refineFactor, refineMargin, zoomFactor);
+
+    // build the worker and return it
+    return std::unique_ptr<sequential_t>(worker);
+}
 
 
 // end of file
