@@ -25,6 +25,7 @@
     "dependencies": {
         "graphql": "latest",
         "lazysizes": "latest",
+        "path-browserify": "latest",
         "react": "experimental",
         "react-dom": "experimental",
         "react-relay": "experimental",
