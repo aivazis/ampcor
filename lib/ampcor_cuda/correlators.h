@@ -7,8 +7,8 @@
 //
 
 // code guard
-#if !defined(ampcor_libampcor_cuda_correlators_h)
-#define ampcor_libampcor_cuda_correlators_h
+#if !defined(ampcor_cuda_correlators_h)
+#define ampcor_cuda_correlators_h
 
 // support
 #include "correlators/public.h"
