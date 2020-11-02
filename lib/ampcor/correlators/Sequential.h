@@ -37,7 +37,7 @@ public:
     using slc_shape_const_reference = const slc_shape_type &;
     using slc_index_const_reference = const slc_index_type &;
 
-    // the specification of the portion of the work assigned to me uses output tiles`
+    // the specification of the portion of the work assigned to me uses output tiles
     using offsets_layout_type = typename offsets_spec::layout_type;
     using offsets_shape_type = typename offsets_layout_type::shape_type;
     using offsets_index_type = typename offsets_layout_type::index_type;
