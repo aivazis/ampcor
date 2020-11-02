@@ -5,16 +5,36 @@
 # (c) 1998-2020 all rights reserved
 #
 
-# add the library to the pile
+# add the library
 ampcor.libraries += ampcor_cuda.lib
+# and the bindings to the pile
+ampcor.extensions += ampcor_cuda.ext
 
 # library configuration
 ampcor_cuda.lib.stem := ampcor_cuda
+# specify the source languages explicitly
 ampcor_cuda.lib.languages := c++ cuda
+# external dependencies
 ampcor_cuda.lib.extern := ampcor.lib p2 pyre cuda
+# build the base ampcor library before this one
 ampcor_cuda.lib.prerequisites := ampcor.lib
+# compiler control
 ampcor_cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
 ampcor_cuda.lib.cuda.flags += $(nvcc.std.c++17)
+
+
+# configure the extension module
+ampcor_cuda.ext.stem := ampcor_cuda
+# wrap {ampcor.lib}
+ampcor_cuda.ext.wraps := ampcor_cuda.lib
+# no capsules for {pybind11} bindings
+ampcor_cuda.ext.capsule :=
+# intra-project dependencies
+ampcor_cuda.ext.prerequisites := ampcor_cuda.lib
+# dependencies
+ampcor_cuda.ext.extern := ampcor_cuda.lib ampcor.lib pyre p2 pybind11 python cuda
+# compiler control
+ampcor_cuda.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 
 
 # add a dependency to the cuda libraries
