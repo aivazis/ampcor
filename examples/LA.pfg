@@ -23,14 +23,14 @@ LA:
     ; shape
     shape = 36864,10344
     ; pfs path to the data file
-    data = ../data/20061231.slc
+    data = ../../data/alos/20061231.slc
 
 ; the secondary raster
 20070215:
     ; shape
     shape = 36864,10344
     ; pfs path to the data file
-    data = ../data/20070215.slc
+    data = ../../data/alos/20070215.slc
 
 ; output
 ; a dense tiling
