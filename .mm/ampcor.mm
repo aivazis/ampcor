@@ -24,10 +24,16 @@ ampcor.pkg.stem := ampcor
 ampcor.pkg.drivers := ampcor
 
 
-# get the asset definitions
+# asset definitions
 include $(ampcor.assets)
-
-# get the test suites
+# test suites
 include $(ampcor.tests)
+
+
+# docker images
+ampcor.docker-images := ampcor.groovy-cuda
+# groovy-cuda
+ampcor.groovy-cuda.name := groovy-cuda
+ampcor.groovy-cuda.launch.mounts := mm pyre p2 ampcor
 
 # end of file
