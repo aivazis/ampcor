@@ -69,6 +69,16 @@ sequential(py::module &m) {
              "refineFactor"_a, "refineMargin"_a, "zoomFactor"_a
              )
 
+        // execute the correlation plan and adjust the offset map
+        .def("adjust",
+             // the handler
+             &sequential_t::adjust,
+             // the signature
+             "box"_a,
+             // the docstring
+             "execute the correlation plan and adjust the {offsets} map"
+             )
+
         // done
         ;
 
