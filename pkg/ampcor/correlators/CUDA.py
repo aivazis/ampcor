@@ -73,7 +73,7 @@ class CUDA:
         channel = journal.info("ampcor.cuda.timings.sequential")
 
         # access the bindings; this is guaranteed to succeed
-        seq = ampcor.ext.libampcor.Sequential
+        seq = ampcor.ext.libampcor_cuda.Sequential
         # start the timer
         timer.reset().start()
 
