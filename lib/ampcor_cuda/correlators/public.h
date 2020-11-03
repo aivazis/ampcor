@@ -14,7 +14,12 @@
 // set up the namespace
 #include "forward.h"
 
-// kernels
+// published type aliases and function declarations that constitute the public API of this package
+// this is the file you are looking for
+#include "api.h"
+
+// local entities
+// device kernels
 #include "kernels.h"
 // the class declarations
 #include "Sequential.h"
