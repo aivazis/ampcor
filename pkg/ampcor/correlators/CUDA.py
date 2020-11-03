@@ -22,62 +22,72 @@ class CUDA:
         """
         Correlate a pair of {rasters} given a collection of {tiles}
         """
-        # unpack the rasters
-        ref, sec = rasters
-        # realize the {tiles}, just in case what came in was a generator
-        tiles = plan.tiles
-        # because we need to know how many pairs there are
-        pairs = len(tiles)
-        # the shape of the reference chips
-        chip = plan.chip
-        # and the shape of the search windows
-        window = plan.window
+        # make a timer
+        timer = ampcor.executive.newTimer(name="ampcor.cuda.sequential")
+        # and a journal channel
+        channel = journal.info("ampcor.cuda.timings.sequential")
 
-        # unpack the refinement margin
-        refineMargin = manager.refineMargin
-        # the refinement factor
-        refineFactor = manager.refineFactor
-        # and the zoom factor
-        zoomFactor = manager.zoomFactor
-
-        # get the bindings
-        libampcor = ampcor.ext.libampcor_cuda
-        # make a worker
-        worker = libampcor.Sequential(pairs=pairs,
-                                      ref=chip, sec=window,
-                                      refineFactor=refineFactor, refineMargin=refineMargin,
-                                      zoomFactor=zoomFactor
-                                      )
-
+        # start the timer
+        timer.reset().start()
+        # compute the adjustments to the offset field
+        self.worker.adjust(box=box)
+        # stop the timer
+        timer.stop()
         # show me
-        channel.log("loading tiles")
-        # go through the valid pairs of reference and secondary tiles
-        for idx, (pid, r, s) in enumerate(tiles):
-            # save the pair id
-            worker.addPair(tid=idx, pid=pid)
-            # load the reference tile
-            worker.addReferenceTile(tid=idx, raster=ref, tile=r)
-            # load the secondary tile
-            worker.addSecondaryTile(tid=idx, raster=sec, tile=s)
-
-        channel.log("adjusting the offset map")
-        # ask the worker to perform pixel level adjustments
-        worker.adjust(offsets)
+        channel.log(f"[{self.rank}]: computed offsets: {1e3 * timer.read():.3f} ms")
 
         # all done
         return offsets
 
 
     # meta-methods
-    def __init__(self, **kwds):
+    def __init__(self, rasters, offsets, manager, plan, rank=0, **kwds):
         # chain up
         super().__init__(**kwds)
+
         # get the cuda support
         import cuda
         # get the cuda device manager
         manager = cuda.manager
         # grab a device
-        # manager.device(did=4)
+        manager.device(did=0)
+
+        # save my rank
+        self.rank = rank
+
+        # unpack the rasters
+        ref, sec = rasters
+        # get the shape of the reference chip
+        chip = plan.chip
+        # and the shape of the search windows
+        window = plan.window
+
+        # the manager holds the refinement plan
+        refineFactor = manager.refineFactor
+        refineMargin = manager.refineMargin
+        zoomFactor = manager.zoomFactor
+
+        # make a timer
+        timer = ampcor.executive.newTimer(name="ampcor.cuda.sequential")
+        # and a journal channel
+        channel = journal.info("ampcor.cuda.timings.sequential")
+
+        # access the bindings; this is guaranteed to succeed
+        seq = ampcor.ext.libampcor.Sequential
+        # start the timer
+        timer.reset().start()
+
+        # instantiate my worker
+        self.worker = seq(rank=rank,
+                          reference=ref.raster, secondary=sec.raster, map=offsets.raster,
+                          chip=chip, window=window,
+                          refineFactor=refineFactor, refineMargin=refineMargin,
+                          zoomFactor=zoomFactor)
+        # stop the timer
+        timer.stop()
+        # show me
+        channel.log(f"[{rank}]: instantiated a cuda sequential worker: {1e3 * timer.read():.3f} ms")
+
         # all done
         return
 
