@@ -35,7 +35,7 @@ namespace ampcor::cuda::correlators {
     using size_t = std::size_t;
 
     // pyre timers
-    using timer_t = pyre::timer_t;
+    using timer_t = pyre::timers::process_timer_t;
 }
 
 
