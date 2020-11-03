@@ -20,9 +20,9 @@ class CUDA:
 
 
     # interface
-    def adjust(self, manager, rasters, plan, channel):
+    def adjust(self, box, **kwds):
         """
-        Correlate a pair of {rasters} given a collection of {tiles}
+        Compute the offset map between a pair of rasters given a correlation {plan}
         """
         # make a timer
         timer = ampcor.executive.newTimer(name="ampcor.cuda.sequential")
@@ -39,7 +39,7 @@ class CUDA:
         channel.log(f"[{self.rank}]: computed offsets: {1e3 * timer.read():.3f} ms")
 
         # all done
-        return offsets
+        return
 
 
     # meta-methods
