@@ -47,10 +47,8 @@ class CUDA:
 
         # get the cuda support
         import cuda
-        # get the cuda device manager
-        manager = cuda.manager
         # grab a device
-        manager.device(did=0)
+        cuda.manager.device(did=0)
 
         # save my rank
         self.rank = rank
