@@ -34,6 +34,6 @@ include $(ampcor.tests)
 ampcor.docker-images := ampcor.groovy-cuda
 # groovy-cuda
 ampcor.groovy-cuda.name := groovy-cuda
-ampcor.groovy-cuda.launch.mounts := mm pyre p2 ampcor
+ampcor.groovy-cuda.launch.mounts := mm pyre p2 ampcor data
 
 # end of file
