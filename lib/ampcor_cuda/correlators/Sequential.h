@@ -47,6 +47,11 @@ public:
     using offsets_shape_const_reference = const offsets_shape_type &;
     using offsets_index_const_reference = const offsets_index_type &;
 
+    // the tile plan
+    using pairing_type = std::tuple<offsets_index_type, slc_index_type, slc_index_type>;
+    using plan_type = std::vector<pairing_type>;
+    using plan_const_reference = const plan_type &;
+
     // metamethods
 public:
     // destructor
@@ -61,9 +66,19 @@ public:
 
     // interface
 public:
+    // execute the correlation plan and adjust the offset map
+    void adjust(offsets_layout_const_reference);
 
-    // implementation
+    // implementation details: top level steps
 private:
+    auto coarseCorrelation(offsets_layout_const_reference) -> void;
+    auto refinedCorrelation(offsets_layout_const_reference) -> void;
+
+    // implementation details: methods
+public:
+    // build and validate a work plan
+    auto _assemblePlan(offsets_layout_const_reference,
+                       slc_shape_const_reference, slc_shape_const_reference) -> plan_type;
 
     // data
 private:

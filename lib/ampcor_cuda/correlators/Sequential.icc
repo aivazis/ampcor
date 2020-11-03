@@ -61,4 +61,204 @@ ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 }
 
 
+// interface
+// execute the correlation plan
+template <class slcT, class offsetsT>
+void
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+adjust(offsets_layout_const_reference box)
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // sign in
+    channel
+        << "[" << _rank << "]: "
+        << "adjusting the offset map: origin: {"
+        << box.origin() << "}, shape: {" << box.shape() << "}"
+        << pyre::journal::endl(__HERE__);
+
+    // we have a valid plan; perform an initial exploration
+    coarseCorrelation(box);
+    // refine the neighborhood of the coarse match and try again
+    refinedCorrelation(box);
+
+    // done
+    channel
+        << "[" << _rank << "]: "
+        << "  done"
+        << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
+}
+
+
+// implementation details
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+coarseCorrelation(offsets_layout_const_reference box) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // step 1: initial exploration of the correlation surface
+    channel
+        << "[" << _rank << "]: "
+        << "  step 1: initial exploration of the correlation surface:"
+        << pyre::journal::endl(__HERE__);
+
+    // assemble and validate the work plan
+    channel
+        << "[" << _rank << "]: "
+        << "    assembling and validating the work plan"
+        << pyre::journal::endl(__HERE__);
+    // build the plan
+    plan_type plan = _assemblePlan(box, _refShape, _secShape);
+    // if there are no valid pairs
+    if (plan.size() == 0) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.sequential.adjust");
+        // complain
+        error
+            << "all specified correlation pairs were invalid!"
+            << pyre::journal::endl(__HERE__);
+        // just in case the user has specified that errors aren't fatal
+        return;
+    }
+
+    // all done
+    return;
+}
+
+
+// narrow the search down to a smaller neighborhood of the best matching pairs, refine using
+// DFTs, and then zoom in to get subpixel estimates
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+refinedCorrelation(offsets_layout_const_reference box) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // all done
+    return;
+}
+
+
+// plan assembly: pull out of {_map} the portion of the tile pairings that belong to me,
+// discard the ones that don't fit within their respective inputs, and form the actual tile
+// shapes
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_assemblePlan(offsets_layout_const_reference box,
+              slc_shape_const_reference refShape, slc_shape_const_reference secShape)
+    -> plan_type
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.plan");
+
+    // make a plan
+    plan_type plan;
+
+    // extent of the input rasters
+    // the lower bound for an index into the reference raster is its origin
+    auto refMinIndex = _ref.layout().origin();
+    // similarly for the secondary raster
+    auto secMinIndex = _sec.layout().origin();
+    // form the strict upper bound of indices into the reference index
+    auto refMaxIndex = refMinIndex + _ref.layout().shape();
+    // ditto for the secondary raster
+    auto secMaxIndex = secMinIndex + _sec.layout().shape();
+
+    // shifts to apply to the tile centers to form the origins of tiles
+    auto refShift = refShape / 2;
+    auto secShift = secShape / 2;
+
+    // go through my portion of the pairings
+    for (auto pairIdx : _map.layout().box(box.origin(), box.shape())) {
+        // get the pair
+        auto pair = _map[pairIdx];
+        // convert the center of the {ref} tile into an index
+        slc_index_type refCenter {
+            static_cast<int>(pair.ref.first), static_cast<int>(pair.ref.second)
+        };
+
+        // form the origin of the reference tile
+        auto refOrigin = refCenter - refShift;
+        // if the reference origin is out of bounds
+        if (refOrigin < refMinIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << refOrigin << ") < ref origin@(" << refMinIndex << ")"
+                << pyre::journal::newline;
+            // skip this pairing; it is invalid
+            continue;
+        }
+        // if the extent spills out of the reference raster
+        if (refOrigin + refShape > refMaxIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << refOrigin << ") + shape@(" << refShape
+                << ") > ref shape@(" << refMaxIndex << ")"
+                << pyre::journal::newline;
+            // skip this pairing; it is invalid
+            continue;
+        }
+
+        // compute the center of the {sec} tile
+        auto secCenter = refCenter + slc_index_type(static_cast<int>(pair.shift.first),
+                                                    static_cast<int>(pair.shift.second));
+        // form the origin of the secondary tile
+        auto secOrigin = secCenter - secShift;
+        // if it's out of bounds
+        if (secOrigin < secMinIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << secOrigin << ") < sec origin@(" << secMinIndex << ")"
+                << pyre::journal::newline;
+            // skip this pairing; it is invalid
+            continue;
+        }
+        // if the extent spills out of the secondary raster
+        if (secOrigin + secShape > secMaxIndex) {
+            // tell me
+            channel
+                << "[" << _rank << "]: "
+                << "      pair (" << pairIdx << ") is invalid:"
+                << pyre::journal::newline
+                << "        origin@(" << secOrigin << ") + shape@(" << secShape
+                << ") > sec shape@(" << secMaxIndex << ")"
+                << pyre::journal::newline;
+            // skip this pairing; it is invalid
+            continue;
+        }
+
+        // we have a valid pair; turn it into a plan record
+        plan.push_back({pairIdx, refOrigin, secOrigin});
+    }
+
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "      " << plan.size() << "/" << box.cells() << " valid tile pairs"
+        << pyre::journal::endl(__HERE__);
+
+    // all done
+    return plan;
+}
+
+
 // end of file
