@@ -6,6 +6,8 @@
 #
 
 
+# externals
+import journal
 # framework
 import ampcor
 
