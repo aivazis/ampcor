@@ -13,17 +13,20 @@
 
 
 // meta-methods
+// destructor
 template <class slcT, class offsetsT>
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-~Sequential() {
-}
+~Sequential()
+{}
 
 
+// constructor
 template <class slcT, class offsetsT>
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-Sequential(size_type pairs,
-           const layout_type & refLayout, const layout_type & secLayout,
-           size_type refineFactor, size_type refineMargin, size_type zoomFactor) :
+    Sequential(int rank,
+               slc_const_reference ref, slc_const_reference sec, offsets_reference map,
+               slc_shape_const_reference chip, slc_shape_const_reference window,
+               int refineFactor, int refineMargin, int zoomFactor) :
     // my rank
     _rank { rank },
     // access to the input rasters
@@ -31,8 +34,8 @@ Sequential(size_type pairs,
     _sec { sec },
     _map { map },
     // the shapes of tiles
-    _refShape { refShape },
-    _secShape { secShape },
+    _refShape { chip },
+    _secShape { window },
     // the correlation refinement parameters
     _refineFactor { refineFactor },
     _refineMargin { refineMargin },

@@ -18,7 +18,7 @@ class ampcor::cuda::correlators::Sequential {
 public:
     // my template parameters
     using slc_type = slcT;
-    using offsets_t = offsetsT;
+    using offsets_type = offsetsT;
     // typical uses
     using slc_const_reference = const slc_type &;
     using offsets_reference = offsets_type &;
@@ -54,7 +54,7 @@ public:
     // constructor
     inline
     Sequential(int rank,
-               slc_const_reference ref, slc_const_reference sec,
+               slc_const_reference ref, slc_const_reference sec, offsets_reference map,
                slc_shape_const_reference chip, slc_shape_const_reference window,
                int refineFactor, int refineMargin, int zoomFactor);
 
@@ -95,7 +95,6 @@ private:
 
 
 // the inline definitions
-// sequential
 #define ampcor_cuda_correlators_Sequential_icc
 #include "Sequential.icc"
 #undef ampcor_cuda_correlators_Sequential_icc
