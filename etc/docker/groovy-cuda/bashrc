@@ -13,6 +13,14 @@ umask u+rwx,g+rwx,o+rx
 # the language/encoding
 export LANG=en_US.UTF-8
 
+# prompt
+export PROMPT_COMMAND=prompter
+
+prompter() {
+  history -a
+  export PS1="$(python3 ${HOME}/prompt.py)"
+}
+
 # aliases
 alias d='ls -ahGF'
 alias dl='ls -ahGFl'

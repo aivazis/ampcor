@@ -7,6 +7,7 @@
 FROM ubuntu:groovy
 
 # set up some build variables
+ARG instance=groovy-cuda
 # python version
 ARG python_version=3.8
 ARG python=python${python_version}
@@ -35,37 +36,44 @@ RUN apt dist-upgrade -y
 # install the base software stack
 RUN DEBIAN_FRONTEND=noninteractive \
     apt install -y \
-        git unzip zip \
+        git vim unzip zip \
         g++ gfortran make \
         npm \
-        nvidia-cuda-toolkit \
-        ${python} ${python}-dev \
-        python3-numpy \
-        python3-pybind11 \
         fftw3-dev \
         libgsl-dev \
         libpq-dev \
-        libopenmpi-dev
+        libopenmpi-dev \
+        nvidia-cuda-toolkit \
+        ${python} ${python}-dev \
+        python3-numpy \
+        python3-pybind11
 
 
 # setup the interactive environment
 # go home
 WORKDIR /root
 # copy the files with support for interactive use
-COPY etc/docker/groovy-cuda/inputrc .inputrc
+COPY etc/docker/${instance}/inputrc .inputrc
 # the startup file
-COPY etc/docker/groovy-cuda/bashrc bashrc.in
+COPY etc/docker/${instance}/bashrc bashrc.in
 # expand
 RUN sed \
         -e "s:@SRCDIR@:${srcdir}:g" \
         bashrc.in > .bashrc
+# copy the prompt
+COPY etc/docker/${instance}/prompt.py prompt.py.in
+# expand
+RUN sed \
+        -e "s:@INSTANCE@:${instance}:g" \
+        prompt.py.in > prompt.py
+
 
 # make the pyre configuration directory
 WORKDIR /root/.pyre
 # the mpi configuration
-COPY etc/docker/groovy-cuda/mpi.pfg mpi.pfg
+COPY etc/docker/${instance}/mpi.pfg mpi.pfg
 # the {mm} coniguration file
-COPY etc/docker/groovy-cuda/mm.pfg mm.pfg.in
+COPY etc/docker/${instance}/mm.pfg mm.pfg.in
 # expand
 RUN sed \
         -e "s:@PREFIX@:${prefix}:g" \
@@ -74,7 +82,7 @@ RUN sed \
 # place the {mm} control file
 WORKDIR /root/.mm
 # copy the relevant configuration file
-COPY etc/docker/groovy-cuda/config.mm config.mm.in
+COPY etc/docker/${instance}/config.mm config.mm.in
 # expand
 RUN sed \
         -e "s:@PYTHON_VERSION@:${python_version}:g" \
