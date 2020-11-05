@@ -128,6 +128,40 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         return;
     }
 
+    // make a coarse arena on the host for the amplitudes of the reference tiles
+    channel
+        << "[" << _rank << "]: "
+        << "    creating coarse arenas for the amplitudes"
+        << pyre::journal::endl(__HERE__);
+    // the reference tile arena has a trivial origin
+    slc_index_type refOrigin {};
+    // make the arena
+    auto refArena = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
+
+    // the secondary tile arena has a non-trivial origin
+    slc_index_type secOrigin = refOrigin - (_secShape - _refShape)/2;
+    // make the arena
+    auto secArena = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
+
+    // detect and transfer the tiles to the coarse arena
+    channel
+        << "[" << _rank << "]: "
+        << "    detecting and transferring"
+        << pyre::journal::endl(__HERE__);
+    // move the data from the rasters to the arena
+    _detect(plan, refArena, secArena);
+
+    // compute the correlation surface
+    // auto gamma = _gamma("coarse", refArena, secArena);
+    _gamma("coarse", refArena, secArena);
+
+    // find its maxima
+    channel
+        << "[" << _rank << "]: "
+        << "    locating the correlation surface maxima and recording the offsets"
+        << pyre::journal::endl(__HERE__);
+    // _maxcor(gamma, 1);
+
     // all done
     return;
 }
@@ -142,6 +176,15 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
+
+    // validate the refined plan
+    // stage the complex pixels so we can deramp and refine
+    // deramp
+    // refine
+    // detect
+    // compute the correlation surface
+    // if not zooming, find its maxima
+    // else, zoom + find maxima
 
     // all done
     return;
@@ -258,6 +301,225 @@ _assemblePlan(offsets_layout_const_reference box,
 
     // all done
     return plan;
+}
+
+
+// build a real arena as an intermediate data product
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_createAmplitudeArena(string_type name, int pairs,
+                      slc_shape_const_reference tileShape, slc_index_const_reference tileOrigin)
+    -> arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.arena");
+
+    // turn the number of pairs into a shape
+    typename arena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
+    // combine with the tile shape to form the arena layout
+    auto arenaShape = pairsShape * tileShape;
+
+    // pair numbering starts at zero
+    typename arena_type::spec_type::id_layout_type::index_type pairsOrigin { 0 };
+    // combine with the tile origin to form the arena origin
+    auto arenaOrigin = pairsOrigin * tileOrigin;
+
+    // convert all this to a layout
+    typename arena_type::layout_type arenaLayout { arenaShape, arenaOrigin };
+
+    // show me
+    channel
+        << "[" << _rank << "]: "
+        << "      creating '" << name << "':"
+        << " origin=(" << arenaOrigin << "), shape=(" << arenaShape << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // create the product and return it
+    return arena_type(arenaLayout, name, arenaLayout.cells());
+}
+
+
+// transfer tiles from the input rasters into corresponding arenas, and compute their magnitude
+// in flight
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+
+    // detecting means
+    auto detect = [](slc_pixel_type pixel) -> slc_value_type {
+        // computing the amplitude of the complex pixel
+        return std::abs(pixel);
+    };
+
+    // go through the plan
+    for (auto pid = 0; pid < plan.size(); ++pid) {
+        // get the origins of the tiles in their respective rasters
+        const auto & [_, refOrigin, secOrigin] = plan[pid];
+        // show me
+        channel
+            << "[" << _rank << "]: "
+            << "      detecting ref(" << refOrigin << ") and sec(" << secOrigin <<  ")"
+            << pyre::journal::endl(__HERE__);
+
+        // we traverse one tile at a time
+        typename arena_type::spec_type::id_layout_type::index_type pairShape { 1 };
+        // the pairing id determines the shift from the arena origin to our tile
+        arena_index_type pairShift { pid, 0, 0 };
+
+        // specify the source tile in the reference raster
+        auto refTile = _ref.box(refOrigin, _refShape);
+        // specify the destination tile
+        auto refArenaTile = refArena.box(refArena.layout().origin() + pairShift,
+                                         pairShape * _refShape);
+        // detect
+        std::transform(refTile.begin(), refTile.end(), refArenaTile.begin(), detect);
+
+        // specify the source tile in the secondary raster
+        auto secTile = _sec.box(secOrigin, _secShape);
+        // specify the destination tile
+        auto secArenaTile = secArena.box(secArena.layout().origin() + pairShift,
+                                         pairShape * _secShape);
+        // detect
+        std::transform(secTile.begin(), secTile.end(), secArenaTile.begin(), detect);
+    }
+
+    // all done
+    return;
+}
+
+
+// go through the sequence of steps necessary to compute the correlation surface given a pair
+// of arenas with detected tiles
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_gamma(string_type tag, arena_reference refArena, arena_reference secArena)
+    -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.gamma");
+
+    // allocate a device arena for the reference amplitudes
+    // mark a spot
+    slc_value_type * dRefArena = nullptr;
+    // compute the memory footprint
+    auto refArenaFootprint = refArena.bytes();
+    // grab device memory
+    auto refArenaAllocStatus = cudaMallocManaged(&dRefArena, refArenaFootprint);
+    // if something went wrong
+    if (refArenaAllocStatus != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << 1.0*refArenaFootprint/1024/1024
+            << "Mb of device memory for the reference amplitude arena: "
+            << cudaGetErrorName(refArenaAllocStatus) << " (" << refArenaAllocStatus << ")"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        throw std::bad_alloc();
+    }
+    // copy the amplitudes to the device
+    auto refArenaCopyStatus = cudaMemcpy(dRefArena, refArena.data()->data(), refArenaFootprint,
+                                         cudaMemcpyHostToDevice);
+    // if something went wrong
+    if (refArenaCopyStatus != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(refArenaCopyStatus);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while transferring reference amplitude tiles to the device: "
+            << description << " (" << refArenaCopyStatus << ")"
+            << pyre::journal::endl;
+        // release the memory
+        cudaFree(dRefArena);
+        // and bail
+        throw std::logic_error(description);
+    }
+
+    // adjust them to zero-mean and compute the variances
+
+    // allocate a device arena for the secondary amplitudes
+    // mark a spot
+    slc_value_type * dSecArena = nullptr;
+    // compute the memory footprint
+    auto secArenaFootprint = secArena.bytes();
+    // grab device memory
+    auto secArenaStatus = cudaMallocManaged(&dSecArena, secArenaFootprint);
+    // if something went wrong
+    if (secArenaStatus != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << "while allocating " << 1.0*secArenaFootprint/1024/1024
+            << "Mb of device memory for the secondary amplitude arena: "
+            << cudaGetErrorName(secArenaStatus) << " (" << secArenaStatus << ")"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        throw std::bad_alloc();
+    }
+    // copy the amplitudes to the device
+    auto secArenaCopyStatus = cudaMemcpy(dSecArena, secArena.data()->data(), secArenaFootprint,
+                                         cudaMemcpyHostToDevice);
+    // if something went wrong
+    if (secArenaCopyStatus != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(secArenaCopyStatus);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while transferring secondary amplitude tiles to the device: "
+            << description << " (" << secArenaCopyStatus << ")"
+            << pyre::journal::endl;
+        // release the memory
+        cudaFree(dSecArena);
+        // and bail
+        throw std::logic_error(description);
+    }
+
+
+
+    // compute the SATs
+    // compute the mean amplitude for all possible chip placements
+
+    // compute the correlation matrix
+
+    // fetch it from the device
+
+    // when we get here, we have to fix the signature of this method: void -> arena_t
+
+
+    // all done
+    return;
+}
+
+
+// compute and store the locations of the maxima of the correlation surface
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.maxcor");
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // all done
+    return;
 }
 
 

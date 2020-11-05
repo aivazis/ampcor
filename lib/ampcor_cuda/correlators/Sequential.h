@@ -47,10 +47,27 @@ public:
     using offsets_shape_const_reference = const offsets_shape_type &;
     using offsets_index_const_reference = const offsets_index_type &;
 
+    // temporary storage for detected tiles
+    using arena_type = ampcor::dom::arena_raster_t<slc_value_type>;
+    using const_arena_type = ampcor::dom::arena_const_raster_t<slc_value_type>;
+    using arena_spec = typename arena_type::spec_type;
+    using arena_value_type = typename arena_type::value_type;
+    using arena_layout_type = typename arena_type::packing_type;
+    using arena_index_type = typename arena_type::index_type;
+    using arena_shape_type = typename arena_type::shape_type;
+    // usage
+    using arena_reference = arena_type &;
+    using const_arena_const_reference = const const_arena_type &;
+    using arena_layout_const_reference = typename arena_type::packing_const_reference;
+    using arena_shape_const_reference = typename arena_type::shape_const_reference;
+
     // the tile plan
     using pairing_type = std::tuple<offsets_index_type, slc_index_type, slc_index_type>;
     using plan_type = std::vector<pairing_type>;
     using plan_const_reference = const plan_type &;
+
+    // miscellaneous
+    using string_type = string_t;
 
     // metamethods
 public:
@@ -79,6 +96,19 @@ public:
     // build and validate a work plan
     auto _assemblePlan(offsets_layout_const_reference,
                        slc_shape_const_reference, slc_shape_const_reference) -> plan_type;
+    // create a tile arena
+    auto _createAmplitudeArena(string_type name, int pairs,
+                               slc_shape_const_reference tileShape,
+                               slc_index_const_reference tileOrigin)
+        -> arena_type;
+    // detect and transfer reference and secondary tiles into their respective arenas
+    auto _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena)
+        -> void;
+
+    // go through all the necessary steps to compute the correlation surface
+    auto _gamma(string_type, arena_reference, arena_reference) -> void;
+    // compute and store the locations of the maxima of the correlation surface
+    auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
 
     // data
 private:
