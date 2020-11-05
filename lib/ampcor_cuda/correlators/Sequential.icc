@@ -425,6 +425,11 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         // and bail
         throw std::bad_alloc();
     }
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "      copying reference amplitudes to the device (" << refArenaFootprint << " bytes)"
+        << pyre::journal::endl(__HERE__);
     // copy the amplitudes to the device
     auto refArenaCopyStatus = cudaMemcpy(dRefArena, refArena.data()->data(), refArenaFootprint,
                                          cudaMemcpyHostToDevice);
@@ -468,6 +473,11 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         // and bail
         throw std::bad_alloc();
     }
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "      copying secondary amplitudes to the device (" << secArenaFootprint << " bytes)"
+        << pyre::journal::endl(__HERE__);
     // copy the amplitudes to the device
     auto secArenaCopyStatus = cudaMemcpy(dSecArena, secArena.data()->data(), secArenaFootprint,
                                          cudaMemcpyHostToDevice);
