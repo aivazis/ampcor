@@ -31,6 +31,8 @@
 // type aliases
 namespace ampcor::cuda::correlators {
     // local type aliases
+    // strings
+    using string_t = std::string;
     // sizes of things
     using size_t = std::size_t;
 
