@@ -117,7 +117,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         return;
     }
 
-    // make a coarse arena for the amplitudes of the reference tiles
+    // make coarse arenas for the tile amplitudes
     channel
         << "[" << _rank << "]: "
         << "    creating coarse arenas for the amplitudes"
@@ -132,7 +132,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
     // make the arena
     auto secArena = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
 
-    // detect and transfer the reference tile tiles to the coarse arena
+    // detect and transfer the tiles to the coarse arena
     channel
         << "[" << _rank << "]: "
         << "    detecting and transferring"
