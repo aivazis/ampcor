@@ -21,6 +21,8 @@
 // local entities
 // device kernels
 #include "kernels.h"
+// device memory
+#include "CUDAHeap.h"
 // the class declarations
 #include "Sequential.h"
 

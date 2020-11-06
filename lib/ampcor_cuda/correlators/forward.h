@@ -11,6 +11,9 @@
 
 // set up the namespace
 namespace ampcor::cuda::correlators {
+    // memory block on the device
+    template <typename T, bool isConst> class CUDAHeap;
+
     // the correlators
     template <class slcT, class offsetsT>
     class Sequential;
