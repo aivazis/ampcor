@@ -7,8 +7,10 @@
 
 # add the library
 ampcor.libraries += ampcor_cuda.lib
-# and the bindings to the pile
+# the bindings
 ampcor.extensions += ampcor_cuda.ext
+# and its testsuite to the build pile
+ampcor.tests += ampcor_cuda.lib.tests
 
 # library configuration
 ampcor_cuda.lib.stem := ampcor_cuda
