@@ -17,7 +17,7 @@ ampcor.tests += ampcor.pkg.tests ampcor.lib.tests
 # configure the library
 ampcor.lib.stem := ampcor
 # dependencies
-ampcor.lib.extern := fftw pyre p2
+ampcor.lib.extern := fftw p2 pyre
 # compiler control
 ampcor.lib.c++.flags += $($(compiler.c++).std.c++17)
 
@@ -31,7 +31,7 @@ ampcor.ext.capsule :=
 # intra-project dependencies
 ampcor.ext.prerequisites := ampcor.lib
 # dependencies
-ampcor.ext.extern := ampcor.lib fftw pyre p2 pybind11 python
+ampcor.ext.extern := ampcor.lib fftw p2 pyre pybind11 python
 # compiler control
 ampcor.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 

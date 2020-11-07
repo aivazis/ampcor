@@ -34,7 +34,7 @@ ampcor_cuda.ext.capsule :=
 # intra-project dependencies
 ampcor_cuda.ext.prerequisites := ampcor_cuda.lib
 # dependencies
-ampcor_cuda.ext.extern := ampcor_cuda.lib ampcor.lib pyre p2 pybind11 python cuda
+ampcor_cuda.ext.extern := ampcor_cuda.lib ampcor.lib p2 pyre pybind11 python cuda
 # compiler control
 ampcor_cuda.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 
