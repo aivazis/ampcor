@@ -114,7 +114,7 @@ refStats(float * rArena,
 template <std::size_t T, typename value_t>
 __global__
 void
-_refStats(const value_t * rArena,
+_refStats(value_t * rArena,
           std::size_t refRows, std::size_t refCols,
           value_t * stats)
 {
