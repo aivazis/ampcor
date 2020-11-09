@@ -26,7 +26,7 @@ template <std::size_t T, typename value_t = float>
 __global__
 void
 _refStats(value_t * rArena,
-          std::size_t refDim, std::size_t cellsPerTilePair,
+          std::size_t refRows, std::size_t refCols,
           value_t * stats);
 
 
@@ -34,7 +34,7 @@ _refStats(value_t * rArena,
 void
 ampcor::cuda::kernels::
 refStats(float * rArena,
-         std::size_t pairs, std::size_t refDim, std::size_t cellsPerTilePair,
+         std::size_t pairs, std::size_t refRows, std::size_t refCols,
          float * stats)
 {
     // make a channel
@@ -42,12 +42,11 @@ refStats(float * rArena,
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "arena has " << pairs << " blocks of " << cellsPerTilePair << " cells;"
-        << " the reference tiles are " << refDim << "x" << refDim
+        << "arena has " << pairs << " blocks of (" << refRows << "x" << refCols << ") tiles"
         << pyre::journal::endl;
 
-    // the number of threads per block
-    auto T = refDim;
+    // the number of threads per block; each thread handles a column of the tile so
+    auto T = refCols;
     // the number of blocks
     auto B = pairs;
     // the amount of shared memory
@@ -56,31 +55,31 @@ refStats(float * rArena,
     // show me
     channel << pyre::journal::at(__HERE__);
     // deploy
-    if (refDim <= 32) {
+    if (refCols <= 32) {
         // show me
         channel << "deploying the 32x32 kernel";
         // with 32x32 tiles
-        _refStats<32><<<B, 32, S>>>(rArena, refDim, cellsPerTilePair, stats);
-    } else if (refDim <= 64) {
+        _refStats<32><<<B, 32, S>>>(rArena, refRows, refCols, stats);
+    } else if (refCols <= 64) {
         // show me
         channel << "deploying the 64x64 kernel";
         // with 64x64 tiles
-        _refStats<64><<<B, 64, S>>>(rArena, refDim, cellsPerTilePair, stats);
-    } else if (refDim <= 128) {
+        _refStats<64><<<B, 64, S>>>(rArena, refRows, refCols, stats);
+    } else if (refCols <= 128) {
         // show me
         channel << "deploying the 128x128 kernel";
         // with 128x128 tiles
-        _refStats<128><<<B, 128, S>>>(rArena, refDim, cellsPerTilePair, stats);
-    } else if (refDim <= 256) {
+        _refStats<128><<<B, 128, S>>>(rArena, refRows, refCols, stats);
+    } else if (refCols <= 256) {
         // show me
         channel << "deploying the 256x256 kernel";
         // with 256x256 tiles
-        _refStats<256><<<B, 256, S>>>(rArena, refDim, cellsPerTilePair, stats);
-    } else if (refDim <= 512) {
+        _refStats<256><<<B, 256, S>>>(rArena, refRows, refCols, stats);
+    } else if (refCols <= 512) {
         // show me
         channel << "deploying the 512x512 kernel";
         // with 512x512 tiles
-        _refStats<512><<<B, 512, S>>>(rArena, refDim, cellsPerTilePair, stats);
+        _refStats<512><<<B, 512, S>>>(rArena, refRows, refCols, stats);
     } else {
         // complain
         throw std::runtime_error("cannot handle reference tiles of this shape");
@@ -115,8 +114,8 @@ refStats(float * rArena,
 template <std::size_t T, typename value_t>
 __global__
 void
-_refStats(value_t * rArena,
-          std::size_t refDim, std::size_t cellsPerTilePair,
+_refStats(const value_t * rArena,
+          std::size_t refRows, std::size_t refCols,
           value_t * stats)
 {
     // build the workload descriptors
@@ -139,17 +138,19 @@ _refStats(value_t * rArena,
     cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
 
     // step one: every thread sums a column of its tile
+    // compute the size of each tile
+    auto refCells = refRows * refCols;
     // find the start of my tile by skipping the tile pairs handled by the lesser blocks
-    auto tile = rArena + b*cellsPerTilePair;
+    auto tile = rArena + b*refCells;
     // compute the location of the cell past the end of my tile
-    auto eot = tile + refDim*refDim;
+    auto eot = tile + refCells;
     // initialize the accumulator
     value_t sum = 0;
     // if my thread id is less than the number of columns, i need to sum up the values;
     // otherwise, my contribution is to zero out my slot in shared memory
-    if (t < refDim) {
+    if (t < refCols) {
         // run down my column
-        for (auto cell = tile + t; cell < eot; cell += refDim) {
+        for (auto cell = tile + t; cell < eot; cell += refCols) {
             // picking up contributions
             sum += *cell;
         }
@@ -212,7 +213,7 @@ _refStats(value_t * rArena,
     // finally, thread 0
     if (t == 0) {
         // saves the final value
-        scratch[0] = sum / (refDim*refDim);
+        scratch[0] = sum / refCells;
     }
     // make sure everybody is done
     cta.sync();
@@ -223,11 +224,11 @@ _refStats(value_t * rArena,
     // initialize the variance
     value_t sumsq = 0;
     // only threads assigned to columns do any work
-    if (t < refDim) {
+    if (t < refCols) {
         // read the mean value from shared memory
         auto mean = scratch[0];
         // run down my column
-        for (auto cell = tile + t; cell < eot; cell += refDim) {
+        for (auto cell = tile + t; cell < eot; cell += refCols) {
             // get the cell value and subtract the mean
             auto value = *cell - mean;
             // store it

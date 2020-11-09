@@ -23,7 +23,7 @@ namespace ampcor::cuda::kernels {
 
     // subtract the tile mean from each reference pixel
     void refStats(float * rArena,
-                  std::size_t pairs, std::size_t refDim, std::size_t cellsPerTilePair,
+                  std::size_t pairs, std::size_t refRows, std::size_t refCols,
                   float * stats);
 
     // build the sum area tables for the secondary tiles
