@@ -404,35 +404,27 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.gamma");
 
+    // get the layout of the reference arena
+    auto refLayout = refArena.layout();
     // allocate a device arena for the reference amplitudes
-    // mark a spot
-    slc_value_type * dRefArena = nullptr;
-    // compute the memory footprint
-    auto refArenaFootprint = refArena.bytes();
-    // grab device memory
-    auto refArenaAllocStatus = cudaMallocManaged(&dRefArena, refArenaFootprint);
-    // if something went wrong
-    if (refArenaAllocStatus != cudaSuccess) {
-        // make a channel
-        pyre::journal::error_t error("ampcor.cuda");
-        // complain
-        error
-            << pyre::journal::at(__HERE__)
-            << "while allocating " << 1.0*refArenaFootprint/1024/1024
-            << "Mb of device memory for the reference amplitude arena: "
-            << cudaGetErrorName(refArenaAllocStatus) << " (" << refArenaAllocStatus << ")"
-            << pyre::journal::endl(__HERE__);
-        // and bail
-        throw std::bad_alloc();
-    }
-    // tell me
+    devarena_raster_t<typename arena_type::pixel_type> dRefArena { refLayout, refLayout.cells() };
+
+    // get the layout of the secondary arena
+    auto secLayout = secArena.layout();
+    // allocate a device arena for the secondary amplitudes
+    devarena_raster_t<typename arena_type::pixel_type> dSecArena { secLayout, secLayout.cells() };
+
+    // moving on
+    // get the reference arena footprint
+    auto refArenaFootprint = refArena.data()->bytes();
+    // show me
     channel
         << "[" << _rank << "]: "
         << "      copying reference amplitudes to the device (" << refArenaFootprint << " bytes)"
         << pyre::journal::endl(__HERE__);
     // copy the amplitudes to the device
-    auto refArenaCopyStatus = cudaMemcpy(dRefArena, refArena.data()->data(), refArenaFootprint,
-                                         cudaMemcpyHostToDevice);
+    auto refArenaCopyStatus = cudaMemcpy(dRefArena.data()->data(), refArena.data()->data(),
+                                         refArenaFootprint, cudaMemcpyHostToDevice);
     // if something went wrong
     if (refArenaCopyStatus != cudaSuccess) {
         // build the error description
@@ -445,42 +437,21 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
             << "while transferring reference amplitude tiles to the device: "
             << description << " (" << refArenaCopyStatus << ")"
             << pyre::journal::endl;
-        // release the memory
-        cudaFree(dRefArena);
         // and bail
         throw std::logic_error(description);
     }
 
-    // adjust them to zero-mean and compute the variances
 
-    // allocate a device arena for the secondary amplitudes
-    // mark a spot
-    slc_value_type * dSecArena = nullptr;
-    // compute the memory footprint
-    auto secArenaFootprint = secArena.bytes();
-    // grab device memory
-    auto secArenaStatus = cudaMallocManaged(&dSecArena, secArenaFootprint);
-    // if something went wrong
-    if (secArenaStatus != cudaSuccess) {
-        // make a channel
-        pyre::journal::error_t error("ampcor.cuda");
-        // complain
-        error
-            << "while allocating " << 1.0*secArenaFootprint/1024/1024
-            << "Mb of device memory for the secondary amplitude arena: "
-            << cudaGetErrorName(secArenaStatus) << " (" << secArenaStatus << ")"
-            << pyre::journal::endl(__HERE__);
-        // and bail
-        throw std::bad_alloc();
-    }
-    // tell me
+    // get the secondary arena footprint
+    auto secArenaFootprint = secArena.data()->bytes();
+    // show me
     channel
         << "[" << _rank << "]: "
         << "      copying secondary amplitudes to the device (" << secArenaFootprint << " bytes)"
         << pyre::journal::endl(__HERE__);
     // copy the amplitudes to the device
-    auto secArenaCopyStatus = cudaMemcpy(dSecArena, secArena.data()->data(), secArenaFootprint,
-                                         cudaMemcpyHostToDevice);
+    auto secArenaCopyStatus = cudaMemcpy(dSecArena.data()->data(), secArena.data()->data(),
+                                         secArenaFootprint, cudaMemcpyHostToDevice);
     // if something went wrong
     if (secArenaCopyStatus != cudaSuccess) {
         // build the error description
@@ -493,15 +464,14 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
             << "while transferring secondary amplitude tiles to the device: "
             << description << " (" << secArenaCopyStatus << ")"
             << pyre::journal::endl;
-        // release the memory
-        cudaFree(dSecArena);
         // and bail
         throw std::logic_error(description);
     }
 
+    // adjust the reference amplitudes to zero-mean and compute the variances
+    auto refVariances = _referenceStatistics(refArena);
 
-
-    // compute the SATs
+    // compute the SATs of the secondary amplitudes
     // compute the mean amplitude for all possible chip placements
 
     // compute the correlation matrix
@@ -530,6 +500,26 @@ _maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
 
     // all done
     return;
+}
+
+
+// reduce the reference amplitude arena tiles to zero mean and compute their variances
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_referenceStatistics(arena_reference arena) -> dvector_type
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.sequential.maxcor");
+
+    // grab a spot
+    dvector_type variances { 0 };
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
+    // all done
+    return variances;
 }
 
 

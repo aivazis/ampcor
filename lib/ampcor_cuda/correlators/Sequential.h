@@ -69,6 +69,9 @@ public:
     // miscellaneous
     using string_type = string_t;
 
+    // device memory: most containers are raw pointers
+    using dvector_type = devmem_t<slc_value_type>;
+
     // metamethods
 public:
     // destructor
@@ -109,6 +112,9 @@ public:
     auto _gamma(string_type, arena_reference, arena_reference) -> void;
     // compute and store the locations of the maxima of the correlation surface
     auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
+
+    // reduce the tiles in {arena} to zero mean, and compute their variances
+    auto _referenceStatistics(arena_reference) -> dvector_type;
 
     // data
 private:
