@@ -69,8 +69,19 @@ public:
     // miscellaneous
     using string_type = string_t;
 
-    // device memory: most containers are raw pointers
+    // device memory
+    // some containers are raw pointers
     using dvector_type = devmem_t<slc_value_type>;
+    // we have arenas over real values
+    using dev_arena_type = devarena_raster_t<slc_value_type>;
+    // and arenas over complex values
+    using dev_carena_type = devarena_raster_t<slc_pixel_type>;
+
+    // usage
+    using dev_arena_reference = dev_arena_type &;
+    using dev_arena_const_reference = const dev_arena_type &;
+    using dev_carena_reference = dev_carena_type &;
+    using dev_carena_const_reference = const dev_carena_type &;
 
     // metamethods
 public:
@@ -114,7 +125,7 @@ public:
     auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
 
     // reduce the tiles in {arena} to zero mean, and compute their variances
-    auto _referenceStatistics(arena_reference) -> dvector_type;
+    auto _referenceStatistics(dev_arena_reference) -> dvector_type;
 
     // data
 private:

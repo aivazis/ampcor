@@ -468,8 +468,13 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         throw std::logic_error(description);
     }
 
+    // adjust the reference tiles to zero mean and compute their variance
+    channel
+        << "[" << _rank << "]: "
+        << "      adjusting the amplitudes to zero mean and computing statistics"
+        << pyre::journal::endl(__HERE__);
     // adjust the reference amplitudes to zero-mean and compute the variances
-    auto refVariances = _referenceStatistics(refArena);
+    auto refVariances = _referenceStatistics(dRefArena);
 
     // compute the SATs of the secondary amplitudes
     // compute the mean amplitude for all possible chip placements
@@ -507,16 +512,21 @@ _maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
 template <class slcT, class offsetsT>
 auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-_referenceStatistics(arena_reference arena) -> dvector_type
+_referenceStatistics(dev_arena_reference arena) -> dvector_type
 {
-    // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.maxcor");
+    // get the arena shape
+    auto shape = arena.layout().shape();
+    // there are as many variances to compute as there are tile pairs in the plan
+    auto pairs = shape[0];
+    // allocate room for the result
+    dvector_type variances { pairs };
 
-    // grab a spot
-    dvector_type variances { 0 };
+    // the shape of the reference tiles
+    auto refRows = shape[1];
+    auto refCols = shape[2];
 
-    // flush
-    channel << pyre::journal::endl(__HERE__);
+    // engage
+    kernels::refStats(arena.data()->data(), pairs, refRows, refCols, variances.data());
 
     // all done
     return variances;
