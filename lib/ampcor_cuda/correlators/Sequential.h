@@ -68,6 +68,7 @@ public:
 
     // miscellaneous
     using string_type = string_t;
+    using size_type = size_t;
 
     // device memory
     // some containers are raw pointers
@@ -126,6 +127,8 @@ public:
 
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(dev_arena_reference) -> dvector_type;
+    // create sum area tables for the secondary amplitude tiles
+    auto _secondarySumAreaTables(dev_arena_reference) -> dev_arena_type;
 
     // data
 private:

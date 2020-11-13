@@ -407,12 +407,12 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
     // get the layout of the reference arena
     auto refLayout = refArena.layout();
     // allocate a device arena for the reference amplitudes
-    devarena_raster_t<typename arena_type::pixel_type> dRefArena { refLayout, refLayout.cells() };
+    dev_arena_type dRefArena { refLayout, refLayout.cells() };
 
     // get the layout of the secondary arena
     auto secLayout = secArena.layout();
     // allocate a device arena for the secondary amplitudes
-    devarena_raster_t<typename arena_type::pixel_type> dSecArena { secLayout, secLayout.cells() };
+    dev_arena_type dSecArena { secLayout, secLayout.cells() };
 
     // moving on
     // get the reference arena footprint
@@ -440,7 +440,6 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         // and bail
         throw std::logic_error(description);
     }
-
 
     // get the secondary arena footprint
     auto secArenaFootprint = secArena.data()->bytes();
@@ -476,16 +475,19 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
     // adjust the reference amplitudes to zero-mean and compute the variances
     auto refVariances = _referenceStatistics(dRefArena);
 
+    // build sum area tables so we can do the same to the sliding window in the secondary tiles
+    channel
+        << "[" << _rank << "]: "
+        << "      building sum area tables"
+        << pyre::journal::endl(__HERE__);
     // compute the SATs of the secondary amplitudes
+    auto secSATs = _secondarySumAreaTables(dSecArena);
+
     // compute the mean amplitude for all possible chip placements
-
     // compute the correlation matrix
-
     // fetch it from the device
 
     // when we get here, we have to fix the signature of this method: void -> arena_t
-
-
     // all done
     return;
 }
@@ -517,19 +519,57 @@ _referenceStatistics(dev_arena_reference arena) -> dvector_type
     // get the arena shape
     auto shape = arena.layout().shape();
     // there are as many variances to compute as there are tile pairs in the plan
-    auto pairs = shape[0];
-    // allocate room for the result
-    dvector_type variances { pairs };
-
+    size_type pairs = shape[0];
     // the shape of the reference tiles
     auto refRows = shape[1];
     auto refCols = shape[2];
 
+    // allocate room for the result
+    dvector_type variances { pairs };
     // engage
     kernels::refStats(arena.data()->data(), pairs, refRows, refCols, variances.data());
 
     // all done
     return variances;
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_secondarySumAreaTables(dev_arena_reference arena) -> dev_arena_type
+{
+    // a sum area table is a device arena with a half border, so we will build it using the
+    // layout information in the amplitude arena
+
+    // get the incoming arena layout
+    auto arenaLayout = arena.layout();
+    // extract the shape
+    auto arenaShape = arenaLayout.shape();
+    // and the origin
+    auto arenaOrigin = arenaLayout.origin();
+
+    // the SAT has a border of zeroes as the leftmost column and topmost row, so its origin is
+    // up and to the left relative to the arena tiles, and its shape needs room for the extra
+    // data, while the number of tiles themselves are untouched
+    arena_index_type delta { 0, 1, 1 };
+    // build the origin
+    arena_index_type satOrigin = arenaOrigin - delta;
+    // build the shape
+    arena_shape_type satShape = arenaShape + delta;
+    // assemble the SAT layout
+    arena_layout_type satLayout { satShape, satOrigin };
+    // and build the table
+    dev_arena_type sat { satLayout, satLayout.cells() };
+
+    // get the number of tiles
+    auto [pairs, tileRows, tileCols] = arenaShape;
+
+    // engage
+    kernels::sat(arena.data()->data(), pairs, tileRows, tileCols, sat.data()->data());
+
+    // all done
+    return sat;
 }
 
 

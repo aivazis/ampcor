@@ -24,27 +24,28 @@
 template <typename value_t = float>
 __global__
 static void
-_sat(const value_t * dArena,
-    std::size_t stride, std::size_t rcells, std::size_t tcells, std::size_t tdim,
-    value_t * dSAT);
+_sat(const value_t * dArena, std::size_t tileRows, std::size_t tileCols, value_t * dSAT);
 
 
 // implementation
 void
 ampcor::cuda::kernels::
 sat(const float * dArena,
-    std::size_t pairs, std::size_t refCells, std::size_t secCells, std::size_t secDim,
+    std::size_t pairs, std::size_t tileRows, std::size_t tileCols,
     float * dSAT)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
-    // to compute the SAT for each secondary tile, we launch as many thread blocks as there are
-    // secondary tiles
+    // to compute a SAT for each tile, we launch as many thread blocks as there are tiles
     std::size_t B = pairs;
-    // the number of threads per block is determined by the shape of the secondary tile; round up
-    // to the nearest warp
-    std::size_t T = 32 * (secDim / 32 + (secDim % 32 ? 1 : 0));
+    // the number of threads per block is determined by the shape of the tiles; each
+    // thread will handle one row and/or one column in the SAT table, so that means we need as
+    // many threads as {max(tileRows, tileCols)} to guarantee we have enough workers; the border
+    // around the SAT will be handled as an explicit pass
+    auto workers = std::max(tileRows, tileCols);
+    // then we round up to the nearest warp...
+    std::size_t T = 32 * (workers / 32 + (workers % 32 ? 1 : 0));
     // show me
     channel
         << pyre::journal::at(__HERE__)
@@ -53,7 +54,7 @@ sat(const float * dArena,
         << pyre::journal::endl;
 
     // launch the SAT kernel
-    _sat <<<B,T>>> (dArena, refCells+secCells, refCells, secCells, secDim, dSAT);
+    _sat <<<B,T>>> (dArena, tileRows, tileCols, dSAT);
     // wait for the device to finish
     cudaError_t status = cudaDeviceSynchronize();
     // if something went wrong
@@ -81,9 +82,7 @@ sat(const float * dArena,
 template <typename value_t>
 __global__
 void
-_sat(const value_t * dArena,
-    std::size_t stride, std::size_t rcells, std::size_t tcells, std::size_t tdim,
-    value_t * dSAT)
+_sat(const value_t * dArena, std::size_t tileRows, std::size_t tileCols, value_t * dSAT)
 {
     // build the workload descriptors
     // global
@@ -95,53 +94,95 @@ _sat(const value_t * dArena,
     std::size_t t = threadIdx.x;     // my thread id within my block
     // std::size_t w = b*T + t;      // my worker id
 
-    // if there is nothing for me to do
-    if (t >= tdim) {
-        // bail
+    // the number of live workers we need
+    auto workers = max(tileRows, tileCols);
+    // excess workers
+    if (t >= workers) {
+        // can be sent home
         return;
     }
 
-    // get a handle to this thread block group
+    // the shape of the SAT
+    auto satRows = tileRows + 1;
+    auto satCols = tileCols + 1;
+
+    // the implementation here has three phases:
+    //
+    // - first, we take care of the border: every thread zeroes out one slot in the topmost row
+    //   and one slot on the leftmost column
+    // - next, each thread sweeps across a given row computing a running sum of the
+    //   corresponding entries in the amplitude tile
+    // - finally, each thread runs down each column setting up a running sum of its entries
+    //
+    // done carefully to make sure that only workers that have work to do are activated
+
+    // point to the SAT my block is responsible for
+    auto sat =  dSAT + b*satRows*satCols;
+    // similarly, point to the start of my tile
+    auto tile = dArena + b*tileRows*tileCols;
+    // N.B.: any use of {dSAT} or {dArena} below this point is probably a bug...
+
+    // get a handle to this thread group so we can synchronize the phases
     cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
 
-    // on the first pass, each thread sweeps across its row in the secondary tile
-    // on a second pass, each thread sweeps down its column in the SAT
-
-    // across the row
-    // my starting point for reading data is row {t} of tile {b} in the arena
-    std::size_t read = b*stride + rcells + t*tdim;
-    // my starting point for writing data is row {t} of tile {b} in the SAT area
-    std::size_t write = b*tcells + t*tdim;
-
-    // initialize the partial sum
-    value_t sum = 0;
-
-    // run across the row
-    for (auto slot = 0; slot < tdim; ++slot) {
-        // update the sum
-        sum += dArena[read + slot];
-        // store the result
-        dSAT[write + slot] = sum;
+    // thread zero writes the upper left hand corner of the SAT
+    if (t == 0) {
+        sat[0] = 0;
+    }
+    // now, everybody
+    if (t < tileCols) {
+        // zeroes out a slot in the topmost row of the SAT; thread {t} takes care of the slot
+        // at (0, t+1)
+        sat[t+1] = 0;
+    }
+    // followed by everybody
+    if (t < tileRows) {
+        // zeroing out a slot in the leftmost column of the SAT; thread {t} takes care of the
+        // slot at (t+1, 0)
+        sat[(t+1)*satCols] = 0;
     }
 
     // barrier: make sure everybody is done updating the SAT
     cta.sync();
 
-    // march down the column of the SAT table itself
-    // my starting point is column {t} of tile {b}
-    std::size_t colStart = b*tcells + t;
-    // can't go past the end of my tile
-    std::size_t colStop = (b+1)*tcells;
-    // reinitialize the partial sum
-    sum = 0;
-    // run
-    for (auto slot=colStart; slot < colStop; slot += tdim) {
-        // read the current value and save it
-        auto current = dSAT[slot];
-        // update the current value with the running sum
-        dSAT[slot] += sum;
-        // update the running sum for the next guy
-        sum += current;
+    // pick as many workers as there are rows in the tile
+    if (t < tileRows) {
+        // have each one find the tile row it will read from
+        const value_t * read = tile + t*tileCols;
+        // and the beginning of the sat row it will write to, starting with the row below the
+        // border and skipping the zeroth entry in that row which belongs to the border
+        value_t * write = sat + (t+1)*satCols + 1;
+        // everybody initializes their running sum
+        value_t sum = 0;
+        // and run across their row
+        for (int slot=0; slot<tileCols; ++slot) {
+            // reading from the tile to update the running total
+            sum += read[slot];
+            // and writing to the corresponding spot in the sat
+            write[slot] = sum;
+        }
+    }
+
+    // barrier: make sure everybody is done updating their row
+    cta.sync();
+
+    // finally, pick as many workers as there are columns in a tile
+    if (t < tileCols) {
+        // initialize the running sum
+        value_t sum = 0;
+        // point to the beginning of its column after skipping over the border row and column;
+        // we don't really need to skip the top row, since it is zero, but why pay for the
+        // extra memory access only to avoid a tiny bit of pointer arithmetic? :)
+        value_t * begin = sat + satCols + t + 1;
+        // nobody is allowed to access memory past the end of this table
+        value_t * end = sat + (satRows*satCols);
+        // march down the column
+        for (auto spot = begin; spot < end; spot += satCols) {
+            // add the current value to the running total
+            sum += *spot;
+            // and store it in place
+            *spot = sum;
+        }
     }
 
     // all done

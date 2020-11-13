@@ -28,8 +28,7 @@ namespace ampcor::cuda::kernels {
 
     // build the sum area tables for the secondary tiles
     void sat(const float * rArena,
-             std::size_t pairs,
-             std::size_t refCells, std::size_t secCells, std::size_t secDim,
+             std::size_t pairs, std::size_t tileRows, std::size_t tileCols,
              float * sat);
 
     // compute the average amplitude for all possible placements of a reference shape
