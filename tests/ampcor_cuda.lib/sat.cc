@@ -24,8 +24,8 @@ using arena_index_type = arena_type::index_type;
 using dev_arena_type = ampcor::cuda::correlators::devarena_raster_t<value_t>;
 
 
-// driver
-int main() {
+// test driver
+int test() {
     // make a shape
     arena_shape_type arenaShape { 1024, 193, 65 };
     // and an origin
@@ -143,5 +143,21 @@ int main() {
     // all done
     return 0;
 }
+
+
+// entry point
+int main()
+{
+    // pick a device
+    cudaSetDevice(0);
+    // test
+    auto status = test();
+    // reset the device
+    cudaDeviceReset();
+
+    // all done
+    return status;
+}
+
 
 // end of file
