@@ -483,7 +483,14 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
     // compute the SATs of the secondary amplitudes
     auto secSATs = _secondarySumAreaTables(dSecArena);
 
-    // compute the mean amplitude for all possible chip placements
+    // use the sum area tables to compute mean amplitude for all possible window placements
+    channel
+        << "[" << _rank << "]: "
+        << "      computing statistics"
+        << pyre::journal::endl(__HERE__);
+    auto secMeans = _secondaryStatistics(refArena.layout(), secArena.layout(),
+                                         secSATs);
+
     // compute the correlation matrix
     // fetch it from the device
 
@@ -570,6 +577,39 @@ _secondarySumAreaTables(dev_arena_reference arena) -> dev_arena_type
 
     // all done
     return sat;
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_secondaryStatistics(arena_layout_const_reference refLayout,
+                     arena_layout_const_reference secLayout,
+                     dev_arena_reference sat) -> dev_arena_type
+{
+    // unpack the reference shape
+    auto [pairs, refRows, refCols] = refLayout.shape();
+    // unpack the secondary shape; the {_} is an unused variable
+    [[maybe_unused]] auto [_, secRows, secCols] = secLayout.shape();
+
+    // compute the possible placements of reference tile sized chips within the secondary tiles
+    auto corRows = secRows - refRows + 1;
+    auto corCols = secCols - refCols + 1;
+    // build the shape of the table of averages
+    arena_shape_type corShape { pairs, corRows, corCols };
+    // and assemble its layout, using the same origin as the secondary tiles
+    arena_layout_type corLayout { corShape, secLayout.origin() };
+
+    // allocate room for the table of averages
+    dev_arena_type mean { corLayout, corLayout.cells() };
+
+    // engage
+    kernels::secStats(sat.data()->data(),
+                      pairs, refRows, refCols, secRows, secCols, corRows, corCols,
+                      mean.data()->data());
+
+    // all done
+    return mean;
 }
 
 

@@ -129,6 +129,10 @@ public:
     auto _referenceStatistics(dev_arena_reference) -> dvector_type;
     // create sum area tables for the secondary amplitude tiles
     auto _secondarySumAreaTables(dev_arena_reference) -> dev_arena_type;
+    // construct an arena with the means and variances of all possible placements of the
+    // reference chip in the secondary window
+    auto _secondaryStatistics(arena_layout_const_reference, arena_layout_const_reference,
+                              dev_arena_reference) -> dev_arena_type;
 
     // data
 private:

@@ -35,7 +35,9 @@ namespace ampcor::cuda::kernels {
     // within the search windows
     void secStats(const float * sat,
                   std::size_t pairs,
-                  std::size_t refDim, std::size_t secDim, std::size_t corDim,
+                  std::size_t refRows, std::size_t refCols,
+                  std::size_t secRows, std::size_t secCols,
+                  std::size_t corRows, std::size_t corCols,
                   float * stats);
 
     // compute the correlation matrix
