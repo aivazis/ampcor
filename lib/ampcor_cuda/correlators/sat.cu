@@ -35,7 +35,7 @@ sat(const float * dArena,
     float * dSAT)
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.cuda");
+    pyre::journal::info_t channel("ampcor.cuda.sat");
 
     // to compute a SAT for each tile, we launch as many thread blocks as there are tiles
     std::size_t B = pairs;
@@ -46,28 +46,48 @@ sat(const float * dArena,
     auto workers = std::max(tileRows, tileCols);
     // then we round up to the nearest warp...
     std::size_t T = 32 * (workers / 32 + (workers % 32 ? 1 : 0));
+    //
+    auto pl = pairs == 1 ? "" : "s";
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "launching " << B << " blocks of " << T
-        << " threads each to compute SATs for the secondary tiles"
+        << "launching " << B << " block" << pl <<" of " << T
+        << " threads each to compute SATs for " << pairs << " tile" << pl <<" of ("
+        << tileRows << "x" << tileCols << ") pixels"
         << pyre::journal::endl;
 
     // launch the SAT kernel
     _sat <<<B,T>>> (dArena, tileRows, tileCols, dSAT);
-    // wait for the device to finish
-    cudaError_t status = cudaDeviceSynchronize();
+    // check whether all went well
+    auto launchStatus = cudaGetLastError();
     // if something went wrong
-    if (status != cudaSuccess) {
+    if (launchStatus != cudaSuccess) {
         // form the error description
-        std::string description = cudaGetErrorName(status);
+        std::string description = cudaGetErrorName(launchStatus);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while launching the sum area tables kernel: "
+            << description << " (" << launchStatus << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // wait for the device to finish
+    auto execStatus = cudaDeviceSynchronize();
+    // if something went wrong
+    if (execStatus != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(execStatus);
         // make a channel
         pyre::journal::error_t channel("ampcor.cuda");
         // complain
         channel
             << pyre::journal::at(__HERE__)
             << "while computing the sum area tables: "
-            << description << " (" << status << ")"
+            << description << " (" << execStatus << ")"
             << pyre::journal::endl;
         // bail
         throw std::runtime_error(description);
