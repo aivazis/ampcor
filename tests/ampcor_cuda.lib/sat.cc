@@ -27,7 +27,7 @@ using dev_arena_type = ampcor::cuda::correlators::devarena_raster_t<value_t>;
 // driver
 int main() {
     // make a shape
-    arena_shape_type arenaShape { 1, 32, 32 };
+    arena_shape_type arenaShape { 1024, 193, 65 };
     // and an origin
     arena_index_type arenaOrigin { 0, 0, 0 };
     // and a layout
@@ -54,6 +54,7 @@ int main() {
     arena_type hostSAT { satLayout, "sat_host_sat.dat", satLayout.cells() };
     // fill it
     for (auto idx : arenaLayout) {
+        // with the running sum of the tile entries
         hostSAT[idx] =
             hostArena[idx] +
             hostSAT[idx-drow] + hostSAT[idx-dcol] - hostSAT[idx-drow-dcol];
@@ -63,6 +64,7 @@ int main() {
     pyre::journal::debug_t channel("ampcor.sat");
     // by visiting the table
     for (auto idx : satLayout) {
+        // and dumping the values
         channel
             << "sat[" << idx << "] = " << hostSAT[idx]
             << pyre::journal::newline;
@@ -73,9 +75,24 @@ int main() {
     // make an arena on the device
     dev_arena_type devArena { arenaLayout, arenaLayout.cells() };
     // fill it with the contents of the host arena
-    cudaMemcpy(devArena.data()->data(),
-               hostArena.data()->data(),
-               arenaLayout.cells() * sizeof(value_t), cudaMemcpyHostToDevice);
+    auto pushStatus = cudaMemcpy(devArena.data()->data(),
+                                 hostArena.data()->data(),
+                                 arenaLayout.cells() * sizeof(value_t), cudaMemcpyHostToDevice);
+    // if something went wrong
+    if (pushStatus != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(pushStatus);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while transferring tiles to the device: "
+            << description << " (" << pushStatus << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::logic_error(description);
+    }
 
     // make a SAT on the device
     dev_arena_type dsat { satLayout, satLayout.cells() };
@@ -89,9 +106,24 @@ int main() {
     // allocate an arena on the host so we can harvest the SAT
     arena_type devSAT { satLayout, "sat_dev_sat.dat", satLayout.cells() };
     // harvest
-    cudaMemcpy(devSAT.data()->data(),
-               dsat.data()->data(),
-               satLayout.cells() * sizeof(value_t), cudaMemcpyDeviceToHost);
+    auto pullStatus = cudaMemcpy(devSAT.data()->data(),
+                                 dsat.data()->data(),
+                                 satLayout.cells() * sizeof(value_t), cudaMemcpyDeviceToHost);
+    // if something went wrong
+    if (pullStatus != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(pullStatus);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while transferring tiles to the device: "
+            << description << " (" << pullStatus << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::logic_error(description);
+    }
 
     // make a channel
     pyre::journal::info_t cmp("ampcor.cmp");
@@ -101,7 +133,7 @@ int main() {
         if (hostSAT[idx] != devSAT[idx]) {
             cmp
                 << "mismatch at idx=[" << idx << "]:" << pyre::journal::newline
-                << "  host <- " << hostSAT[idx] << " != " << " device <- " << devSAT[idx]
+                << "  host=" << hostSAT[idx] << " != " << " device=" << devSAT[idx]
                 << pyre::journal::newline;
         }
     }
