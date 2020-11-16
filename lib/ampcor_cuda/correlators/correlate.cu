@@ -1,10 +1,8 @@
 // -*- C++ -*-
-// -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
 
 
 // configuration
@@ -20,27 +18,33 @@
 #include "kernels.h"
 
 
+// we use floats
+using value_t = float;
+
+
 // the correlation kernel
-template <std::size_t T, typename value_t = float>
+template <std::size_t T, typename valueT = value_t>
 __global__
 void
-_correlate(const value_t * arena,
-           const value_t * refStats, const value_t * secStats,
-           std::size_t rdim, std::size_t rcells,
-           std::size_t tdim, std::size_t tcells,
-           std::size_t cdim, std::size_t ccells,
+_correlate(const valueT * refArena, const valueT * refStats,
+           const valueT * secArena, const valueT * secStats,
+           std::size_t refRows, std::size_t refCols,
+           std::size_t secRows, std::size_t secCols,
+           std::size_t corRows, std::size_t corCols,
            std::size_t row, std::size_t col,
-           value_t * correlation);
+           valueT * correlation);
 
 
 // implementation
 void
 ampcor::cuda::kernels::
-correlate(const float * dArena, const float * refStats, const float * secStats,
+correlate(const value_t * refArena, const value_t * refStats,
+          const value_t * secArena, const value_t * secStats,
           std::size_t pairs,
-          std::size_t refCells, std::size_t secCells, std::size_t corCells,
-          std::size_t refDim, std::size_t secDim, std::size_t corDim,
-          float * dCorrelation)
+          std::size_t refRows, std::size_t refCols,
+          std::size_t secRows, std::size_t secCols,
+          std::size_t corRows, std::size_t corCols,
+          value_t * dCorrelation)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
@@ -48,64 +52,69 @@ correlate(const float * dArena, const float * refStats, const float * secStats,
     // figure out the job layout and launch the calculation on the device
     // each thread block takes care of one tile pair, so we need as many blocks as there are pairs
     auto B = pairs;
-    // the number of threads per block is determined by the shape of the reference  tile
-    auto T = refDim;
+    // the computation of the correlation matrix is a reduction that starts with each thread
+    // handling a pair of columns, one from the reference tile and one from a particular
+    // placement of the chip within the search window; this means that the number of threads
+    // per block is determined by the number of columns in the reference tile
+    auto T = refCols;
     // each thread stores in shared memory the partial sum for the numerator term and the
     // partial sum for the secondary tile variance; so we need two {value_t}'s worth of shared
-    // memory for each thread
-    auto S = 2 * T * sizeof(float);
+    // memory for each thread, but no less than 64
+    auto S = 2 * std::max(T, 64ul) * sizeof(value_t);
+
     // show me
     channel
         << pyre::journal::at(__HERE__)
         << "launching " << B << " blocks of " << T << " threads each, with "
-        << S << " bytes of shared memory per block, for each of the " << corCells
+        << S << " bytes of shared memory per block, for each of the "
+        << "(" << corRows << "x" << corCols << ")"
         << " possible placements of the search window within the secondary tile;"
-        << " a grand total of " << (B*corCells) << " kernel launches"
+        << " a grand total of " << (B*corRows*corCols) << " kernel launches"
         << pyre::journal::endl;
 
     // for storing error codes
     cudaError_t status = cudaSuccess;
     // go through all possible row offsets for the sliding window
-    for (auto row = 0; row < corDim; ++row) {
+    for (auto row = 0; row < corRows; ++row) {
         // and all possible column offsets
-        for (auto col = 0; col < corDim; ++col) {
+        for (auto col = 0; col < corCols; ++col) {
             // deduce the correct kernel to launch and deploy
             // N.B.: kernel launch is an implicit barrier, so no need for any extra
             // synchronization
-            if (refDim <= 32) {
+            if (refCols <= 32) {
                 // tell me
-                channel << "deploying the 32x32 kernel";
+                channel << "deploying the 32 column kernel";
                 // do it
-                _correlate<32> <<<B,32,S>>> (dArena, refStats, secStats,
-                                             refDim, refCells, secDim, secCells, corDim, corCells,
+                _correlate<32> <<<B,32,S>>> (refArena, refStats, secArena, secStats,
+                                             refRows, refCols, secRows, secCols, corRows, corCols,
                                              row, col, dCorrelation);
-            } else if (refDim <= 64) {
+            } else if (refCols <= 64) {
                 // tell me
-                channel << "deploying the 64x64 kernel";
+                channel << "deploying the 64 column kernel";
                 // do it
-                _correlate<64> <<<B,64,S>>> (dArena, refStats, secStats,
-                                             refDim, refCells, secDim, secCells, corDim, corCells,
+                _correlate<64> <<<B,64,S>>> (refArena, refStats, secArena, secStats,
+                                             refRows, refCols, secRows, secCols, corRows, corCols,
                                              row, col, dCorrelation);
-            } else if (refDim <= 128) {
+            } else if (refCols <= 128) {
                 // tell me
-                channel << "deploying the 128x128 kernel";
+                channel << "deploying the 128 column kernel";
                 // do it
-                _correlate<128> <<<B,128,S>>> (dArena, refStats, secStats,
-                                               refDim, refCells, secDim, secCells, corDim, corCells,
+                _correlate<128> <<<B,128,S>>> (refArena, refStats, secArena, secStats,
+                                               refRows, refCols, secRows, secCols, corRows, corCols,
                                                row, col, dCorrelation);
-            } else if (refDim <= 256) {
+            } else if (refCols <= 256) {
                 // tell me
-                channel << "deploying the 256x256 kernel";
+                channel << "deploying the 256 column kernel";
                 // do it
-                _correlate<256> <<<B,256,S>>> (dArena, refStats, secStats,
-                                               refDim, refCells, secDim, secCells, corDim, corCells,
+                _correlate<256> <<<B,256,S>>> (refArena, refStats, secArena, secStats,
+                                               refRows, refCols, secRows, secCols, corRows, corCols,
                                                row, col, dCorrelation);
-            } else if (refDim <= 512) {
+            } else if (refCols <= 512) {
                 // tell me
-                channel << "deploying the 512x512 kernel";
+                channel << "deploying the 512 column kernel";
                 // do it
-                _correlate<512> <<<B,512,S>>> (dArena, refStats, secStats,
-                                               refDim, refCells, secDim, secCells, corDim, corCells,
+                _correlate<512> <<<B,512,S>>> (refArena, refStats, secArena, secStats,
+                                               refRows, refCols, secRows, secCols, corRows, corCols,
                                                row, col, dCorrelation);
             } else {
                 // complain
@@ -157,17 +166,18 @@ correlate(const float * dArena, const float * refStats, const float * secStats,
 
 
 // the correlation kernel
-template <std::size_t T, typename value_t>
+template <std::size_t T, typename valueT>
 __global__
 void
-_correlate(const value_t * arena, // the dataspace
-           const value_t * refStats, // the hyper-grid of reference tile variances
-           const value_t * secStats, // the hyper-grid of secondary tile averages
-           std::size_t rdim, std::size_t rcells, // ref grid shape and size
-           std::size_t tdim, std::size_t tcells, // sec grid shape and size
-           std::size_t cdim, std::size_t ccells, // cor grid shape and size
+_correlate(const valueT * refArena, // the reference tiles
+           const valueT * refStats, // the hyper-grid of reference tile variances
+           const valueT * secArena, // the secondary tiles
+           const valueT * secStats, // the hyper-grid of secondary tile averages
+           std::size_t refRows, std::size_t refCols,
+           std::size_t secRows, std::size_t secCols,
+           std::size_t corRows, std::size_t corCols,
            std::size_t row, std::size_t col,
-           value_t * correlation)
+           valueT * correlation)
 {
 
     // build the workload descriptors
@@ -186,38 +196,34 @@ _correlate(const value_t * arena, // the dataspace
     // nominally out of bounds accesses
 
     // get access to my shared memory
-    extern __shared__ value_t scratch[];
+    extern __shared__ valueT scratch[];
     // get a handle to this thread block group
     cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
 
     // initialize the numerator term
-    value_t numerator = 0;
+    valueT numerator = 0;
     // initialize the secondary variance accumulator
-    value_t secVariance = 0;
-    // look up the mean secondary amplitude
-    auto mean = secStats[b*ccells + row*cdim + col];
-
-    // reference and secondary grids are interleaved; compute the stride
-    std::size_t stride = rcells + tcells;
+    valueT secVariance = 0;
+    // look up the mean secondary amplitude: skip over the cells handled by other block, and
+    // then skip over the cells handled by other threads in my block
+    auto mean = secStats[b*corRows*corCols + row*corCols + col];
 
     // my {ref} starting point is column {t} of grid {b}
-    auto ref = arena + b*stride + t;
-    // my {sec} starting point is column {t} of grid {b} at (row, col)
-    // value_t * sec = arena + b*stride + rcells + (row*tdim + col) + t;
-    // or, more simply
-    auto sec = ref + rcells + (row*tdim + col);
+    auto ref = refArena + b*refRows*refCols + t;
+    // my {sec} starting point is column {t} of the slice of grid {b} at (row, col)
+    auto sec = secArena + b*secRows*secCols + (row*secCols + col) + t;
 
     // if my thread id is less than the number of columns in the reference tile, i need to sum
     // up the contributions to the numerator and the secondary tile variance from my column; if
     // not, my contribution is to zero out my slots in shared memory so the reduction doesn't
     // read uninitialized memory
-    if (t < rdim) {
+    if (t < refCols) {
         // run down the two matching columns, one from {ref}, one from {sec}
-        for (std::size_t idx=0; idx < rdim; ++idx) {
+        for (std::size_t idx=0; idx < refCols; ++idx) {
             // fetch the {ref} value
-            value_t r = ref[idx*rdim];
+            valueT r = ref[idx*refCols];
             // fetch the {sec} value and subtract the mean secondary amplitude
-            value_t t = sec[idx*tdim] - mean;
+            valueT t = sec[idx*secCols] - mean;
             // update the numerator
             numerator += r * t;
             // and the secondary variance
@@ -283,7 +289,7 @@ _correlate(const value_t * arena, // the dataspace
 
     // on recent architectures, there is a faster way to do the reduction once we reach the
     // warp level; the only cost is that we have to make sure there is enough memory for 64
-    // threads, i.e. the shared memory size is bound from below by 64*sizeof(value_t)
+    // threads, i.e. the shared memory size is bound from below by 64*sizeof(valueT)
     if (t < 32) {
         // if we need to
         if (T >= 64) {
@@ -306,11 +312,11 @@ _correlate(const value_t * arena, // the dataspace
     // finally, the master thread of each block
     if (t == 0) {
         // looks up the sqrt of the reference tile variance
-        value_t refVariance = refStats[b];
+        valueT refVariance = refStats[b];
         // computes the correlation
         auto corr = numerator / refVariance / std::sqrt(secVariance);
         // computes the slot where this result goes
-        std::size_t slot = b*ccells + row*cdim + col;
+        std::size_t slot = b*corRows*corCols + row*corCols + col;
         // and writes the sum to the result vector
         correlation[slot] = corr;
     }

@@ -1,10 +1,9 @@
 // -*- C++ -*-
-// -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
+
 
 // code guard
 #if !defined(ampcor_libampcor_cuda_correlators_Sequential_h)
@@ -73,6 +72,8 @@ public:
     // device memory
     // some containers are raw pointers
     using dvector_type = devmem_t<slc_value_type>;
+    using dvector_reference = dvector_type &;
+    using dvector_const_reference = const dvector_type &;
     // we have arenas over real values
     using dev_arena_type = devarena_raster_t<slc_value_type>;
     // and arenas over complex values
@@ -133,6 +134,9 @@ public:
     // reference chip in the secondary window
     auto _secondaryStatistics(arena_layout_const_reference, arena_layout_const_reference,
                               dev_arena_reference) -> dev_arena_type;
+    // compute the correlation surface
+    auto _correlate(dev_arena_const_reference, dvector_reference,
+                    dev_arena_const_reference, dev_arena_const_reference) -> dev_arena_type;
 
     // data
 private:

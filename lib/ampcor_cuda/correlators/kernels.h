@@ -41,10 +41,12 @@ namespace ampcor::cuda::kernels {
                   float * stats);
 
     // compute the correlation matrix
-    void correlate(const float * rArena, const float * refStats, const float * secStats,
+    void correlate(const float * refArena, const float * refStats,
+                   const float * secArena, const float * secStats,
                    std::size_t pairs,
-                   std::size_t refCells, std::size_t secCells, std::size_t corCells,
-                   std::size_t refDim, std::size_t secDim, std::size_t corDim,
+                   std::size_t refRows, std::size_t refCols,
+                   std::size_t secRows, std::size_t secCols,
+                   std::size_t corRows, std::size_t corCols,
                    float * dCorrelation);
 
     // compute the locations of the maximum value of the correlation map

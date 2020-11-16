@@ -1,10 +1,9 @@
 // -*- C++ -*-
-// -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2020 all rights reserved
-//
+
 
 // code guard
 #if !defined(ampcor_cuda_correlators_Sequential_icc)
@@ -348,7 +347,7 @@ ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.adjust");
+    pyre::journal::info_t channel("ampcor.sequential.adjust");
 
     // detecting means
     auto detect = [](slc_pixel_type pixel) -> slc_value_type {
@@ -488,10 +487,15 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         << "[" << _rank << "]: "
         << "      computing statistics"
         << pyre::journal::endl(__HERE__);
-    auto secMeans = _secondaryStatistics(refArena.layout(), secArena.layout(),
-                                         secSATs);
+    auto secMeans = _secondaryStatistics(refArena.layout(), secArena.layout(), secSATs);
 
     // compute the correlation matrix
+    channel
+        << "[" << _rank << "]: "
+        << "    computing the correlation surface"
+        << pyre::journal::endl(__HERE__);
+    auto gamma = _correlate(dRefArena, refVariances, dSecArena, secMeans);
+
     // fetch it from the device
 
     // when we get here, we have to fix the signature of this method: void -> arena_t
@@ -610,6 +614,43 @@ _secondaryStatistics(arena_layout_const_reference refLayout,
 
     // all done
     return mean;
+}
+
+
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_correlate(dev_arena_const_reference dRefArena, dvector_reference dRefVariance,
+           dev_arena_const_reference dSecArena, dev_arena_const_reference dSecMeans)
+    -> dev_arena_type
+{
+    const float * ra = dRefArena.data()->data();
+    const float * sa = dSecArena.data()->data();
+    const float * rv = dRefVariance.data();
+    const float * sm = dSecMeans.data()->data();
+
+
+    // unpack the reference shape
+    auto [pairs, refRows, refCols] = dRefArena.layout().shape();
+    // unpack the secondary shape; the {_sp} is an unused variable
+    [[maybe_unused]] auto [_sp, secRows, secCols] = dSecArena.layout().shape();
+    // unpack the correlation shape
+    [[maybe_unused]] auto [_cp, corRows, corCols] = dSecMeans.layout().shape();
+
+    // the layout of the correlation arena is the same as the secondary means arena
+    auto gammaLayout = dSecMeans.layout();
+    // allocate room for the correlation matrix arena
+    dev_arena_type gamma { gammaLayout, gammaLayout.cells() };
+
+    // engage
+    kernels::correlate(dRefArena.data()->data(), dRefVariance.data(),
+                       dSecArena.data()->data(), dSecMeans.data()->data(),
+                       pairs,
+                       refRows, refCols, secRows, secCols, corRows, corCols,
+                       gamma.data()->data());
+
+    // all done
+    return gamma;
 }
 
 
