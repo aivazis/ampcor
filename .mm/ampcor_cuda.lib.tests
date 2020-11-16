@@ -16,9 +16,8 @@ ampcor_cuda.lib.tests.cuda.flags += $(nvcc.std.c++17)
 
 # global clean up
 tests.ampcor_cuda.lib.clean += \
-    sat_dev_sat.dat \
-    sat_host_arena.dat \
-    sat_host_sat.dat
+    mean_host_arena.dat \
+    sat_dev_sat.dat sat_host_arena.dat sat_host_sat.dat \
 
 
 # end of file
