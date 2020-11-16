@@ -147,6 +147,12 @@ int test() {
 // entry point
 int main()
 {
+    // access the top level info channel
+    pyre::journal::info_t channel("ampcor");
+    // so we can quiet it down
+    channel.deactivate();
+
+    // pick a device
     // pick a device
     cudaSetDevice(0);
     // test
