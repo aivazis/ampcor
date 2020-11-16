@@ -125,20 +125,19 @@ int test() {
         throw std::logic_error(description);
     }
 
-    // make a channel
-    pyre::journal::info_t cmp("ampcor.cmp");
     // with a complete set of indices of the two SATs
     for (auto idx : satLayout) {
         // compare
         if (hostSAT[idx] != devSAT[idx]) {
+            // make a channel
+            pyre::journal::error_t cmp("ampcor.cmp");
+            // complain
             cmp
                 << "mismatch at idx=[" << idx << "]:" << pyre::journal::newline
                 << "  host=" << hostSAT[idx] << " != " << " device=" << devSAT[idx]
-                << pyre::journal::newline;
+                << pyre::journal::endl;
         }
     }
-    // flush
-    cmp << pyre::journal::endl;
 
     // all done
     return 0;

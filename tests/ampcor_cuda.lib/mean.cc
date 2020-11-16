@@ -117,7 +117,7 @@ int test() {
                                     dmean.data()->data());
 
     // make a channel
-    pyre::journal::info_t cmp("ampcor.cmp");
+    pyre::journal::debug_t cmp("ampcor.cmp");
     // go through the table
     for (auto idx : dmean.layout()) {
         // and dump its values
