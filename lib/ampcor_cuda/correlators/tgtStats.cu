@@ -53,7 +53,7 @@ secStats(const float * dSAT,
          float * dStats)
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.cuda");
+    pyre::journal::info_t channel("ampcor.cuda.secStats");
 
     // launch blocks of T threads
     auto T = 128;
@@ -144,9 +144,9 @@ _secStats(const value_t * dSAT,
 
     // compute the number of cells in a reference tile; it scales the running sum
     auto refCells = refRows * refCols;
-    // the number of cells in a SAT; let me skip to my SAT
+    // the number of cells in a SAT; lets me skip to my SAT
     auto satCells = satRows * satCols;
-    // and the number of cells in a {stats} matrix; let's me skip to my {stats} slice
+    // and the number of cells in a {stats} matrix; lets me skip to my {stats} slice
     auto corCells = corRows * corCols;
 
     // locate the beginning of my SAT table
@@ -167,11 +167,11 @@ _secStats(const value_t * dSAT,
             // the upper left corner
             auto iUL = row*satCols + col;
             // the upper right corner is {refCols+1} away from that
-            auto iUR = iUL + refCols+1;
+            auto iUR = iUL + refCols;
             // the lower left corner: skip (refRows+1) rows of the SAT
-            auto iLL = iUL + (refRows+1)*satCols;
+            auto iLL = iUL + refRows*satCols;
             // the lower right corner is just {refCols+1} away from that
-            auto iLR = iLL + refCols+1;
+            auto iLR = iLL + refCols;
 
             // the sum is
             auto sum = sat[iLR] - sat[iLL] - sat[iUR] + sat[iUL];
