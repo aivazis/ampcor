@@ -624,12 +624,6 @@ _correlate(dev_arena_const_reference dRefArena, dvector_reference dRefVariance,
            dev_arena_const_reference dSecArena, dev_arena_const_reference dSecMeans)
     -> dev_arena_type
 {
-    const float * ra = dRefArena.data()->data();
-    const float * sa = dSecArena.data()->data();
-    const float * rv = dRefVariance.data();
-    const float * sm = dSecMeans.data()->data();
-
-
     // unpack the reference shape
     auto [pairs, refRows, refCols] = dRefArena.layout().shape();
     // unpack the secondary shape; the {_sp} is an unused variable
