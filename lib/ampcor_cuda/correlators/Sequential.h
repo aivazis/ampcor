@@ -122,7 +122,7 @@ public:
         -> void;
 
     // go through all the necessary steps to compute the correlation surface
-    auto _gamma(string_type, arena_reference, arena_reference) -> void;
+    auto _gamma(string_type, arena_reference, arena_reference) -> dev_arena_type;
     // compute and store the locations of the maxima of the correlation surface
     auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
 

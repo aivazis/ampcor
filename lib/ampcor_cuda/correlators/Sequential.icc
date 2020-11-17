@@ -151,8 +151,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
     _detect(plan, refArena, secArena);
 
     // compute the correlation surface
-    // auto gamma = _gamma("coarse", refArena, secArena);
-    _gamma("coarse", refArena, secArena);
+    auto gamma = _gamma("coarse", refArena, secArena);
 
     // find its maxima
     channel
@@ -398,7 +397,7 @@ template <class slcT, class offsetsT>
 auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
-    -> void
+    -> dev_arena_type
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.gamma");
@@ -496,11 +495,8 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         << pyre::journal::endl(__HERE__);
     auto gamma = _correlate(dRefArena, refVariances, dSecArena, secMeans);
 
-    // fetch it from the device
-
-    // when we get here, we have to fix the signature of this method: void -> arena_t
     // all done
-    return;
+    return gamma;
 }
 
 
