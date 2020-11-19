@@ -158,7 +158,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
-    // _maxcor(gamma, 1);
+    _maxcor(gamma, 1);
 
     // all done
     return;
@@ -504,13 +504,37 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
 template <class slcT, class offsetsT>
 auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-_maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
+_maxcor(dev_arena_reference gamma, slc_value_type zoomFactor) -> void
 {
-    // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.maxcor");
+    // get the arena layout
+    auto layout = gamma.layout();
+    // its shape
+    auto shape = layout.shape();
+    // and its origin
+    auto origin = layout.origin();
 
-    // flush
-    channel << pyre::journal::endl(__HERE__);
+    // unpack the shape of the covariance arena
+    auto [pairs, corRows, corCols] = shape;
+    // and the origin
+    auto [orgTile, orgRow, orgCol] = origin;
+
+    // allocate device memory to store the indices of the maximum value in each tile
+    dvector_type delta { 2 * pairs };
+    // compute the locations of the maxima
+    kernels::maxcor(gamma.data()->data(),
+                    pairs, corRows, corCols, orgRow, orgCol, zoomFactor,
+                    delta.data());
+
+    // now, go through all the tiles
+    for (auto pid = 0; pid < pairs; ++pid) {
+        // get corresponding record from the output product, in write enabled mode
+        auto & rec = _map[pid];
+        // update the shift
+        rec.shift.first += delta[2*pid + 0];
+        rec.shift.second += delta[2*pid + 1];
+        // mark it as a good one
+        rec.confidence = 1;
+    }
 
     // all done
     return;

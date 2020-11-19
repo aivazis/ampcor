@@ -96,7 +96,6 @@ public:
                slc_shape_const_reference chip, slc_shape_const_reference window,
                int refineFactor, int refineMargin, int zoomFactor);
 
-
     // interface
 public:
     // execute the correlation plan and adjust the offset map
@@ -124,7 +123,7 @@ public:
     // go through all the necessary steps to compute the correlation surface
     auto _gamma(string_type, arena_reference, arena_reference) -> dev_arena_type;
     // compute and store the locations of the maxima of the correlation surface
-    auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
+    auto _maxcor(dev_arena_reference, slc_value_type) -> void;
 
     // reduce the tiles in {arena} to zero mean, and compute their variances
     auto _referenceStatistics(dev_arena_reference) -> dvector_type;
