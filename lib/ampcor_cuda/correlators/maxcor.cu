@@ -26,15 +26,17 @@ __global__
 static void
 _maxcor(const value_t * gamma,
         std::size_t pairs, std::size_t corRows, std::size_t corCols,
-        int * loc);
+        std::size_t orgRow, std::size_t orgCol, value_t zoomFactor,
+        value_t * loc);
 
 
 // run through the correlation matrix for each, find its maximum value and record its location
 void
 ampcor::cuda::kernels::
 maxcor(const float * gamma,
-         std::size_t pairs, std::size_t corRows, std::size_t corCols,
-         int * loc)
+       std::size_t pairs, std::size_t corRows, std::size_t corCols,
+       std::size_t orgRow, std::size_t orgCol, float zoomFactor,
+       float * loc)
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
@@ -51,7 +53,7 @@ maxcor(const float * gamma,
         << " entries of the correlation hyper-matrix"
         << pyre::journal::endl;
     // launch the kernels
-    _maxcor <<<B,T>>> (gamma, pairs, corRows, corCols, loc);
+    _maxcor <<<B,T>>> (gamma, pairs, corRows, corCols, orgRow, orgCol, zoomFactor, loc);
     // wait for the kernels to finish
     cudaError_t status = cudaDeviceSynchronize();
     // check
@@ -81,7 +83,8 @@ __global__
 void
 _maxcor(const value_t * gamma,
         std::size_t pairs, std::size_t corRows, std::size_t corCols,
-        int * loc)
+        std::size_t orgRow, std::size_t orgCol, value_t zoomFactor,
+        value_t * loc)
 {
     // build the workload descriptors
     // global
@@ -126,6 +129,10 @@ _maxcor(const value_t * gamma,
             }
         }
     }
+
+    // shift back to the origin and apply the zoom factor
+    myloc[0] = (myloc[0] + orgRow) / zoomFactor;
+    myloc[1] = (myloc[1] + orgRow) / zoomFactor;
 
     // all done
     return;
