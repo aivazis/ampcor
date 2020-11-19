@@ -25,7 +25,7 @@ template <typename value_t = float>
 __global__
 static void
 _maxcor(const value_t * gamma,
-        std::size_t pairs, std::size_t corCells, std::size_t corDim,
+        std::size_t pairs, std::size_t corRows, std::size_t corCols,
         int * loc);
 
 
@@ -33,7 +33,7 @@ _maxcor(const value_t * gamma,
 void
 ampcor::cuda::kernels::
 maxcor(const float * gamma,
-         std::size_t pairs, std::size_t corCells, std::size_t corDim,
+         std::size_t pairs, std::size_t corRows, std::size_t corCols,
          int * loc)
 {
     // make a channel
@@ -51,7 +51,7 @@ maxcor(const float * gamma,
         << " entries of the correlation hyper-matrix"
         << pyre::journal::endl;
     // launch the kernels
-    _maxcor <<<B,T>>> (gamma, pairs, corCells, corDim, loc);
+    _maxcor <<<B,T>>> (gamma, pairs, corRows, corCols, loc);
     // wait for the kernels to finish
     cudaError_t status = cudaDeviceSynchronize();
     // check
@@ -80,10 +80,8 @@ template <typename value_t>
 __global__
 void
 _maxcor(const value_t * gamma,
-      std::size_t pairs,     // the total number of tiles
-      std::size_t corCells,  // the shape of the correlation hyper-matrix
-      std::size_t corDim,    // and its number of rows
-      int * loc)
+        std::size_t pairs, std::size_t corRows, std::size_t corCols,
+        int * loc)
 {
     // build the workload descriptors
     // global
@@ -102,31 +100,32 @@ _maxcor(const value_t * gamma,
     }
 
     // locate the beginning of my correlation matrix
-    auto cor = gamma + w*corCells;
+    auto cor = gamma + w*corRows*corCols;
     // locate the beginning of my stats table
     auto myloc = loc + 2*w;
 
     // initialize
-    int row = 0;
-    int col = 0;
+    // the maximum value
     auto high = cor[0];
+    // and its location
+    myloc[0] = 0;
+    myloc[1] = 0;
+
     // go through all the cells in my matrix
-    for (auto cell = 1; cell < corCells; ++cell) {
-        // get the current value
-        auto value = cor[cell];
-        // if it is higher than the current max
-        if (value > high) {
-            // decode its row and col and update my location
-            row = cell / corDim;
-            col = cell % corDim;
-            // and save the new value
-            high = value;
+    for (auto row = 0; row < corRows; ++row) {
+        for (auto col = 0; col < corCols; ++col) {
+            // get the value
+            auto value = cor[row*corCols + col];
+            // if it is higher than the current max
+            if (value > high) {
+                // update the current max
+                high = value;
+                // and its location
+                myloc[0] = row;
+                myloc[1] = col;
+            }
         }
     }
-
-    // save
-    myloc[0] = row;
-    myloc[1] = col;
 
     // all done
     return;

@@ -51,7 +51,7 @@ namespace ampcor::cuda::kernels {
 
     // compute the locations of the maximum value of the correlation map
     void maxcor(const float * cor,
-                std::size_t pairs, std::size_t corCells, std::size_t corDim,
+                std::size_t pairs, std::size_t corRows, std::size_t corCols,
                 int * loc);
 
     // nudge the (row, col) pairs so that they describe sub-tiles within a secondary tile
