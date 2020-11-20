@@ -176,9 +176,74 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     pyre::journal::info_t channel("ampcor.sequential.adjust");
 
     // step 2: refining the search neighborhoods and trying again
+    channel
+        << "[" << _rank << "]: "
+        << "  step 2: refining the search:"
+        << pyre::journal::endl(__HERE__);
+
     // check the parameters
+    // if we have an invalid refinement factor
+    if (_refineFactor < 2) {
+        // get a channel
+        pyre::journal::warning_t warning("ampcor.sequential.refined");
+        // generate a report
+        warning
+            << "while refining the search:"
+            << pyre::journal::newline
+            << "refinement factor: " << _refineFactor
+            << pyre::journal::newline
+            << "unable to refine; refinement factor must be 2 or greater"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        return;
+    }
+    // if we have an invalid refinement margin
+    if (_refineMargin < 1) {
+        // get a channel
+        pyre::journal::warning_t warning("ampcor.sequential.refined");
+        // generate a report
+        warning
+            << "while refining the search:"
+            << pyre::journal::newline
+            << "refinement margin: " << _refineMargin
+            << pyre::journal::newline
+            << "unable to refine; refinement margin must be 1 or greater"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        return;
+    }
+
+    // a useful index
+    slc_shape_type one { 1, 1 };
+
+    // form the shape of the refined neighborhood in the reference raster
+    auto refRefinedShape = _refShape / _refineFactor;
+    // form the shape of the refined neighborhood in the secondary raster
+    auto secRefinedShape = refRefinedShape + 2 * _refineMargin * one;
+
     // assemble and validate the work plan
+    channel
+        << "[" << _rank << "]: "
+        << "    assembling and validating the work plan"
+        << pyre::journal::endl(__HERE__);
+    // build the plan
+    plan_type plan = _assemblePlan(box, refRefinedShape, secRefinedShape);
+    // if there are no valid pairs
+    if (plan.size() == 0) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.sequential.adjust");
+        // complain
+        error
+            << "all specified correlation pairs were invalid!"
+            << pyre::journal::endl(__HERE__);
+        // just in case the user has specified that errors aren't fatal
+        return;
+    }
+
+    // build
+
     // stage the complex pixels so we can deramp and refine
+
     // deramp
     // refine
     // detect
