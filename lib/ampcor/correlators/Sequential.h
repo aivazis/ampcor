@@ -135,7 +135,7 @@ public:
                     const_arena_const_reference, vector_pointer,
                     const_arena_const_reference, const_arena_const_reference) -> const_arena_type;
     // compute and store the locations of the maxima of the correlation surface
-    auto _maxcor(const_arena_const_reference, slc_value_type) -> void;
+    auto _maxcor(plan_const_reference, const_arena_const_reference, slc_value_type) -> void;
 
     // build complex arenas for storing tiles for deramping and refininment
     auto _createComplexArena(string_type, int,

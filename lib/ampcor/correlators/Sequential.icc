@@ -148,7 +148,7 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
-    _maxcor(gamma, 1);
+    _maxcor(plan, gamma, 1);
 
     // all done
     return;
@@ -335,7 +335,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
             << "    locating the correlation surface maxima and recording the offsets"
             << pyre::journal::endl(__HERE__);
         // compute the maximum of the new correlation surface
-        _maxcor(gamma, _refineFactor);
+        _maxcor(plan, gamma, _refineFactor);
         // and we are done
         return;
     }
@@ -353,7 +353,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << "    locating the correlation surface maxima and recording the offsets"
         << pyre::journal::endl(__HERE__);
     // compute the maximum and store
-    _maxcor(gammaZoomed, _refineFactor * _zoomFactor);
+    _maxcor(plan, gammaZoomed, _refineFactor * _zoomFactor);
 
     // all done
     return;
@@ -960,7 +960,8 @@ _correlate(string_type tag,
 template <class slcT, class offsetsT>
 auto
 ampcor::correlators::Sequential<slcT, offsetsT>::
-_maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
+_maxcor(plan_const_reference plan,
+        const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
 {
     // make a channel
     pyre::journal::debug_t channel("ampcor.sequential.maxcor");
@@ -1003,8 +1004,10 @@ _maxcor(const_arena_const_reference gamma, slc_value_type zoomFactor) -> void
             }
         }
 
+        // map the pair id to the corresponding tile pairing in the output product
+        [[maybe_unused]] auto [tid, _r, _s] = plan[pid];
         // get the corresponding record from the output product, in write enabled mode
-        auto & rec = _map[pid];
+        auto & rec = _map[tid];
         // record the new value
         rec.gamma = corMax;
         // update the shift
