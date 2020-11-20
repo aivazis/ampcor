@@ -165,6 +165,12 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.adjust");
 
+    // step 2: refining the search neighborhoods and trying again
+    channel
+        << "[" << _rank << "]: "
+        << "  step 2: refining the search:"
+        << pyre::journal::endl(__HERE__);
+
     // check the parameters
     // if we have an invalid refinement factor
     if (_refineFactor < 2) {
@@ -196,12 +202,6 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         // and bail
         return;
     }
-
-    // step 2: refining the search neighborhoods and trying again
-    channel
-        << "[" << _rank << "]: "
-        << "  step 2: refining the search:"
-        << pyre::journal::endl(__HERE__);
 
     // a useful index
     slc_shape_type one { 1, 1 };
