@@ -137,6 +137,15 @@ public:
     auto _correlate(dev_arena_const_reference, dvector_reference,
                     dev_arena_const_reference, dev_arena_const_reference) -> dev_arena_type;
 
+    // build a complex arena on the device for staging tiles for de-ramping and refinement
+    auto _createComplexArena(int, slc_index_const_reference, slc_shape_const_reference)
+        -> dev_carena_type;
+    // prime a complex device arena with raster data
+    auto _primeComplexArena(plan_const_reference,
+                            slc_const_reference, slc_shape_const_reference, bool,
+                            dev_carena_reference) -> void;
+
+
     // data
 private:
     // my rank

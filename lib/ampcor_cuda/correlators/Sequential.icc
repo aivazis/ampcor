@@ -78,7 +78,7 @@ adjust(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
 
     // we have a valid plan; perform an initial exploration
-    coarseCorrelation(box);
+    // coarseCorrelation(box);
     // refine the neighborhood of the coarse match and try again
     refinedCorrelation(box);
 
@@ -214,22 +214,24 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     }
 
     // a useful index
-    slc_shape_type one { 1, 1 };
+    slc_shape_type margin { _refineMargin, _refineMargin };
 
-    // form the shape of the refined neighborhood in the reference raster
-    auto refRefinedShape = _refShape / _refineFactor;
-    // form the shape of the refined neighborhood in the secondary raster
-    auto secRefinedShape = refRefinedShape + 2 * _refineMargin * one;
+    // form the shape of the narrowed neighborhood in the reference raster
+    auto refNarrowShape = _refShape / _refineFactor;
+    // form the shape of the narrowed neighborhood in the secondary raster
+    auto secNarrowShape = refNarrowShape + 2 * margin;
 
-    // assemble and validate the work plan
+    // assemble and validate the work plan; we only need data for the narrow tiles
     channel
         << "[" << _rank << "]: "
         << "    assembling and validating the work plan"
         << pyre::journal::endl(__HERE__);
     // build the plan
-    plan_type plan = _assemblePlan(box, refRefinedShape, secRefinedShape);
+    plan_type plan = _assemblePlan(box, refNarrowShape, secNarrowShape);
+    // get the number of pairs
+    auto pairs = plan.size();
     // if there are no valid pairs
-    if (plan.size() == 0) {
+    if (pairs == 0) {
         // make a channel
         pyre::journal::error_t error("ampcor.sequential.adjust");
         // complain
@@ -240,9 +242,33 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         return;
     }
 
-    // build
+    channel
+        << "pairs: " << pairs
+        << pyre::journal::newline
+        << "base: ref: {" << _refShape << "}, factor: " << _refineFactor
+        << ", margin: " << _refineMargin
+        << pyre::journal::newline
+        << "narrow: ref: {" << refNarrowShape << "}, sec: {" <<secNarrowShape << "}"
+        << pyre::journal::newline
+        << pyre::journal::endl;
 
-    // stage the complex pixels so we can deramp and refine
+    // after refinement, the shape of the reference tiles goes back to the original value
+    auto refRefinedShape = _refineFactor * refNarrowShape;
+    // the refined tiles have a trivial origin
+    slc_index_type refRefinedOrigin { 0, 0 };
+    // make a device arena with these specs
+    auto refRefinedComplex = _createComplexArena(pairs, refRefinedOrigin, refRefinedShape);
+    // prime the arena: copy {refNarrowShape}d tiles from the reference raster
+    _primeComplexArena(plan, _ref, refNarrowShape, true, refRefinedComplex);
+
+    // but the secondary tiles get refined with their new margin
+    auto secRefinedShape = _refineFactor * secNarrowShape;
+    // the secondary tiles don't
+    slc_index_type secRefinedOrigin { -_refineFactor*_refineMargin, -_refineFactor*_refineMargin };
+    // and make a device arena with the secondary tiles
+    auto secRefinedComplex = _createComplexArena(pairs, secRefinedOrigin, secRefinedShape);
+    // prime the arena: copy {secNarrowShape}d tiles from the secondary raster
+    _primeComplexArena(plan, _sec, secNarrowShape, false, secRefinedComplex);
 
     // deramp
     // refine
@@ -734,6 +760,97 @@ _correlate(dev_arena_const_reference dRefArena, dvector_reference dRefVariance,
 
     // all done
     return gamma;
+}
+
+
+// allocate a complex arena on the device given the shape and origin of the tile payload, and
+// the number of pairs
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_createComplexArena(int pairs,
+                    slc_index_const_reference tileOrigin, slc_shape_const_reference tileShape)
+    -> dev_carena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.sequential.refine");
+
+    // the origin of the pair index
+    typename arena_spec::id_layout_type::index_type pairOrigin { 0 };
+    // and its shape
+    typename arena_spec::id_layout_type::shape_type pairShape { pairs };
+
+    // now, we have the building blocks to generate the arena origin
+    auto carenaOrigin = pairOrigin * tileOrigin;
+    // and its shape
+    auto carenaShape = pairShape * tileShape;
+    // assemble its layout
+    arena_layout_type carenaLayout { carenaShape, carenaOrigin };
+
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "      creating a complex device arena:"
+        << " origin=(" << carenaLayout.origin() << "), shape=(" << carenaLayout.shape() << ")"
+        << pyre::journal::endl(__HERE__);
+
+    // create the aren and return it
+    return dev_carena_type(carenaLayout, carenaLayout.cells());
+}
+
+
+// move data from a raster to a complex device arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_primeComplexArena(plan_const_reference plan,
+                   slc_const_reference raster, slc_shape_const_reference tileShape, bool refQ,
+                   dev_carena_reference arena)
+    -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
+
+    // shape component that specifies exactly one pair
+    typename arena_spec::id_layout_type::shape_type one { 1 };
+
+    // form the shape of each tile in the arena as the cartesian product of the pair selector
+    // with the shape of the tile in the raster
+    arena_shape_type dstShape = one * tileShape;
+
+    // go through the entries in the plan
+    for (auto pid=0; pid < plan.size(); ++pid) {
+        // unpack this pairing
+        auto & [ pdx, refOrigin, secOrigin ] = plan[pid];
+
+        // reference or secondary
+        auto & srcOrigin = refQ ? refOrigin : secOrigin;
+
+        // isolate the source tile
+        auto srcTile = raster.box(srcOrigin, tileShape);
+
+        // compute the shift to the start of this tile in the destination arena
+        arena_index_type thisPair { pid, 0, 0 };
+        // compute the origin of the destination tile
+        auto dstOrigin = thisPair + arena.layout().origin();
+        // isolate the destination tile region
+        auto dstTile = arena.box(dstOrigin, dstShape);
+
+        // tell me
+        channel
+            << "pid " << pid << ", (pair " << pdx << "):"
+            << " from (" << srcOrigin << ")+(" << tileShape << ")"
+            << " to (" << dstOrigin << ")+(" << dstShape << ")"
+            << pyre::journal::newline;
+
+        // transfer the data
+        std::copy(srcTile.begin(), srcTile.end(), dstTile.begin());
+    }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+    // all done
+    return;
 }
 
 
