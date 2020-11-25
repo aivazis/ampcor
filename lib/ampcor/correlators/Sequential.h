@@ -137,7 +137,7 @@ public:
     // compute and store the locations of the maxima of the correlation surface
     auto _maxcor(plan_const_reference, const_arena_const_reference, slc_value_type) -> void;
 
-    // build complex arenas for storing tiles for deramping and refininment
+    // build complex arenas for storing tiles for de-ramping and refinement
     auto _createComplexArena(string_type, int,
                              slc_index_const_reference, slc_shape_const_reference) -> carena_type;
     // fill the complex arenas with pixels from the rasters
