@@ -19,6 +19,7 @@
 #include <exception>
 // cuda
 #include <cuda_runtime.h>
+#include <cooperative_groups.h>
 #include <cuComplex.h>
 // pyre
 #include <pyre/journal.h>
