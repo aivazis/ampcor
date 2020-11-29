@@ -46,7 +46,7 @@ sat(const float * dArena,
     auto workers = std::max(tileRows, tileCols);
     // then we round up to the nearest warp...
     std::size_t T = 32 * (workers / 32 + (workers % 32 ? 1 : 0));
-    //
+    // it's not 1980 any more
     auto pl = pairs == 1 ? "" : "s";
     // show me
     channel
