@@ -260,6 +260,8 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     auto refRefinedComplex = _createComplexArena(pairs, refRefinedOrigin, refRefinedShape);
     // prime the arena: copy {refNarrowShape}d tiles from the reference raster
     _primeComplexArena(plan, _ref, refNarrowShape, true, refRefinedComplex);
+    // deramp
+    _deramp(refRefinedComplex, refNarrowShape);
 
     // but the secondary tiles get refined with their new margin
     auto secRefinedShape = _refineFactor * secNarrowShape;
@@ -809,7 +811,7 @@ _primeComplexArena(plan_const_reference plan,
     -> void
 {
     // make a channel
-    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
+    pyre::journal::debug_t channel("ampcor.cuda.refine.primeComplex");
 
     // shape component that specifies exactly one pair
     typename arena_spec::id_layout_type::shape_type one { 1 };
@@ -849,6 +851,33 @@ _primeComplexArena(plan_const_reference plan,
 
     // flush
     channel << pyre::journal::endl(__HERE__);
+    // all done
+    return;
+}
+
+
+// move data from a raster to a complex device arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_deramp(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
+
+    // tell me
+    channel
+        << "[" << _rank << "]: deramping"
+        << pyre::journal::endl(__HERE__);
+
+    // unpack the tile shape
+    auto [tileRows, tileCols] = narrowShape;
+    // and the arena shape
+    auto [pairs, arenaRows, arenaCols] = arena.layout().shape();
+
+    // launch
+    kernels::deramp(arena.data()->data(), pairs, arenaRows, arenaCols, tileRows, tileCols);
+
     // all done
     return;
 }

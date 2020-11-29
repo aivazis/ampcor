@@ -55,6 +55,10 @@ namespace ampcor::cuda::kernels {
                 std::size_t orgRow, std::size_t orgCol, float zoomFactor,
                 float * loc);
 
+    void deramp(std::complex<float> * arena,
+                std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
+                std::size_t tileRows, std::size_t tileCols);
+
     // nudge the (row, col) pairs so that they describe sub-tiles within a secondary tile
     void nudge(std::size_t pairs,
                std::size_t refDim,  std::size_t secDim, std::size_t margin,

@@ -144,7 +144,8 @@ public:
     auto _primeComplexArena(plan_const_reference,
                             slc_const_reference, slc_shape_const_reference, bool,
                             dev_carena_reference) -> void;
-
+    // deramp
+    auto _deramp(dev_carena_reference, slc_shape_const_reference) -> void;
 
     // data
 private:
