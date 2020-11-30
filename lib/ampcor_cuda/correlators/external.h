@@ -20,7 +20,7 @@
 // cuda
 #include <cuda_runtime.h>
 #include <cooperative_groups.h>
-#include <cuComplex.h>
+#include <thrust/complex.h>
 // pyre
 #include <pyre/journal.h>
 #include <p2/timers.h>
