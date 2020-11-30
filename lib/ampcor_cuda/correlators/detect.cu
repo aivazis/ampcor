@@ -14,15 +14,22 @@
 #include <string>
 // cuda
 #include <cuda_runtime.h>
+#include <thrust/complex.h>
 // pyre
 #include <pyre/journal.h>
 // local declarations
 #include "kernels.h"
 
+
+// type aliases
+using real_t = float;
+using complex_t = thrust::complex<real_t>;
+
 // helpers
+template <typename realT = real_t, typename complexT = complex_t>
 __global__
 static void
-_detect(const cuFloatComplex * cArena, std::size_t cells, std::size_t load, float * rArena);
+_detect(const complexT * cArena, std::size_t cells, std::size_t load, realT * rArena);
 
 
 // compute the amplitude of the signal tiles, assuming pixels are of type std::complex<float>
@@ -50,7 +57,7 @@ detect(const std::complex<float> * cArena, std::size_t cells, float * rArena)
         << pyre::journal::endl;
 
     // launch
-    _detect <<<B,T>>> (reinterpret_cast<const cuFloatComplex *>(cArena), cells, N, rArena);
+    _detect <<<B,T>>> (reinterpret_cast<const complex_t *>(cArena), cells, N, rArena);
     // wait for the device to finish
     cudaError_t status = cudaDeviceSynchronize();
     // if something went wrong
@@ -75,9 +82,10 @@ detect(const std::complex<float> * cArena, std::size_t cells, float * rArena)
 
 
 // implementations
+template <typename realT, typename complexT>
 __global__
 static void
-_detect(const cuFloatComplex * cArena, std::size_t cells, std::size_t load, float * rArena)
+_detect(const complexT * cArena, std::size_t cells, std::size_t load, realT * rArena)
 {
     // build the workload descriptors
     // global
@@ -107,7 +115,7 @@ _detect(const cuFloatComplex * cArena, std::size_t cells, std::size_t load, floa
     // go through my cells
     for (auto current=skip+t; current < stop; current += T) {
         // get the complex pixel, compute its amplitude and store it
-        rArena[current] = cuCabsf(cArena[current]);
+        rArena[current] = thrust::abs(cArena[current]);
     }
 
     // all done
