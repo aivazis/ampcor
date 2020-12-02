@@ -262,6 +262,12 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     _primeComplexArena(plan, _ref, refNarrowShape, true, refRefinedComplex);
     // deramp
     _deramp(refRefinedComplex, refNarrowShape);
+    // forward FFT
+    // spread spectrum
+    _spreadSpectrum(refRefinedComplex, refNarrowShape);
+    // reverse FFT
+    // detect
+
 
     // but the secondary tiles get refined with their new margin
     auto secRefinedShape = _refineFactor * secNarrowShape;
@@ -271,10 +277,12 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     auto secRefinedComplex = _createComplexArena(pairs, secRefinedOrigin, secRefinedShape);
     // prime the arena: copy {secNarrowShape}d tiles from the secondary raster
     _primeComplexArena(plan, _sec, secNarrowShape, false, secRefinedComplex);
-
     // deramp
-    // refine
+    // forward FFT
+    // spread spectrum
+    // reverse FFT
     // detect
+
     // compute the correlation surface
     // if not zooming, find its maxima
     // else, zoom + find maxima
@@ -877,6 +885,42 @@ _deramp(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> vo
 
     // launch
     kernels::deramp(arena.data()->data(), pairs, arenaRows, arenaCols, tileRows, tileCols);
+
+    // all done
+    return;
+}
+
+
+// move data from a raster to a complex device arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_spreadSpectrum(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> void
+{
+    // this is the transformation we apply to each tile in the arena
+
+    //     X X . .          X . . X
+    //     X X . .          . . . .
+    //     . . . .   --->   . . . .
+    //     . . . .          X . . X
+
+    // where the overall shape is in {arena} and the shape with the X in {narrowShape}
+
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
+
+    // tell me
+    channel
+        << "[" << _rank << "]: spreading the spectrum"
+        << pyre::journal::endl(__HERE__);
+
+    // unpack the tile shape
+    auto [tileRows, tileCols] = narrowShape;
+    // and the arena shape
+    auto [pairs, arenaRows, arenaCols] = arena.layout().shape();
+
+    // launch
+    kernels::spread(arena.data()->data(), pairs, arenaRows, arenaCols, tileRows, tileCols);
 
     // all done
     return;
