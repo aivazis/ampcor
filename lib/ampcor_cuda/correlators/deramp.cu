@@ -174,6 +174,8 @@ _deramp(complexT * arena,
     auto t = threadIdx.x;       // my thread id
     // auto w = b*T + t;        // my worker id
 
+    // a small number
+    const typename complexT::value_type eps = 1e-6;
     // get access to my shared memory
     extern __shared__ complexT scratch[];
     // get a handle to this thread block group
@@ -216,9 +218,9 @@ _deramp(complexT * arena,
     // one for the horizontal phase accumulator and one for the vertical
     // my slot is at
     auto slot = scratch + 2*t;
-    // write the horizontal phase
+    // write the horizontal accumulator
     slot[0] = phaseHorz;
-    // and the vertical phase
+    // and the vertical accumulator
     slot[1] = phaseVert;
     // barrier
     cta.sync();
@@ -229,14 +231,13 @@ _deramp(complexT * arena,
     // memory; we then half the block size and try again, until we hit warp size, then we
     // shuffle
 
-#ifdef MGA
+#ifdef MGA_DERAMP_REDUCE_LAMBDA
     // here is a lambda version of the reducer; debug...
     auto reduce = [&] (int halfBlock) {
         // my sibling from the upper half of the block stored its accumulators here
         auto sibling = scratch + 2*(t+halfBlock);
-        // update my horizontal phase
+        // update my accumulators
         phaseHorz += sibling[0];
-        // and my vertical phase
         phaseVert += sibling[1];
         // record my values
         slot[0] = phaseHorz;
@@ -250,9 +251,8 @@ _deramp(complexT * arena,
     if (T >= 512 && t < 256) {
         // my sibling from the upper half of the block stored its accumulators here
         auto sibling = scratch + 2*(t+256);
-        // update my horizontal phase
+        // update my accumulators
         phaseHorz += sibling[0];
-        // and my vertical phase
         phaseVert += sibling[1];
         // record my values
         slot[0] = phaseHorz;
@@ -265,9 +265,8 @@ _deramp(complexT * arena,
     if (T >= 256 && t < 128) {
         // my sibling from the upper half of the block stored its accumulators here
         auto sibling = scratch + 2*(t+128);
-        // update my horizontal phase
+        // update my accumulators
         phaseHorz += sibling[0];
-        // and my vertical phase
         phaseVert += sibling[1];
         // record my values
         slot[0] = phaseHorz;
@@ -319,10 +318,37 @@ _deramp(complexT * arena,
         scratch[0] =  phaseHorz;
         scratch[1] =  phaseVert;
     }
+    // barrier
+    cta.sync();
 
-    // finally, we have to deramp the tile using the phase accumulators
-    //
-    //
+    // finally, we have to deramp the tile using the phase accumulators; we will go down
+    // columns of the tile handled by this block; if i have been assigned one
+    if (t < tileCols) {
+        // get the complex accumulators from shared memory
+        auto phaseHorz = scratch[0];
+        auto phaseVert = scratch[1];
+
+        // convert into angles
+        auto phiV =
+            thrust::abs(phaseVert) > eps ?
+            std::atan2(phaseVert.imag(), phaseVert.real()) : 0;
+        auto phiH =
+            thrust::abs(phaseHorz) > eps ?
+            std::atan2(phaseHorz.imag(), phaseHorz.real()) : 0;
+
+        // find the start of my column; {t} doubles as the column index in what follows
+        auto col = tile + t;
+        // run down the column
+        for (auto r = 0; r < tileRows; ++r) {
+            // form an linear combination of the two phases that depends on the tile element
+            // recall that {t} doubles as the column index
+            auto comb = r * phiV + t * phiH;
+            // for the phase factor
+            complexT phase { std::cos(comb), std::sin(comb) };
+            // multiply the value in place with this phase
+            col[r*arenaRows] *= phase;
+        }
+    }
 
     // all done
     return;
