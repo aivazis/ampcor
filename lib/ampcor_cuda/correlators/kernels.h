@@ -55,7 +55,13 @@ namespace ampcor::cuda::kernels {
                 std::size_t orgRow, std::size_t orgCol, float zoomFactor,
                 float * loc);
 
+    // remove phase ramps
     void deramp(std::complex<float> * arena,
+                std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
+                std::size_t tileRows, std::size_t tileCols);
+
+    // spread the spectrum, a necessary step while interpolating using FFTs
+    void spread(std::complex<float> * arena,
                 std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
                 std::size_t tileRows, std::size_t tileCols);
 
