@@ -819,7 +819,7 @@ _primeComplexArena(plan_const_reference plan,
     -> void
 {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.cuda.refine.primeComplex");
+    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
 
     // shape component that specifies exactly one pair
     typename arena_spec::id_layout_type::shape_type one { 1 };
