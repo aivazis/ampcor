@@ -15,7 +15,8 @@
 template <class T, bool isConst>
 ampcor::cuda::correlators::CUDAHeap<T, isConst>::
 CUDAHeap(cell_count_type cells) :
-    // initialize with a {nullptr} and replace it
+    // the cuda {malloc} api is not RAII friendly, so we initialize with a {nullptr} and
+    // replace it with the actual allocation
     _data{ nullptr },
     _cells{ cells }
 {
@@ -58,7 +59,7 @@ CUDAHeap(cell_count_type cells) :
         return;
     };
 
-    // replace the {nullptr} with the new block
+    // replace the {nullptr} with the new block and register the deallocator
     _data.reset(data, destructor);
 }
 
