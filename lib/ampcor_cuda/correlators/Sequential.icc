@@ -800,7 +800,7 @@ _createComplexArena(int pairs,
     // tell me
     channel
         << "[" << _rank << "]: "
-        << "      creating a complex device arena:"
+        << "creating a complex device arena:"
         << " origin=(" << carenaLayout.origin() << "), shape=(" << carenaLayout.shape() << ")"
         << pyre::journal::endl(__HERE__);
 
