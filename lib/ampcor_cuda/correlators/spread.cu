@@ -42,11 +42,9 @@ spread(std::complex<float> * arena,
     // make a channel
     pyre::journal::info_t channel("ampcor.cuda.spread");
 
-    // each thread handles a row and a column to get the horizontal and vertical accumulated
-    // phase, then we do a reduction; so we need enough workers to cover the largest tile rank
-    const auto w = std::max(tileRows, tileCols);
-    // round up to the nearest warp
-    const auto T = 32 * (w / 32 + (w % 32 ? 1 : 0));
+    // each thread moves the data in its column to a new location, so we need as many threads
+    // as there are columns in a narrow tile, rounded up to the nearest warp
+    const auto T = 32 * (tileCols / 32 + (tileCols % 32 ? 1 : 0));
     // the number of blocks
     const auto B = pairs;
 
@@ -84,6 +82,97 @@ _spread(complexT * arena,
     auto b = blockIdx.x;        // my block id
     auto t = threadIdx.x;       // my thread id
     // auto w = b*T + t;        // my worker id
+
+    // this is the transformation we apply to each tile in the arena
+    //
+    //     X X . . .          X . . . X
+    //     X X . . .          . . . . .
+    //     . . . . .   --->   . . . . .
+    //     . . . . .          . . . . .
+    //     . . . . .          X . . . X
+    //
+    // where the overall shape is in {arena} and the shape of the X blocks in {narrowShape}
+    // each thread handles one column
+
+    // N.B.: if {tileCols} is not divisible by 2, the X blocks are not all the same size, so we
+    // have to do the integer arithmetic carefully; to keep things straight, let's number the
+    // blocks:
+    //
+    //     0 1 . . .         0 . . . 1
+    //     2 3 . . .         . . . . .
+    //     . . . . .  --->   . . . . .
+    //     . . . . .         . . . . .
+    //     . . . . .         2 . . . 3
+    //
+
+    // block 0 is, by definition, (tileRows/2, tileCols/2), where integer division is understood
+    // this fixes everybody else's size:
+    // block 1: (tileRows, tileCols - tileCols/2)
+    // block 2: (tileRows - tileRows/2, tileCols)
+    // block 3: (tileRows - tileRows/2, tileCols - tileCols/2)
+
+    // make a zero
+    complexT zero {0, 0};
+    // the beginning of my tile is at
+    auto tile = arena + b * (arenaRows*arenaCols);
+
+    // in what follows, the number of columns of the block being moved is implicit in the range
+    // of the ids of the threads that handle it; the number of rows shows up explicitly as a
+    // loop counter
+
+    // move block 1
+    if (t >= tileCols/2 && t < tileCols) {
+        // the source column starts at
+        auto src = tile + t;
+        // the destination column starts at
+        auto dst = src + arenaCols - (tileCols - tileCols/2);
+        // run down the column
+        for (auto row = 0; row < tileRows/2; ++row) {
+            // copy my data to its destination
+            dst[0] = src[0];
+            // zero out the source cell
+            src[0] = zero;
+            // update the pointers to get to the next row
+            src += arenaCols;
+            dst += arenaCols;
+        }
+    }
+
+    // move block 2
+    if (t < tileCols/2) {
+        // my column in the source row starts at
+        auto src = tile + (tileRows/2 * arenaCols) + t;
+        // the destination is a few rows below me
+        auto dst = src + (arenaRows - tileRows/2)*arenaCols;
+        // run down the column
+        for (auto row = 0; row < tileRows - tileRows/2; ++row) {
+            // copy my data to its destination
+            dst[0] = src[0];
+            // zero out the source cell
+            src[0] = zero;
+            // update the pointers to get to the next row
+            src += arenaCols;
+            dst += arenaCols;
+        }
+    }
+
+    // move block 3
+    if (t >= tileCols/2 && t < tileCols) {
+        // the source column starts at
+        auto src = tile + t;
+        // the destination is a few rows below me and a few columns to the right
+        auto dst = src + (arenaRows-tileRows/2)*arenaCols + arenaCols-(tileCols-tileCols/2);
+        // run down the column
+        for (auto row=0; row < tileRows - tileRows/2; ++row) {
+            // copy my data to its destination'
+            dst[0] = src[0];
+            // zero out the source cell
+            src[0] = zero;
+            // update the pointers
+            src += arenaCols;
+            dst += arenaCols;
+        }
+    }
 
     // all done
     return;
