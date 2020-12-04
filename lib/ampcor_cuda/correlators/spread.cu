@@ -63,6 +63,41 @@ spread(std::complex<float> * arena,
     // launch
     _spread<<<B,T>>> (tarena, arenaRows, arenaCols, tileRows, tileCols);
 
+    // check whether all went well
+    auto launchStatus = cudaGetLastError();
+    // if something went wrong
+    if (launchStatus != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(launchStatus);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while launching the spread kernel: "
+            << description << " (" << launchStatus << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // wait for the device to finish
+    auto execStatus = cudaDeviceSynchronize();
+    // if something went wrong
+    if (execStatus != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(execStatus);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while spreading the spectrum of the refined tiles: "
+            << description << " (" << execStatus << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+
     // all done
     return;
 }
