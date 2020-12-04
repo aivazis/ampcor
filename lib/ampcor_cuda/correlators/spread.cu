@@ -58,8 +58,10 @@ spread(std::complex<float> * arena,
         << tileRows << "x" << tileCols << ") pixels"
         << pyre::journal::endl;
 
+    // convert to {thrust::complex}
+    auto tarena = reinterpret_cast<complex_t *>(arena);
     // launch
-    _spread<<<B,T>>> (arena, arenaRows, arenaCols, tileRows, tileCols);
+    _spread<<<B,T>>> (tarena, arenaRows, arenaCols, tileRows, tileCols);
 
     // all done
     return;
