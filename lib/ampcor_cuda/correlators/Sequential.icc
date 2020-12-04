@@ -262,7 +262,6 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     _primeComplexArena(plan, _ref, refNarrowShape, true, refRefinedComplex);
     // deramp
     _deramp(refRefinedComplex, refNarrowShape);
-
     // refine: forward FFT, spread spectrum, reverse FFT
     _refine(refRefinedComplex, refNarrowShape);
     // detect
@@ -277,9 +276,9 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // prime the arena: copy {secNarrowShape}d tiles from the secondary raster
     _primeComplexArena(plan, _sec, secNarrowShape, false, secRefinedComplex);
     // deramp
-    // forward FFT
-    // spread spectrum
-    // reverse FFT
+    _deramp(secRefinedComplex, secNarrowShape);
+    // refine: forward FFT, spread spectrum, reverse FFT
+    _refine(secRefinedComplex, secNarrowShape);
     // detect
 
     // compute the correlation surface
