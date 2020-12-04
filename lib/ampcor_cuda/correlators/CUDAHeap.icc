@@ -40,6 +40,24 @@ CUDAHeap(cell_count_type cells) :
         throw std::bad_alloc();
     }
 
+    // zero out the memory
+    status = cudaMemset(data, footprint, 0);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << "while initializing " << footprint
+            << " bytes of device memory for the offset field: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        throw std::runtime_error(description);
+    }
+
     // if all went well, make a deleter for CUDA allocated memory
     auto destructor = [footprint](auto ptr) {
         // attempt to free the block of memory
