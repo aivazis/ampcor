@@ -262,10 +262,9 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     _primeComplexArena(plan, _ref, refNarrowShape, true, refRefinedComplex);
     // deramp
     _deramp(refRefinedComplex, refNarrowShape);
-    // forward FFT
-    // spread spectrum
-    _spreadSpectrum(refRefinedComplex, refNarrowShape);
-    // reverse FFT
+
+    // refine: forward FFT, spread spectrum, reverse FFT
+    _refine(refRefinedComplex, refNarrowShape);
     // detect
 
 
@@ -891,7 +890,198 @@ _deramp(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> vo
 }
 
 
-// move data from a raster to a complex device arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_refine(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> void
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.refine.interpolate");
+
+    // tell me
+    channel
+        << "[" << _rank << "]: refining tiles"
+        << pyre::journal::endl(__HERE__);
+
+    // unpack the tile shape
+    auto [tileRows, tileCols] = narrowShape;
+    // and the arena shape
+    auto [pairs, arenaRows, arenaCols] = arena.layout().shape();
+
+    // cast the arena into an array of {cufftComplex}
+    auto fftArena = reinterpret_cast<cufftComplex *>(arena.data()->data());
+
+    // step 1: forward FFT in-place
+    channel
+        << "[" << _rank << "]: forward FFTs"
+        << pyre::journal::endl(__HERE__);
+    // the plan characteristics
+    int dim = 2;
+    // the input data is confined to the narrow tiles
+    int narrowRanks[] = { tileRows, tileCols };
+    // regardless, the distance between blocks is the number of cells in an arena tile
+    int distance = arenaRows * arenaCols;
+
+    // input data layout
+    int fwdIEmbed[] = { arenaRows, arenaCols };
+    int fwdIStride = 1;
+    int fwdIDistance = distance;
+
+    // output data layout
+    int fwdOEmbed[] = { arenaRows, arenaCols };
+    int fwdOStride = 1;
+    int fwdODistance = distance;
+
+    // grab a spot for a plan
+    cufftHandle fwdPlan;
+    // instantiate
+    auto fwdPlanStatus = cufftPlanMany(&fwdPlan,
+                                       // 2d tiles
+                                       dim,
+                                       // the ranks of the input tiles
+                                       narrowRanks,
+                                       // input layout
+                                       fwdIEmbed, fwdIStride, fwdIDistance,
+                                       // output layout
+                                       fwdOEmbed, fwdOStride, fwdODistance,
+                                       // full DFT
+                                       CUFFT_C2C,
+                                   // as many FFTs as there are tile pairs
+                                       pairs);
+    // if something went wrong
+    if (fwdPlanStatus != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining tiles: forward FFT plan: error " << fwdPlanStatus
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the reference tiles: forward FFT plan error");
+    }
+
+    // execute the forward plan
+    auto fwdLaunchStatus = cufftExecC2C(fwdPlan, fftArena, fftArena, CUFFT_FORWARD);
+    // if something went wrong
+    if (fwdLaunchStatus != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << "while refining tiles: executing the forward FFT plan: error "
+            << fwdLaunchStatus
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        throw std::runtime_error("while executing a forward FFT plan");
+    }
+    // wait for the device to finish
+    auto fwdExecStatus = cudaDeviceSynchronize();
+    // if something went wrong
+    if (fwdExecStatus != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(fwdExecStatus);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << "while refining tiles: STEP 1: " << description << " (" << fwdExecStatus << ")"
+            << pyre::journal::endl(__HERE__);
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(fwdPlan);
+
+    // step2: spread the spectrum
+    _spreadSpectrum(arena, narrowShape);
+
+    // step 3: reverse FFT in-place
+    channel
+        << "[" << _rank << "]: reverse FFTs"
+        << pyre::journal::endl(__HERE__);
+
+    // the output data will live on the expanded tiles
+    int refinedRanks[] = { arenaRows, arenaCols };
+
+    // input data layout
+    int revIEmbed[] = { arenaRows, arenaCols };
+    int revIStride = 1;
+    int revIDistance = distance;
+
+    // output data layout
+    int revOEmbed[] = { arenaRows, arenaCols };
+    int revOStride = 1;
+    int revODistance = distance;
+
+    // grab a spot for a plan
+    cufftHandle revPlan;
+    // instantiate
+    auto revPlanStatus = cufftPlanMany(&revPlan,
+                                       // 2d tiles
+                                       dim,
+                                       // the ranks of the input tiles now include the entire tile
+                                       refinedRanks,
+                                       // input layout
+                                       revIEmbed, revIStride, revIDistance,
+                                       // output layout
+                                       revOEmbed, revOStride, revODistance,
+                                       // full DFT
+                                       CUFFT_C2C,
+                                   // as many FFTs as there are tile pairs
+                                       pairs);
+    // if something went wrong
+    if (revPlanStatus != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining tiles: reverse FFT plan: error " << revPlanStatus
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the reference tiles: reverse FFT plan error");
+    }
+
+    // execute the reverse plan
+    auto revLaunchStatus = cufftExecC2C(revPlan, fftArena, fftArena, CUFFT_FORWARD);
+    // if something went wrong
+    if (revLaunchStatus != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << "while refining tiles: executing the reverse FFT plan: error "
+            << revLaunchStatus
+            << pyre::journal::endl(__HERE__);
+        // and bail
+        throw std::runtime_error("while executing a reverse FFT plan");
+    }
+    // wait for the device to finish
+    auto revExecStatus = cudaDeviceSynchronize();
+    // if something went wrong
+    if (revExecStatus != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(revExecStatus);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << "while refining tiles: STEP 1: " << description << " (" << revExecStatus << ")"
+            << pyre::journal::endl(__HERE__);
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(revPlan);
+
+    // all done
+    return;
+}
+
+
+// given the forward FFT of the complex narrow tiles, push the spectrum to the four corners of
+// the refined arena in preparation for the reverse FFT
 template <class slcT, class offsetsT>
 auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
@@ -907,7 +1097,7 @@ _spreadSpectrum(dev_carena_reference arena, slc_shape_const_reference narrowShap
     // where the overall shape is in {arena} and the shape with the X in {narrowShape}
 
     // make a channel
-    pyre::journal::info_t channel("ampcor.cuda.refine.primeComplex");
+    pyre::journal::info_t channel("ampcor.cuda.refine.spreadSpectrum");
 
     // tell me
     channel

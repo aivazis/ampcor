@@ -19,6 +19,7 @@
 #include <exception>
 // cuda
 #include <cuda_runtime.h>
+#include <cufft.h>
 #include <cooperative_groups.h>
 #include <thrust/complex.h>
 // pyre

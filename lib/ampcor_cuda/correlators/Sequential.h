@@ -146,6 +146,9 @@ public:
                             dev_carena_reference) -> void;
     // deramp
     auto _deramp(dev_carena_reference, slc_shape_const_reference) -> void;
+
+    // refine workhorse: forward FFT, spread the spectrum, reverse FFT
+    auto _refine(dev_carena_reference, slc_shape_const_reference) -> void;
     // spread the spectrum: part of tile refinement between forward and reverse FFTs
     auto _spreadSpectrum(dev_carena_reference, slc_shape_const_reference) -> void;
 
