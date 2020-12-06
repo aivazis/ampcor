@@ -78,7 +78,7 @@ adjust(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
 
     // we have a valid plan; perform an initial exploration
-    // coarseCorrelation(box);
+    coarseCorrelation(box);
     // refine the neighborhood of the coarse match and try again
     refinedCorrelation(box);
 
