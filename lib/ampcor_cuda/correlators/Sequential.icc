@@ -447,7 +447,7 @@ ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
 {
     // make a channel
-    pyre::journal::info_t channel("ampcor.sequential.adjust");
+    pyre::journal::debug_t channel("ampcor.sequential.detect");
 
     // detecting means
     auto detect = [](slc_pixel_type pixel) -> slc_value_type {
