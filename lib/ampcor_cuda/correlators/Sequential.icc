@@ -620,7 +620,7 @@ _maxcor(plan_const_reference plan, dev_arena_reference gamma, slc_value_type zoo
     auto [orgTile, orgRow, orgCol] = origin;
 
     // allocate device memory to store the indices of the maximum value in each tile
-    dvector_type delta { 2 * pairs };
+    dvector_type delta(2 * pairs);
     // compute the locations of the maxima
     kernels::maxcor(gamma.data()->data(),
                     pairs, corRows, corCols, orgRow, orgCol, zoomFactor,
