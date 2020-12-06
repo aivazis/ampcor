@@ -162,7 +162,7 @@ _spread(complexT * arena,
         // the source column starts at
         auto src = tile + t;
         // the destination column starts at
-        auto dst = src + arenaCols - (tileCols - tileCols/2);
+        auto dst = tile + arenaCols - (tileCols - tileCols/2);
         // run down the column
         for (auto row = 0; row < tileRows/2; ++row) {
             // copy my data to its destination
@@ -180,7 +180,7 @@ _spread(complexT * arena,
         // my column in the source row starts at
         auto src = tile + (tileRows/2 * arenaCols) + t;
         // the destination is a few rows below me
-        auto dst = src + (arenaRows - tileRows/2)*arenaCols;
+        auto dst = tile + (arenaRows - (tileRows - tileRows/2))*arenaCols;
         // run down the column
         for (auto row = 0; row < tileRows - tileRows/2; ++row) {
             // copy my data to its destination
@@ -198,7 +198,9 @@ _spread(complexT * arena,
         // the source column starts at
         auto src = tile + t;
         // the destination is a few rows below me and a few columns to the right
-        auto dst = src + (arenaRows-tileRows/2)*arenaCols + arenaCols-(tileCols-tileCols/2);
+        auto dst = tile +
+            (arenaRows-(tileRows - tileRows/2))*arenaCols +
+            arenaCols-(tileCols-tileCols/2);
         // run down the column
         for (auto row=0; row < tileRows - tileRows/2; ++row) {
             // copy my data to its destination'
