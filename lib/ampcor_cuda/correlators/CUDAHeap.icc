@@ -21,11 +21,11 @@ CUDAHeap(cell_count_type cells) :
     _cells{ cells }
 {
     // grab a spot
-    pointer data = nullptr;
+    pointer spot = nullptr;
     // compute the memory footprint
     auto footprint = cells * sizeof(value_type);
     // allocate memory
-    auto status = cudaMallocManaged(&data, footprint);
+    auto status = cudaMallocManaged(&spot, footprint);
     // if something went wrong
     if (status != cudaSuccess) {
         // make a channel
@@ -40,8 +40,15 @@ CUDAHeap(cell_count_type cells) :
         throw std::bad_alloc();
     }
 
+    // all went well
+    pyre::journal::debug_t channel("ampcor.cuda.cudaheap_t");
+    // so let me know
+    channel
+        << "allocated " << footprint << " bytes at " << (void *)spot
+        << pyre::journal::endl(__HERE__);
+
     // zero out the memory
-    status = cudaMemset(data, 0, footprint);
+    status = cudaMemset(spot, 0, footprint);
     // if something went wrong
     if (status != cudaSuccess) {
         // get the error description
@@ -73,12 +80,19 @@ CUDAHeap(cell_count_type cells) :
                 << cudaGetErrorName(status) << " (" << status << ")"
                 << pyre::journal::endl(__HERE__);
         }
+        // all went well
+        pyre::journal::debug_t channel("ampcor.cuda.cudaheap_t");
+        // so let me know
+        channel
+            << "deallocated " << footprint << " bytes starting at "
+            << (void *) ptr << " on the device"
+            << pyre::journal::endl(__HERE__);
         // all done
         return;
     };
 
     // replace the {nullptr} with the new block and register the deallocator
-    _data.reset(data, destructor);
+    _data.reset(spot, destructor);
 }
 
 
@@ -178,7 +192,7 @@ at(size_type pos) const -> reference
     }
 
     // return a reference to the cell at {pos}
-    return _data[pos];
+    return data()[pos];
 }
 
 
@@ -188,7 +202,7 @@ ampcor::cuda::correlators::CUDAHeap<T, isConst>::
 operator [] (size_type pos) const -> reference
 {
     // return a reference to the cell at {pos}
-    return _data[pos];
+    return data()[pos];
 }
 
 

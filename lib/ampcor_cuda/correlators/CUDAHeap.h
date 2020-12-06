@@ -28,7 +28,7 @@ public:
     using size_type = typename cell_type::size_type;
     using cell_count_type = typename cell_type::cell_count_type;
     // my handle
-    using handle_type = std::shared_ptr<value_type []>;
+    using handle_type = std::shared_ptr<value_type>;
 
     // metamethods
 public:
