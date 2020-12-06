@@ -894,8 +894,10 @@ auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
 _refine(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> void
 {
-    // make a channel
+    // make an info channel
     pyre::journal::info_t channel("ampcor.cuda.refine.interpolate");
+    // and a channel for reporting the estimated cost of the FFTs
+    pyre::journal::debug_t estimates("ampcor.cuda.refine.interpolate");
 
     // tell me
     channel
@@ -1012,6 +1014,37 @@ _refine(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> vo
     int invOEmbed[] = { arenaRows, arenaCols };
     int invOStride = 1;
     int invODistance = distance;
+
+    // if the user wants to see it
+    if (estimates) {
+        // grab a spot
+        std::size_t worksize = 0;
+        // by passing the plan parameters to the estimator
+        auto invEstimateStatus = cufftEstimateMany(dim,
+                                                   refinedRanks,
+                                                   invIEmbed, invIStride, invIDistance,
+                                                   invOEmbed, invOStride, invODistance,
+                                                   CUFFT_C2C,
+                                                   pairs,
+                                                   &worksize);
+        // if something went wrong
+        if (invEstimateStatus != CUFFT_SUCCESS) {
+            // make a channel
+            pyre::journal::error_t error("ampcor.cuda");
+            // complain
+            error
+            << pyre::journal::at(__HERE__)
+            << "while refining tiles: inverse FFT plan estimate: error " << invEstimateStatus
+            << pyre::journal::endl;
+            // and bail
+            throw std::runtime_error("error while estimate the cost of the inverse FFT");
+        }
+        // if all went well, show me
+        estimates
+            << "[" << _rank << "]: estimate of the inverse FFT work area: "
+            << worksize << " bytes"
+            << pyre::journal::endl(__HERE__);
+    }
 
     // grab a spot for a plan
     cufftHandle invPlan;
