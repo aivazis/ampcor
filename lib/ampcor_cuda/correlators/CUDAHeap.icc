@@ -41,7 +41,7 @@ CUDAHeap(cell_count_type cells) :
     }
 
     // zero out the memory
-    status = cudaMemset(data, footprint, 0);
+    status = cudaMemset(data, 0, footprint);
     // if something went wrong
     if (status != cudaSuccess) {
         // get the error description
