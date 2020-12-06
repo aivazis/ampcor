@@ -294,7 +294,7 @@ _deramp(complexT * arena,
         // if we need to pull values from the upper half of a block
         if (T >= 64) {
             // my sibling from the upper half of the block stored its accumulators here
-            auto sibling = scratch + 2*(t+64);
+            auto sibling = scratch + 2*(t+32);
             // update my accumulators, but no need to bother updating shared memory; we are
             // done with it
             phaseHorz += sibling[0];
