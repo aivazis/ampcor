@@ -78,7 +78,7 @@ adjust(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
 
     // we have a valid plan; perform an initial exploration
-    coarseCorrelation(box);
+    // coarseCorrelation(box);
     // refine the neighborhood of the coarse match and try again
     refinedCorrelation(box);
 
@@ -265,7 +265,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // refine: forward FFT, spread spectrum, inverse FFT
     _refine(refRefinedComplex, refNarrowShape);
     // detect
-
+    auto refAmplitude = _amplitude(refRefinedComplex);
 
     // but the secondary tiles get refined with their new margin
     auto secRefinedShape = _refineFactor * secNarrowShape;
@@ -280,6 +280,7 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // refine: forward FFT, spread spectrum, inverse FFT
     _refine(secRefinedComplex, secNarrowShape);
     // detect
+    auto secAmplitude = _amplitude(secRefinedComplex);
 
     // compute the correlation surface
     // if not zooming, find its maxima
@@ -1146,6 +1147,35 @@ _spreadSpectrum(dev_carena_reference arena, slc_shape_const_reference narrowShap
 
     // all done
     return;
+}
+
+
+// detect a complex arena into an amplitude arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_amplitude(dev_carena_reference carena) -> dev_arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.detect");
+
+    // tell me
+    channel
+        << "[" << _rank << "]: detecting the complex tiles into an amplitude arena"
+        << pyre::journal::endl(__HERE__);
+
+    // get the layout of the complex arena
+    auto & layout = carena.layout();
+    // use it to make a new one
+    dev_arena_type arena { layout, layout.cells() };
+
+    // unpack the shape
+    auto [pairs, rows, cols] = layout.shape();
+    // launch the detection kernel
+    kernels::detect(carena.data()->data(), pairs, rows, cols, arena.data()->data());
+
+    // all done
+    return arena;
 }
 
 
