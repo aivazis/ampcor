@@ -35,8 +35,7 @@ _spread(complexT * arena,
 // spread the tiles in the arena
 void
 ampcor::cuda::kernels::
-spread(std::complex<float> * arena,
-       std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
+spread(std::complex<float> * arena, std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
        std::size_t tileRows, std::size_t tileCols)
 {
     // make a channel
@@ -162,7 +161,7 @@ _spread(complexT * arena,
         // the source column starts at
         auto src = tile + t;
         // the destination column starts at
-        auto dst = tile + arenaCols - (tileCols - tileCols/2);
+        auto dst = tile + t + arenaCols - tileCols;
         // run down the column
         for (auto row = 0; row < tileRows/2; ++row) {
             // copy my data to its destination
@@ -178,9 +177,9 @@ _spread(complexT * arena,
     // move block 2
     if (t < tileCols/2) {
         // my column in the source row starts at
-        auto src = tile + (tileRows/2 * arenaCols) + t;
+        auto src = tile + t + (tileRows/2 * arenaCols);
         // the destination is a few rows below me
-        auto dst = tile + (arenaRows - (tileRows - tileRows/2))*arenaCols;
+        auto dst = tile + t + (arenaRows - (tileRows - tileRows/2))*arenaCols;
         // run down the column
         for (auto row = 0; row < tileRows - tileRows/2; ++row) {
             // copy my data to its destination
@@ -196,11 +195,11 @@ _spread(complexT * arena,
     // move block 3
     if (t >= tileCols/2 && t < tileCols) {
         // the source column starts at
-        auto src = tile + t;
+        auto src = tile + t + (tileRows/2 * arenaCols);
         // the destination is a few rows below me and a few columns to the right
-        auto dst = tile +
-            (arenaRows-(tileRows - tileRows/2))*arenaCols +
-            arenaCols-(tileCols-tileCols/2);
+        auto dst = tile + t +
+            (arenaRows - (tileRows - tileRows/2))*arenaCols +
+            (arenaCols - tileCols);
         // run down the column
         for (auto row=0; row < tileRows - tileRows/2; ++row) {
             // copy my data to its destination'
