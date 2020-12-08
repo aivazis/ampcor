@@ -29,7 +29,7 @@ using dev_arena_type = ampcor::cuda::correlators::devarena_raster_t<complex_t>;
 // test driver
 int test() {
     // make a channel
-    pyre::journal::debug_t channel("ampcor.spread");
+    pyre::journal::info_t channel("ampcor.spread");
 
     // the number of pairs in the arena
     auto pairs = 2;
@@ -90,7 +90,7 @@ int test() {
 
     // spread the spectrum
     ampcor::cuda::kernels::spread(arena.data()->data(),
-                                  pairs-1, refinedRows, refinedCols,
+                                  pairs, refinedRows, refinedCols,
                                   narrowRows, narrowCols);
 
     // show me after
