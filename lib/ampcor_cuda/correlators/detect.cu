@@ -26,17 +26,23 @@ using real_t = float;
 using complex_t = thrust::complex<real_t>;
 
 // helpers
-template <typename realT = real_t, typename complexT = complex_t>
+template <typename complexT = complex_t>
 __global__
 static void
-_detect(const complexT * cArena, std::size_t cells, std::size_t load, realT * rArena);
+_detect(const complexT * cArena, std::size_t cells, std::size_t load,
+        typename complexT::value_type * rArena);
 
 
-// compute the amplitude of the signal tiles, assuming pixels are of type std::complex<float>
+// compute the amplitude of the signal tiles, assuming pixels are of type {complex_t}
 void
 ampcor::cuda::kernels::
-detect(const std::complex<float> * cArena, std::size_t cells, float * rArena)
+detect(const std::complex<float> * cArena,
+       std::size_t pairs, std::size_t rows, std::size_t cols,
+       float * rArena)
 {
+    // the total number of cells
+    auto cells = pairs * rows * cols;
+
     // this is embarrassingly parallel, so pick a simple deployment schedule
     // the load of each thread
     std::size_t N = 128*128;
@@ -82,38 +88,39 @@ detect(const std::complex<float> * cArena, std::size_t cells, float * rArena)
 
 
 // implementations
-template <typename realT, typename complexT>
+template <typename complexT>
 __global__
 static void
-_detect(const complexT * cArena, std::size_t cells, std::size_t load, realT * rArena)
+_detect(const complexT * cArena, std::size_t cells, std::size_t load,
+        typename complexT::value_type * rArena)
 {
     // build the workload descriptors
     // global
-    // std::size_t B = gridDim.x;      // number of blocks
-    std::size_t T = blockDim.x;        // number of threads per block
+    // auto B = gridDim.x;             // number of blocks
+    auto T = blockDim.x;               // number of threads per block
     // auto W = B*T;                   // total number of workers
     // local
-    std::size_t b = blockIdx.x;        // my block id
-    std::size_t t = threadIdx.x;       // my thread id
+    auto b = blockIdx.x;               // my block id
+    auto t = threadIdx.x;              // my thread id
     // auto w = b*T + t;               // my worker id
 
     // the number of cells handled by each block
     auto L = T * load;
     // the number of cells handled by the blocks before me
-    auto skip = b*L;
+    auto begin = b*L;
     // threads in this block should go no further than
-    auto stop = min((b+1)*L, cells);
+    auto end = min((b+1)*L, cells);
 
 #if defined(DEBUG_DETECT)
     // the first thread of each block
     if (t == 0) {
         // show me
-        printf("[%05lu]: skip=%lu, stop=%lu\n", w, skip, stop);
+        printf("[%05lu]: begin=%lu, end=%lu\n", w, begin, end);
     }
 #endif
 
     // go through my cells
-    for (auto current=skip+t; current < stop; current += T) {
+    for (auto current=begin+t; current < end; current += T) {
         // get the complex pixel, compute its amplitude and store it
         rArena[current] = thrust::abs(cArena[current]);
     }

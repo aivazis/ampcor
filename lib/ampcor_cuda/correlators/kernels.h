@@ -19,7 +19,9 @@
 // forward declarations
 namespace ampcor::cuda::kernels {
     // compute amplitudes of the tile pixels
-    void detect(const std::complex<float> * cArena, std::size_t cells, float * rArena);
+    void detect(const std::complex<float> * cArena,
+                std::size_t pairs, std::size_t rows, std::size_t cols,
+                float * rArena);
 
     // subtract the tile mean from each reference pixel
     void refStats(float * rArena,
