@@ -12,7 +12,7 @@ LA:
     ; secondary raster
     secondary = slc#20070215
     ; the output of this process, configured above
-    offsetMap = offsets#sparse
+    offsetMap = offsets#dense
     ; the factory
     correlator = mga#tiles.large
 
@@ -72,7 +72,7 @@ tiles.large:
     ; padding used to form the search window in the secondary raster
     padding = 32, 32
     ; the refinement factor
-    refineFactor = 2
+    refineFactor = 4
     ; the refinement margin
     refineMargin = 8
     ; the zoom factor
