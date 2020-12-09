@@ -34,7 +34,7 @@ using dev_carena_type = ampcor::cuda::correlators::devarena_raster_t<complex_t>;
 // test driver
 int test() {
     // make a channel for showing the partial results
-    pyre::journal::info_t channel("ampcor.detect");
+    pyre::journal::debug_t channel("detect.data");
     // and another for displaying timing info
     pyre::journal::info_t tlog("detect.time");
 
@@ -131,11 +131,9 @@ int test() {
         channel << pyre::journal::endl(__HERE__);
     }
 
-#if 0
+
     // build a tolerance
     real_t eps = 5 * std::numeric_limits<real_t>::epsilon();
-    std::cout << "verifying" << std::endl;
-
     // compare
     for (auto idx : layout) {
         // compute what we expect
@@ -160,7 +158,6 @@ int test() {
             << ", got: " << actual
             << pyre::journal::endl(__HERE__);
     }
-#endif
 
     // all done
     return 0;
@@ -170,13 +167,9 @@ int test() {
 // entry point
 int main(int argc, char *argv[])
 {
-    // access the top level info channel
-    pyre::journal::info_t channel("ampcor");
-    // so we can quiet it down
-    channel.deactivate();
-
-    // repeat for the timer channel
+    // get the timer channel
     pyre::journal::info_t tlog("detect.time");
+    // so we can quiet it down
     tlog.deactivate();
 
     // the device id
