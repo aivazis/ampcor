@@ -282,9 +282,33 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // detect
     auto secAmplitude = _amplitude(secRefinedComplex);
 
+#ifdef READY
     // compute the correlation surface
-    // if not zooming, find its maxima
-    // else, zoom + find maxima
+    auto gamma = _gamma("refined", refAmplitude, secAmplitude);
+
+    // if we are not zooming into the correlation surface
+    if (_zoomFactor < 2) {
+        // find its maxima
+        channel
+            << "[" << _rank << "]: "
+            << "    locating the correlation surface maxima and recording the offsets"
+            << pyre::journal::endl(__HERE__);
+        // compute the maximum of the new correlation surface
+        _maxcor(plan, gamma, _refineFactor);
+        // and we are done
+        return;
+    }
+
+    // zoom the correlation surface
+    auto gammaZoomed = _zoom(gamma);
+    // find its maxima
+    channel
+        << "[" << _rank << "]: "
+        << "    locating the correlation surface maxima and recording the offsets"
+        << pyre::journal::endl(__HERE__);
+    // compute the maximum and store
+    _maxcor(plan, gammaZoomed, _refineFactor * _zoomFactor);
+#endif
 
     // all done
     return;
@@ -1176,6 +1200,59 @@ _amplitude(dev_carena_reference carena) -> dev_arena_type
 
     // all done
     return arena;
+}
+
+
+// detect a complex arena into an amplitude arena
+template <class slcT, class offsetsT>
+auto
+ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
+_zoom(dev_arena_reference gamma) -> dev_arena_type
+{
+    // make a channel
+    pyre::journal::info_t channel("ampcor.cuda.zoom");
+
+    // tell me
+    channel
+        << "[" << _rank << "]: "
+        << "    zooming the correlation surface by a factor of " << _zoomFactor
+        << pyre::journal::endl(__HERE__);
+
+    // get the layout of the incoming correlation surface
+    auto layout = gamma.layout();
+    // its origin
+    auto origin = layout.origin();
+    // and its shape
+    auto shape = layout.shape();
+
+    // form the origin of the zoomed correlation surface
+    arena_index_type zoomedOrigin { origin[0], _zoomFactor*origin[1], _zoomFactor*origin[2] };
+    // and its shape
+    arena_shape_type zoomedShape { shape[0], _zoomFactor*shape[1], _zoomFactor*shape[2] };
+    // use these to assemble the zoomed layout
+    arena_layout_type zoomedLayout { zoomedShape, zoomedOrigin };
+
+    // make a complex arena with the zoomed layout
+    dev_carena_type czoomed { zoomedLayout, zoomedLayout.cells() };
+
+    // copy the real gamma narrow tiles into the zoomed complex arena
+    // initially, the narrow gamma tiles will sit at the upper corners; it's the wrong origin
+    // for them, but it will be ok after refinement
+    // read the entire incoming gamma
+    auto src = gamma.box(origin, shape);
+    // write to the upper corners in the complex gamma
+    auto dst = czoomed.box(zoomedOrigin, shape);
+    // copy
+    std::copy(src.begin(), src.end(), dst.begin());
+
+    // refine; {shape} is the shape of the narrow tiles within the zoomed arena
+    _refine(czoomed, shape);
+
+    // detect it to convert to a real arena
+    auto zoomed = _amplitude(czoomed);
+
+    // and return it
+    return zoomed;
 }
 
 

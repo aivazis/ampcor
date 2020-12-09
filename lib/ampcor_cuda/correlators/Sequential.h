@@ -153,6 +153,8 @@ public:
     auto _spreadSpectrum(dev_carena_reference, slc_shape_const_reference) -> void;
     // detect a complex arena
     auto _amplitude(dev_carena_reference) -> dev_arena_type;
+    // zoom the correlation surface
+    auto _zoom(dev_arena_reference) -> dev_arena_type;
 
     // data
 private:
