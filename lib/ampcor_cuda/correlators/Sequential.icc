@@ -1235,22 +1235,16 @@ _zoom(dev_arena_reference gamma) -> dev_arena_type
     // make a complex arena with the zoomed layout
     dev_carena_type czoomed { zoomedLayout, zoomedLayout.cells() };
 
-    // copy the real gamma narrow tiles into the zoomed complex arena
-    // initially, the narrow gamma tiles will sit at the upper corners; it's the wrong origin
-    // for them, but it will be ok after refinement
-    // read the entire incoming gamma
-    auto src = gamma.box(origin, shape);
-    // write to the upper corners in the complex gamma
+    // narrow the destination region to the upper left hand corner of each tile
     auto dst = czoomed.box(zoomedOrigin, shape);
-    // copy
-    std::copy(src.begin(), src.end(), dst.begin());
+    // copy the real gamma tiles into the narrowed region of the zoomed complex arena
+    std::copy(gamma.begin(), gamma.end(), dst.begin());
 
     // refine; {shape} is the shape of the narrow tiles within the zoomed arena
     _refine(czoomed, shape);
 
     // detect it to convert to a real arena
     auto zoomed = _amplitude(czoomed);
-
     // and return it
     return zoomed;
 }
