@@ -18,10 +18,30 @@
 
 // forward declarations
 namespace ampcor::cuda::kernels {
+    // compute the correlation matrix
+    void correlate(const float * refArena, const float * refStats,
+                   const float * secArena, const float * secStats,
+                   std::size_t pairs,
+                   std::size_t refRows, std::size_t refCols,
+                   std::size_t secRows, std::size_t secCols,
+                   std::size_t corRows, std::size_t corCols,
+                   float * dCorrelation);
+
+    // remove phase ramps
+    void deramp(std::complex<float> * arena,
+                std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
+                std::size_t tileRows, std::size_t tileCols);
+
     // compute amplitudes of the tile pixels
     void detect(const std::complex<float> * cArena,
                 std::size_t pairs, std::size_t rows, std::size_t cols,
                 float * rArena);
+
+    // compute the locations of the maximum value of the correlation map
+    void maxcor(const float * cor,
+                std::size_t pairs, std::size_t corRows, std::size_t corCols,
+                std::size_t orgRow, std::size_t orgCol, float zoomFactor,
+                float * loc);
 
     // subtract the tile mean from each reference pixel
     void refStats(float * rArena,
@@ -42,60 +62,10 @@ namespace ampcor::cuda::kernels {
                   std::size_t corRows, std::size_t corCols,
                   float * stats);
 
-    // compute the correlation matrix
-    void correlate(const float * refArena, const float * refStats,
-                   const float * secArena, const float * secStats,
-                   std::size_t pairs,
-                   std::size_t refRows, std::size_t refCols,
-                   std::size_t secRows, std::size_t secCols,
-                   std::size_t corRows, std::size_t corCols,
-                   float * dCorrelation);
-
-    // compute the locations of the maximum value of the correlation map
-    void maxcor(const float * cor,
-                std::size_t pairs, std::size_t corRows, std::size_t corCols,
-                std::size_t orgRow, std::size_t orgCol, float zoomFactor,
-                float * loc);
-
-    // remove phase ramps
-    void deramp(std::complex<float> * arena,
-                std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
-                std::size_t tileRows, std::size_t tileCols);
-
     // spread the spectrum, a necessary step while interpolating using FFTs
     void spread(std::complex<float> * arena,
                 std::size_t pairs, std::size_t arenaRows, std::size_t arenaCols,
                 std::size_t tileRows, std::size_t tileCols);
-
-    // nudge the (row, col) pairs so that they describe sub-tiles within a secondary tile
-    void nudge(std::size_t pairs,
-               std::size_t refDim,  std::size_t secDim, std::size_t margin,
-               int * locations);
-
-    // migrate the expanded maxcor tiles to the refinement arena
-    void migrate(const std::complex<float>  * arena,
-                 std::size_t pairs,
-                 std::size_t refDim, std::size_t secDim, std::size_t expDim,
-                 std::size_t refRefinedDim, std::size_t secRefinedDim,
-                 const int * locations,
-                 std::complex<float> * refinedArena);
-
-    // upcast the correlation matrix into complex numbers and embed in the zoomed
-    // hyper-matrix
-    auto r2c(const float * gamma,
-             std::size_t pairs, std::size_t corDim, std::size_t zmdDim
-             ) -> cuComplex *;
-
-    // convert the zoomed correlation matrix to floats
-    auto c2r(const cuComplex * scratch,
-             std::size_t pairs, std::size_t zmdDim
-             ) -> float *;
-
-    // assemble the offset field
-    void offsetField(const int * maxcor, const int * zoomed,
-                     std::size_t pairs,
-                     std::size_t margin, std::size_t refineMargin, std::size_t zoom,
-                     float * field);
 }
 
 
