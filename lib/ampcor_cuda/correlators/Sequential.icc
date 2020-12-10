@@ -78,7 +78,7 @@ adjust(offsets_layout_const_reference box)
         << pyre::journal::endl(__HERE__);
 
     // we have a valid plan; perform an initial exploration
-    // coarseCorrelation(box);
+    coarseCorrelation(box);
     // refine the neighborhood of the coarse match and try again
     refinedCorrelation(box);
 
@@ -115,8 +115,10 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << pyre::journal::endl(__HERE__);
     // build the plan
     plan_type plan = _assemblePlan(box, _refShape, _secShape);
+    // the number of pairs in the plan
+    int pairs = plan.size();
     // if there are no valid pairs
-    if (plan.size() == 0) {
+    if (pairs == 0) {
         // make a channel
         pyre::journal::error_t error("ampcor.sequential.adjust");
         // complain
@@ -132,8 +134,27 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << "[" << _rank << "]: "
         << "    creating coarse arenas for the amplitudes"
         << pyre::journal::endl(__HERE__);
+
     // the reference tile arena has a trivial origin
-    slc_index_type refOrigin {};
+    slc_index_type refOrigin { 0, 0 };
+    // make the reference arena
+    auto refComplexArena = _createComplexArena(pairs, refOrigin, _refShape);
+    // prime it: copy {pairs} tile of {_refShape} from the reference raster
+    _primeComplexArena(plan, _ref, _refShape, true, refComplexArena);
+    // and detect it to form an amplitude arena
+    auto refAmplitudeArena = _amplitude(refComplexArena);
+
+    // repeat with the secondary arena; it's origin is shifted so that it's easy to convert the
+    // placement of the chip into an index offset
+    slc_index_type secOrigin = refOrigin - (_secShape - _refShape)/2;
+    // make the secondary arena
+    auto secComplexArena = _createComplexArena(pairs, secOrigin, _secShape);
+    // prime it
+    _primeComplexArena(plan, _sec, _secShape, false, secComplexArena);
+    // and detect it to form an amplitude arena
+    auto secAmplitudeArena = _amplitude(secComplexArena);
+
+#if defined(MGA)
     // make the arena
     auto refArena = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
 
@@ -149,9 +170,10 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
         << pyre::journal::endl(__HERE__);
     // move the data from the rasters to the arena
     _detect(plan, refArena, secArena);
+#endif
 
     // compute the correlation surface
-    auto gamma = _gamma("coarse", refArena, secArena);
+    auto gamma = _gamma(refAmplitudeArena, secAmplitudeArena);
 
     // find its maxima
     channel
@@ -282,9 +304,8 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
     // detect
     auto secAmplitude = _amplitude(secRefinedComplex);
 
-#ifdef READY
     // compute the correlation surface
-    auto gamma = _gamma("refined", refAmplitude, secAmplitude);
+    auto gamma = _gamma(refAmplitude, secAmplitude);
 
     // if we are not zooming into the correlation surface
     if (_zoomFactor < 2) {
@@ -308,7 +329,6 @@ refinedCorrelation(offsets_layout_const_reference box) -> void
         << pyre::journal::endl(__HERE__);
     // compute the maximum and store
     _maxcor(plan, gammaZoomed, _refineFactor * _zoomFactor);
-#endif
 
     // all done
     return;
@@ -522,74 +542,11 @@ _detect(plan_const_reference plan, arena_reference refArena, arena_reference sec
 template <class slcT, class offsetsT>
 auto
 ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-_gamma(string_type tag, arena_reference refArena, arena_reference secArena)
+_gamma(dev_arena_reference refArena, dev_arena_reference secArena)
     -> dev_arena_type
 {
     // make a channel
     pyre::journal::info_t channel("ampcor.sequential.gamma");
-
-    // get the layout of the reference arena
-    auto refLayout = refArena.layout();
-    // allocate a device arena for the reference amplitudes
-    dev_arena_type dRefArena { refLayout, refLayout.cells() };
-
-    // get the layout of the secondary arena
-    auto secLayout = secArena.layout();
-    // allocate a device arena for the secondary amplitudes
-    dev_arena_type dSecArena { secLayout, secLayout.cells() };
-
-    // moving on
-    // get the reference arena footprint
-    auto refArenaFootprint = refArena.data()->bytes();
-    // show me
-    channel
-        << "[" << _rank << "]: "
-        << "      copying reference amplitudes to the device (" << refArenaFootprint << " bytes)"
-        << pyre::journal::endl(__HERE__);
-    // copy the amplitudes to the device
-    auto refArenaCopyStatus = cudaMemcpy(dRefArena.data()->data(), refArena.data()->data(),
-                                         refArenaFootprint, cudaMemcpyHostToDevice);
-    // if something went wrong
-    if (refArenaCopyStatus != cudaSuccess) {
-        // build the error description
-        std::string description = cudaGetErrorName(refArenaCopyStatus);
-        // make a channel
-        pyre::journal::error_t error("ampcor.cuda");
-        // complain
-        error
-            << pyre::journal::at(__HERE__)
-            << "while transferring reference amplitude tiles to the device: "
-            << description << " (" << refArenaCopyStatus << ")"
-            << pyre::journal::endl;
-        // and bail
-        throw std::logic_error(description);
-    }
-
-    // get the secondary arena footprint
-    auto secArenaFootprint = secArena.data()->bytes();
-    // show me
-    channel
-        << "[" << _rank << "]: "
-        << "      copying secondary amplitudes to the device (" << secArenaFootprint << " bytes)"
-        << pyre::journal::endl(__HERE__);
-    // copy the amplitudes to the device
-    auto secArenaCopyStatus = cudaMemcpy(dSecArena.data()->data(), secArena.data()->data(),
-                                         secArenaFootprint, cudaMemcpyHostToDevice);
-    // if something went wrong
-    if (secArenaCopyStatus != cudaSuccess) {
-        // build the error description
-        std::string description = cudaGetErrorName(secArenaCopyStatus);
-        // make a channel
-        pyre::journal::error_t error("ampcor.cuda");
-        // complain
-        error
-            << pyre::journal::at(__HERE__)
-            << "while transferring secondary amplitude tiles to the device: "
-            << description << " (" << secArenaCopyStatus << ")"
-            << pyre::journal::endl;
-        // and bail
-        throw std::logic_error(description);
-    }
 
     // adjust the reference tiles to zero mean and compute their variance
     channel
@@ -597,7 +554,7 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         << "      adjusting the amplitudes to zero mean and computing statistics"
         << pyre::journal::endl(__HERE__);
     // adjust the reference amplitudes to zero-mean and compute the variances
-    auto refVariances = _referenceStatistics(dRefArena);
+    auto refVariances = _referenceStatistics(refArena);
 
     // build sum area tables so we can do the same to the sliding window in the secondary tiles
     channel
@@ -605,7 +562,7 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         << "      building sum area tables"
         << pyre::journal::endl(__HERE__);
     // compute the SATs of the secondary amplitudes
-    auto secSATs = _secondarySumAreaTables(dSecArena);
+    auto secSATs = _secondarySumAreaTables(secArena);
 
     // use the sum area tables to compute mean amplitude for all possible window placements
     channel
@@ -619,7 +576,7 @@ _gamma(string_type tag, arena_reference refArena, arena_reference secArena)
         << "[" << _rank << "]: "
         << "    computing the correlation surface"
         << pyre::journal::endl(__HERE__);
-    auto gamma = _correlate(dRefArena, refVariances, dSecArena, secMeans);
+    auto gamma = _correlate(refArena, refVariances, secArena, secMeans);
 
     // all done
     return gamma;
@@ -961,6 +918,7 @@ _refine(dev_carena_reference arena, slc_shape_const_reference narrowShape) -> vo
     // grab a spot for a plan
     cufftHandle fwdPlan;
     // instantiate
+
     auto fwdPlanStatus = cufftPlanMany(&fwdPlan,
                                        // 2d tiles
                                        dim,
@@ -1240,8 +1198,11 @@ _zoom(dev_arena_reference gamma) -> dev_arena_type
     // copy the real gamma tiles into the narrowed region of the zoomed complex arena
     std::copy(gamma.begin(), gamma.end(), dst.begin());
 
+
+    // extract the shape of individual tiles
+    slc_shape_type tileShape { shape[1], shape[2] };
     // refine; {shape} is the shape of the narrow tiles within the zoomed arena
-    _refine(czoomed, shape);
+    _refine(czoomed, tileShape);
 
     // detect it to convert to a real arena
     auto zoomed = _amplitude(czoomed);
