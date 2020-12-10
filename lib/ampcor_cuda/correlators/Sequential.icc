@@ -154,24 +154,6 @@ coarseCorrelation(offsets_layout_const_reference box) -> void
     // and detect it to form an amplitude arena
     auto secAmplitudeArena = _amplitude(secComplexArena);
 
-#if defined(MGA)
-    // make the arena
-    auto refArena = _createAmplitudeArena("coarse_ref.dat", plan.size(), _refShape, refOrigin);
-
-    // the secondary tile arena has a non-trivial origin
-    slc_index_type secOrigin = refOrigin - (_secShape - _refShape)/2;
-    // make the arena
-    auto secArena = _createAmplitudeArena("coarse_sec.dat", plan.size(), _secShape, secOrigin);
-
-    // detect and transfer the tiles to the coarse arena
-    channel
-        << "[" << _rank << "]: "
-        << "    detecting and transferring"
-        << pyre::journal::endl(__HERE__);
-    // move the data from the rasters to the arena
-    _detect(plan, refArena, secArena);
-#endif
-
     // compute the correlation surface
     auto gamma = _gamma(refAmplitudeArena, secAmplitudeArena);
 
@@ -445,95 +427,6 @@ _assemblePlan(offsets_layout_const_reference box,
 
     // all done
     return plan;
-}
-
-
-// build a real arena as an intermediate data product
-template <class slcT, class offsetsT>
-auto
-ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-_createAmplitudeArena(string_type name, int pairs,
-                      slc_shape_const_reference tileShape, slc_index_const_reference tileOrigin)
-    -> arena_type
-{
-    // make a channel
-    pyre::journal::info_t channel("ampcor.sequential.arena");
-
-    // turn the number of pairs into a shape
-    typename arena_type::spec_type::id_layout_type::shape_type pairsShape { pairs };
-    // combine with the tile shape to form the arena layout
-    auto arenaShape = pairsShape * tileShape;
-
-    // pair numbering starts at zero
-    typename arena_type::spec_type::id_layout_type::index_type pairsOrigin { 0 };
-    // combine with the tile origin to form the arena origin
-    auto arenaOrigin = pairsOrigin * tileOrigin;
-
-    // convert all this to a layout
-    typename arena_type::layout_type arenaLayout { arenaShape, arenaOrigin };
-
-    // show me
-    channel
-        << "[" << _rank << "]: "
-        << "      creating '" << name << "':"
-        << " origin=(" << arenaOrigin << "), shape=(" << arenaShape << ")"
-        << pyre::journal::endl(__HERE__);
-
-    // create the product and return it
-    return arena_type(arenaLayout, name, arenaLayout.cells());
-}
-
-
-// transfer tiles from the input rasters into corresponding arenas, and compute their magnitude
-// in flight
-template <class slcT, class offsetsT>
-auto
-ampcor::cuda::correlators::Sequential<slcT, offsetsT>::
-_detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena) -> void
-{
-    // make a channel
-    pyre::journal::debug_t channel("ampcor.sequential.detect");
-
-    // detecting means
-    auto detect = [](slc_pixel_type pixel) -> slc_value_type {
-        // computing the amplitude of the complex pixel
-        return std::abs(pixel);
-    };
-
-    // go through the plan
-    for (auto pid = 0; pid < plan.size(); ++pid) {
-        // get the origins of the tiles in their respective rasters
-        const auto & [_, refOrigin, secOrigin] = plan[pid];
-        // show me
-        channel
-            << "[" << _rank << "]: "
-            << "      detecting ref(" << refOrigin << ") and sec(" << secOrigin <<  ")"
-            << pyre::journal::endl(__HERE__);
-
-        // we traverse one tile at a time
-        typename arena_type::spec_type::id_layout_type::index_type pairShape { 1 };
-        // the pairing id determines the shift from the arena origin to our tile
-        arena_index_type pairShift { pid, 0, 0 };
-
-        // specify the source tile in the reference raster
-        auto refTile = _ref.box(refOrigin, _refShape);
-        // specify the destination tile
-        auto refArenaTile = refArena.box(refArena.layout().origin() + pairShift,
-                                         pairShape * _refShape);
-        // detect
-        std::transform(refTile.begin(), refTile.end(), refArenaTile.begin(), detect);
-
-        // specify the source tile in the secondary raster
-        auto secTile = _sec.box(secOrigin, _secShape);
-        // specify the destination tile
-        auto secArenaTile = secArena.box(secArena.layout().origin() + pairShift,
-                                         pairShape * _secShape);
-        // detect
-        std::transform(secTile.begin(), secTile.end(), secArenaTile.begin(), detect);
-    }
-
-    // all done
-    return;
 }
 
 

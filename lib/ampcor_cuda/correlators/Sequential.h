@@ -111,15 +111,6 @@ public:
     // build and validate a work plan
     auto _assemblePlan(offsets_layout_const_reference,
                        slc_shape_const_reference, slc_shape_const_reference) -> plan_type;
-    // create a tile arena
-    auto _createAmplitudeArena(string_type name, int pairs,
-                               slc_shape_const_reference tileShape,
-                               slc_index_const_reference tileOrigin)
-        -> arena_type;
-    // detect and transfer reference and secondary tiles into their respective arenas
-    auto _detect(plan_const_reference plan, arena_reference refArena, arena_reference secArena)
-        -> void;
-
     // go through all the necessary steps to compute the correlation surface
     auto _gamma(dev_arena_reference, dev_arena_reference) -> dev_arena_type;
     // compute and store the locations of the maxima of the correlation surface
