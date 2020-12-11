@@ -34,7 +34,6 @@ _correlate(const valueT * refArena, const valueT * refStats,
            std::size_t row, std::size_t col,
            valueT * correlation);
 
-
 // implementation
 void
 ampcor::cuda::kernels::
@@ -49,6 +48,13 @@ correlate(const value_t * refArena, const value_t * refStats,
     // make a channel
     pyre::journal::debug_t channel("ampcor.cuda");
 
+    // each of the {corRows x corCols} placements is handled by a separate kernel launch
+    // each launch has as many blocks as there are {pairs} to process
+    // each block has _at least_ as many threads as there are columns in a reference tile
+    // correlation is a reduction, so there is a run down columns by the workers in each block
+    // to compute the numerator and the secondary variance, followed by a gathering
+    // in shared memory of the numerator; finally, the result is assembled by tread 0
+
     // figure out the job layout and launch the calculation on the device
     // each thread block takes care of one tile pair, so we need as many blocks as there are pairs
     auto B = pairs;
@@ -56,96 +62,137 @@ correlate(const value_t * refArena, const value_t * refStats,
     // handling a pair of columns, one from the reference tile and one from a particular
     // placement of the chip within the search window; this means that the number of threads
     // per block is determined by the number of columns in the reference tile
-    auto T = refCols;
+    auto w = refCols;
     // each thread stores in shared memory the partial sum for the numerator term and the
     // partial sum for the secondary tile variance; so we need two {value_t}'s worth of shared
-    // memory for each thread, but no less than 64
-    auto S = 2 * std::max(T, 64ul) * sizeof(value_t);
+    // memory for each thread
+    auto s = 2 * sizeof(value_t);
 
     // show me
     channel
         << pyre::journal::at(__HERE__)
-        << "launching " << B << " blocks of " << T << " threads each, with "
-        << S << " bytes of shared memory per block, for each of the "
-        << "(" << corRows << "x" << corCols << ")"
-        << " possible placements of the search window within the secondary tile;"
-        << " a grand total of " << (B*corRows*corCols) << " kernel launches"
+        << "launching " << B << " blocks of no less than " << w << " threads each"
+        << pyre::journal::newline
+        << "with " << s << " bytes of shared memory per thread"
+        << pyre::journal::newline
+        << "for each of the (" << corRows << "x" << corCols << ")"
+        << " possible placements of the search window within the secondary tile"
+        << pyre::journal::newline
+        << "a grand total of " << (B*corRows*corCols) << " kernel launches"
         << pyre::journal::endl;
 
     // for storing error codes
     cudaError_t status = cudaSuccess;
-    // go through all possible row offsets for the sliding window
-    for (auto row = 0; row < corRows; ++row) {
-        // and all possible column offsets
-        for (auto col = 0; col < corCols; ++col) {
-            // deduce the correct kernel to launch and deploy
-            // N.B.: kernel launch is an implicit barrier, so no need for any extra
-            // synchronization
-            if (refCols <= 32) {
+
+    // deduce the correct kernel to launch
+    // N.B.: kernel launch is an implicit barrier, so no need for any extra synchronization
+    if (w <= 32) {
+        // tell me
+        channel << "deploying the 32 column kernel" << pyre::journal::newline;
+        // set the number of threads
+        const int T = 32;
+        // set aside shared memory; there is a low limit because we shuffle
+        const int S = 64 * s;
+        // for all possible horizontal placements
+        for (auto row = 0; row < corRows; ++row) {
+            // for all possible vertical placements
+            for (auto col = 0; col < corCols; ++col) {
                 // tell me
-                channel << "deploying the 32 column kernel";
-                // do it
-                _correlate<32> <<<B,32,S>>> (refArena, refStats, secArena, secStats,
-                                             refRows, refCols, secRows, secCols, corRows, corCols,
-                                             row, col, dCorrelation);
-            } else if (refCols <= 64) {
-                // tell me
-                channel << "deploying the 64 column kernel";
-                // do it
-                _correlate<64> <<<B,64,S>>> (refArena, refStats, secArena, secStats,
-                                             refRows, refCols, secRows, secCols, corRows, corCols,
-                                             row, col, dCorrelation);
-            } else if (refCols <= 128) {
-                // tell me
-                channel << "deploying the 128 column kernel";
-                // do it
-                _correlate<128> <<<B,128,S>>> (refArena, refStats, secArena, secStats,
-                                               refRows, refCols, secRows, secCols, corRows, corCols,
-                                               row, col, dCorrelation);
-            } else if (refCols <= 256) {
-                // tell me
-                channel << "deploying the 256 column kernel";
-                // do it
-                _correlate<256> <<<B,256,S>>> (refArena, refStats, secArena, secStats,
-                                               refRows, refCols, secRows, secCols, corRows, corCols,
-                                               row, col, dCorrelation);
-            } else if (refCols <= 512) {
-                // tell me
-                channel << "deploying the 512 column kernel";
-                // do it
-                _correlate<512> <<<B,512,S>>> (refArena, refStats, secArena, secStats,
-                                               refRows, refCols, secRows, secCols, corRows, corCols,
-                                               row, col, dCorrelation);
-            } else {
-                // complain
-                throw std::runtime_error("cannot handle reference tiles of this shape");
-            }
-            // check for errors
-            status = cudaPeekAtLastError();
-            // if something went wrong
-            if (status != cudaSuccess) {
-                // make a channel
-                pyre::journal::error_t error("ampcor.cuda");
-                // complain
-                error
-                    << pyre::journal::at(__HERE__)
-                    << "after launching the " << row << "x" << col << " correlators: "
-                    << cudaGetErrorName(status) << " (" << status << ")"
-                    << pyre::journal::endl;
-                // and bail
-                break;
+                channel << "(" << row << "," << col << "): launch" << pyre::journal::newline;
+                // launch
+                _correlate<T> <<<B,T,S>>> (refArena, refStats, secArena, secStats,
+                                           refRows, refCols, secRows, secCols, corRows, corCols,
+                                           row, col, dCorrelation);
             }
         }
-        // if something went wrong in the inner loop
-        if (status != cudaSuccess) {
-            // bail out of the outer loop as well
-            break;
+    } else if (w <= 64) {
+        // tell me
+        channel << "deploying the 64 column kernel" << pyre::journal::newline;
+        // set the number of threads
+        const int T = 64;
+        // set aside shared memory; there is a low limit because we shuffle
+        const int S = T * s;
+        // for all possible horizontal placements
+        for (auto row = 0; row < corRows; ++row) {
+            // for all possible vertical placements
+            for (auto col = 0; col < corCols; ++col) {
+                // tell me
+                channel << "(" << row << "," << col << "): launch" << pyre::journal::newline;
+                // launch
+                _correlate<T> <<<B,T,S>>> (refArena, refStats, secArena, secStats,
+                                           refRows, refCols, secRows, secCols, corRows, corCols,
+                                           row, col, dCorrelation);
+            }
         }
+    } else if (w <= 128) {
+        // tell me
+        channel << "deploying the 128 column kernel" << pyre::journal::newline;
+        // set the number of threads
+        const int T = 128;
+        // set aside shared memory; there is a low limit because we shuffle
+        const int S = T * s;
+        // for all possible horizontal placements
+        for (auto row = 0; row < corRows; ++row) {
+            // for all possible vertical placements
+            for (auto col = 0; col < corCols; ++col) {
+                // tell me
+                channel << "(" << row << "," << col << "): launch" << pyre::journal::newline;
+                // launch
+                _correlate<T> <<<B,T,S>>> (refArena, refStats, secArena, secStats,
+                                           refRows, refCols, secRows, secCols, corRows, corCols,
+                                           row, col, dCorrelation);
+            }
+        }
+    } else if (w <= 256) {
+        // tell me
+        channel << "deploying the 256 column kernel" << pyre::journal::newline;
+        // set the number of threads
+        const int T = 256;
+        // set aside shared memory; there is a low limit because we shuffle
+        const int S = T * s;
+        // for all possible horizontal placements
+        for (auto row = 0; row < corRows; ++row) {
+            // for all possible vertical placements
+            for (auto col = 0; col < corCols; ++col) {
+                // tell me
+                channel << "(" << row << "," << col << "): launch" << pyre::journal::newline;
+                // launch
+                _correlate<T> <<<B,T,S>>> (refArena, refStats, secArena, secStats,
+                                           refRows, refCols, secRows, secCols, corRows, corCols,
+                                           row, col, dCorrelation);
+            }
+        }
+    } else if (w <= 512) {
+        // tell me
+        channel << "deploying the 512 column kernel" << pyre::journal::newline;
+        // set the number of threads
+        const int T = 512;
+        // set aside shared memory; there is a low limit because we shuffle
+        const int S = T * s;
+        // for all possible horizontal placements
+        for (auto row = 0; row < corRows; ++row) {
+            // for all possible vertical placements
+            for (auto col = 0; col < corCols; ++col) {
+                // tell me
+                channel << "(" << row << "," << col << "): launch" << pyre::journal::newline;
+                // launch
+                _correlate<T> <<<B,T,S>>> (refArena, refStats, secArena, secStats,
+                                           refRows, refCols, secRows, secCols, corRows, corCols,
+                                           row, col, dCorrelation);
+            }
+        }
+    } else {
+        // complain
+        throw std::runtime_error("cannot handle reference tiles of this shape");
     }
+
+    // flush
+    channel << pyre::journal::endl(__HERE__);
+
     // wait for the device to finish
-    status = cudaDeviceSynchronize();
+    auto execStatus = cudaDeviceSynchronize();
     // check
-    if (status != cudaSuccess) {
+    if (execStatus != cudaSuccess) {
         // get the error description
         std::string description = cudaGetErrorName(status);
         // make a channel
@@ -154,7 +201,7 @@ correlate(const value_t * refArena, const value_t * refStats,
         error
             << pyre::journal::at(__HERE__)
             << "while waiting for a kernel to finish: "
-            << description << " (" << status << ")"
+            << description << " (" << execStatus << ")"
             << pyre::journal::endl;
         // and bail
         throw std::runtime_error(description);
@@ -182,13 +229,13 @@ _correlate(const valueT * refArena, // the reference tiles
 
     // build the workload descriptors
     // global
-    // std::size_t B = gridDim.x;    // number of blocks
-    // std::size_t T = blockDim.x;   // number of threads per block
-    // std::size_t W = B*T;          // total number of workers
+    // auto B = gridDim.x;    // number of blocks
+    // auto T = blockDim.x;   // number of threads per block
+    // auto W = B*T;          // total number of workers
     // local
-    std::size_t b = blockIdx.x;      // my block id
-    std::size_t t = threadIdx.x;     // my thread id within my block
-    // std::size_t w = b*T + t;      // my worker id
+    auto b = blockIdx.x;      // my block id
+    auto t = threadIdx.x;     // my thread id within my block
+    // auto w = b*T + t;      // my worker id
 
 
     // N.B.: do not be tempted to terminate early threads that have no assigned workload; their
@@ -219,7 +266,7 @@ _correlate(const valueT * refArena, // the reference tiles
     // read uninitialized memory
     if (t < refCols) {
         // run down the two matching columns, one from {ref}, one from {sec}
-        for (std::size_t idx=0; idx < refCols; ++idx) {
+        for (auto idx=0; idx < refCols; ++idx) {
             // fetch the {ref} value
             valueT r = ref[idx*refCols];
             // fetch the {sec} value and subtract the mean secondary amplitude
@@ -316,7 +363,7 @@ _correlate(const valueT * refArena, // the reference tiles
         // computes the correlation
         auto corr = numerator / refVariance / std::sqrt(secVariance);
         // computes the slot where this result goes
-        std::size_t slot = b*corRows*corCols + row*corCols + col;
+        auto slot = b*corRows*corCols + row*corCols + col;
         // and writes the sum to the result vector
         correlation[slot] = corr;
     }
