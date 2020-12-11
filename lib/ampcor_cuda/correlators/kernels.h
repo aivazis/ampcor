@@ -39,8 +39,8 @@ namespace ampcor::cuda::kernels {
 
     // compute the locations of the maximum value of the correlation map
     void maxcor(const float * cor,
-                std::size_t pairs, std::size_t corRows, std::size_t corCols,
-                std::size_t orgRow, std::size_t orgCol, float zoomFactor,
+                int pairs, int corRows, int corCols,
+                int orgRow, int orgCol, float zoomFactor,
                 float * loc);
 
     // subtract the tile mean from each reference pixel

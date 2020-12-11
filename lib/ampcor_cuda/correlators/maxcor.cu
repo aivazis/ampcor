@@ -25,8 +25,8 @@ template <typename value_t = float>
 __global__
 static void
 _maxcor(const value_t * gamma,
-        std::size_t pairs, std::size_t corRows, std::size_t corCols,
-        std::size_t orgRow, std::size_t orgCol, value_t zoomFactor,
+        int pairs, int corRows, int corCols,
+        int orgRow, int orgCol, value_t zoomFactor,
         value_t * loc);
 
 
@@ -34,8 +34,8 @@ _maxcor(const value_t * gamma,
 void
 ampcor::cuda::kernels::
 maxcor(const float * gamma,
-       std::size_t pairs, std::size_t corRows, std::size_t corCols,
-       std::size_t orgRow, std::size_t orgCol, float zoomFactor,
+       int pairs, int corRows, int corCols,
+       int orgRow, int orgCol, float zoomFactor,
        float * loc)
 {
     // make a channel
@@ -77,24 +77,24 @@ maxcor(const float * gamma,
 }
 
 
-// the SAT generation kernel
+// the kernel that locates the maximum value of the correlation surface and records the shift
 template <typename value_t>
 __global__
 void
 _maxcor(const value_t * gamma,
-        std::size_t pairs, std::size_t corRows, std::size_t corCols,
-        std::size_t orgRow, std::size_t orgCol, value_t zoomFactor,
+        int pairs, int corRows, int corCols,
+        int orgRow, int orgCol, value_t zoomFactor,
         value_t * loc)
 {
     // build the workload descriptors
     // global
-    // std::size_t B = gridDim.x;    // number of blocks
-    std::size_t T = blockDim.x;      // number of threads per block
-    // std::size_t W = B*T;          // total number of workers
+    // auto B = gridDim.x;    // number of blocks
+    auto T = blockDim.x;      // number of threads per block
+    // auto W = B*T;          // total number of workers
     // local
-    std::size_t b = blockIdx.x;      // my block id
-    std::size_t t = threadIdx.x;     // my thread id within my block
-    std::size_t w = b*T + t;         // my worker id
+    auto b = blockIdx.x;      // my block id
+    auto t = threadIdx.x;     // my thread id within my block
+    auto w = b*T + t;         // my worker id
 
     // if my worker id exceeds the number of cells that require update
     if (w >= pairs) {
