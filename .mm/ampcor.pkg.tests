@@ -11,9 +11,6 @@ ampcor.pkg.tests.stem := ampcor.pkg
 ampcor.pkg.tests.prerequisites := ampcor.pkg ampcor.lib ampcor.ext
 
 # global clean up
-tests.ampcor.pkg.clean +=
-
-# global clean up
 tests.ampcor.pkg.clean += offsets.dat
 
 # the {offsets} product tests must be executed in a specific order
