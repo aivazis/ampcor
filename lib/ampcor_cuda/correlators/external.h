@@ -24,8 +24,8 @@
 #include <thrust/complex.h>
 // pyre
 #include <pyre/journal.h>
+#include <pyre/grid.h>
 #include <p2/timers.h>
-#include <p2/grid.h>
 
 // access to the dom
 #include <ampcor/dom.h>

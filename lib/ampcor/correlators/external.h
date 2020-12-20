@@ -16,7 +16,7 @@
 // FFTW
 #include <fftw3.h>
 // externals
-#include <p2/grid.h>
+#include <pyre/grid.h>
 
 // pull the product definitions
 #include <ampcor/dom.h>

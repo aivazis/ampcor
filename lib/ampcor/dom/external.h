@@ -13,7 +13,7 @@
 #include <complex>
 
 // externals
-#include <p2/grid.h>
+#include <pyre/grid.h>
 
 
 // type aliases
