@@ -2,7 +2,7 @@
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
-// (c) 1998-2020 all rights reserved
+// (c) 1998-2021 all rights reserved
 
 
 // externals
@@ -24,7 +24,7 @@ const footer = () => (
         {/* the box with the copyright note */}
         <div style={styles.colophon}>
             <span style={styles.copyright}>
-                copyright &copy; 1998-2020
+                copyright &copy; 1998-2021
                 &nbsp;
                 <a style={styles.author} href="https://github.com/aivazis">
                     michael&nbsp;aïvázis
