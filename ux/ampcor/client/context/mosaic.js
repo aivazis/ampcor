@@ -169,7 +169,7 @@ const useZoom = () => {
     }
 
     const zoomOut = () => {
-        // zoom out is clipped at {maxZoom}, so if we are not arleady there
+        // zoom out is clipped at {maxZoom}, so if we are already there
         if (zoom >= maxZoom) {
             // bail
             return
@@ -199,7 +199,7 @@ const useZoom = () => {
         setPan({ top, left })
 
         // all done
-
+        return
     }
 
     // and publish
