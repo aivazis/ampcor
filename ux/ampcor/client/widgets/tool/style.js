@@ -42,7 +42,7 @@ export default {
             ry: 5,
         },
 
-        // the drawing; these are treated s hints; the icon design overrides
+        // the drawing; these are treated as hints; the icon design overrides
         icon: {
             fill: "none",
             stroke: "none",
