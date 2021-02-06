@@ -25,7 +25,7 @@
 // pyre
 #include <pyre/journal.h>
 #include <pyre/grid.h>
-#include <p2/timers.h>
+#include <pyre/timers.h>
 
 // access to the dom
 #include <ampcor/dom.h>
@@ -40,7 +40,7 @@ namespace ampcor::cuda::correlators {
 
     // pyre timers
     using timer_t = pyre::timers::process_timer_t;
-}
+}    // namespace ampcor::cuda::correlators
 
 
 #endif

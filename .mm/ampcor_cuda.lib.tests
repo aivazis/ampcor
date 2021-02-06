@@ -8,7 +8,7 @@
 # the libampcor test suite
 ampcor_cuda.lib.tests.stem := ampcor_cuda.lib
 ampcor_cuda.lib.tests.prerequisites := ampcor_cuda.lib ampcor.lib
-ampcor_cuda.lib.tests.extern := ampcor_cuda.lib ampcor.lib p2 pyre cuda
+ampcor_cuda.lib.tests.extern := ampcor_cuda.lib ampcor.lib pyre cuda
 # c++ compiler flags
 ampcor_cuda.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 ampcor_cuda.lib.tests.cuda.flags += $(nvcc.std.c++17)

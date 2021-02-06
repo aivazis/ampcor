@@ -17,7 +17,7 @@ ampcor_cuda.lib.stem := ampcor_cuda
 # specify the source languages explicitly
 ampcor_cuda.lib.languages := c++ cuda
 # external dependencies
-ampcor_cuda.lib.extern := ampcor.lib p2 pyre cuda
+ampcor_cuda.lib.extern := ampcor.lib pyre cuda
 # build the base ampcor library before this one
 ampcor_cuda.lib.prerequisites := ampcor.lib
 # compiler control
@@ -34,7 +34,7 @@ ampcor_cuda.ext.capsule :=
 # intra-project dependencies
 ampcor_cuda.ext.prerequisites := ampcor_cuda.lib
 # dependencies
-ampcor_cuda.ext.extern := ampcor_cuda.lib ampcor.lib p2 pyre pybind11 python cuda
+ampcor_cuda.ext.extern := ampcor_cuda.lib ampcor.lib pyre pybind11 python cuda
 # compiler control
 ampcor_cuda.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
 

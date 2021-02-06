@@ -9,7 +9,7 @@
 # the libampcor test suite
 ampcor.lib.tests.stem := ampcor.lib
 ampcor.lib.tests.prerequisites := ampcor.lib
-ampcor.lib.tests.extern := ampcor.lib fftw p2 pyre
+ampcor.lib.tests.extern := ampcor.lib fftw pyre
 # c++ compiler flags
 ampcor.lib.tests.c++.flags += -Wall $($(compiler.c++).std.c++17)
 
