@@ -39,6 +39,9 @@ class Arena(ampcor.flow.product,
 
 
     # public data
+    # the memory footprint of an individual pixel; the {SLC} extesion knows...
+    bytesPerPixel = ampcor.libampcor.SLC.bytesPerPixel
+
     @property
     def layout(self):
         """
@@ -46,15 +49,6 @@ class Arena(ampcor.flow.product,
         """
         # ask the spec
         return self.spec.layout
-
-
-    @property
-    def bytesPerPixel(self):
-        """
-        Get the memory footprint of my pixel
-        """
-        # ask the spec
-        return self.spec.bytesPerPixel
 
 
     # protocol obligations
