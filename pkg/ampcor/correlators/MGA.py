@@ -222,10 +222,8 @@ class MGA(ampcor.flow.factory,
         secondary = self.secondary
         # grab the output
         offsets = self.offsets
-        # get the coarse map
-        map = self.cover.map(bounds=reference.shape, shape=offsets.shape)
         # make a plan
-        plan = self.plan(correlator=self, regmap=map, rasters=(reference,secondary))
+        map, plan = self.plan()
         # and show me the plan details
         yield from plan.show(indent=indent, margin=margin+indent)
 
