@@ -11,6 +11,7 @@
 // STL
 #include <complex>
 #include <string>
+#include <vector>
 
 // journal
 #include <pyre/journal.h>
@@ -20,6 +21,11 @@
 #include <pybind11/complex.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
+
+// libampcor
+#include <ampcor/dom.h>
+#include <ampcor/correlators.h>
+#include <ampcor/viz.h>
 
 
 // type aliases
@@ -40,6 +46,6 @@ namespace ampcor::py {
 }
 
 
-# endif
+#endif
 
 // end of file

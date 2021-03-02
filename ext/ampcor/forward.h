@@ -8,12 +8,28 @@
 #define ampcor_py_forward_h
 
 
-// the {ampcor} namespace
+// useful type aliases
+namespace ampcor::py {
+    // 2d layouts
+    using layout2d_t = dom::layout_t<2>;
+    using order2d_t = layout2d_t::order_type;
+    using shape2d_t = layout2d_t::shape_type;
+    using index2d_t = layout2d_t::index_type;
+}
+
+
+// assemble the {ampcor} package namespace
 namespace ampcor::py {
     // bindings of opaque types
     void opaque(py::module &);
     // exceptions
     void exceptions(py::module &);
+
+    // layouts
+    void order2d(py::module &);
+    void index2d(py::module &);
+    void shape2d(py::module &);
+    void layout2d(py::module &);
 
     // the raster layout
     void raster_layout(py::module &);

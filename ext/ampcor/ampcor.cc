@@ -11,7 +11,8 @@
 
 
 // the module entry point
-PYBIND11_MODULE(ampcor, m) {
+PYBIND11_MODULE(ampcor, m)
+{
     // the doc string
     m.doc() = "the libampcor bindings";
 
@@ -21,6 +22,11 @@ PYBIND11_MODULE(ampcor, m) {
     ampcor::py::exceptions(m);
 
     // layouts
+    // 2d
+    ampcor::py::order2d(m);
+    ampcor::py::index2d(m);
+    ampcor::py::shape2d(m);
+    ampcor::py::layout2d(m);
     // rasters
     ampcor::py::raster_layout(m);
     // arenas
