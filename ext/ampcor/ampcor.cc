@@ -27,6 +27,12 @@ PYBIND11_MODULE(ampcor, m)
     ampcor::py::index2d(m);
     ampcor::py::shape2d(m);
     ampcor::py::layout2d(m);
+    // 3d
+    ampcor::py::order3d(m);
+    ampcor::py::index3d(m);
+    ampcor::py::shape3d(m);
+    ampcor::py::layout3d(m);
+
     // rasters
     ampcor::py::raster_layout(m);
     // arenas

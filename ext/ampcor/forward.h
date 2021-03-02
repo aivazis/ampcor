@@ -15,6 +15,11 @@ namespace ampcor::py {
     using order2d_t = layout2d_t::order_type;
     using shape2d_t = layout2d_t::shape_type;
     using index2d_t = layout2d_t::index_type;
+    // 3d layouts
+    using layout3d_t = dom::layout_t<3>;
+    using order3d_t = layout3d_t::order_type;
+    using shape3d_t = layout3d_t::shape_type;
+    using index3d_t = layout3d_t::index_type;
 }
 
 
@@ -26,10 +31,16 @@ namespace ampcor::py {
     void exceptions(py::module &);
 
     // layouts
+    // 2d
     void order2d(py::module &);
     void index2d(py::module &);
     void shape2d(py::module &);
     void layout2d(py::module &);
+    // 3d
+    void order3d(py::module &);
+    void index3d(py::module &);
+    void shape3d(py::module &);
+    void layout3d(py::module &);
 
     // the raster layout
     void raster_layout(py::module &);
