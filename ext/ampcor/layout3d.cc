@@ -78,6 +78,24 @@ ampcor::py::layout3d(py::module & m)
         // the docstring
         "get my nudge");
 
+    // sizes of things: number of pixels
+    layoutCls.def_property_readonly(
+        "cells",
+        // the getter
+        &layout3d_t::cells,
+        // the docstring
+        "the number of pixels in the arena");
+
+    // methods
+    layoutCls.def(
+        "box",
+        // the handler
+        &layout3d_t::box,
+        // the signature
+        "origin"_a, "shape"_a,
+        // the docstring
+        "carve a portion of a layout");
+
     // indexing
     // get the index that corresponds to a given offset
     layoutCls.def(
