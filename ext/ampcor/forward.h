@@ -42,9 +42,6 @@ namespace ampcor::py {
     void shape3d(py::module &);
     void layout3d(py::module &);
 
-    // the raster layout
-    void raster_layout(py::module &);
-
     // SLC
     void slc(py::module &);
     void slc_raster(py::module &);
