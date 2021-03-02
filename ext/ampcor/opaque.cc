@@ -12,8 +12,8 @@
 
 // opaque classes do not get auto-converted to and from python
 void
-ampcor::py::
-opaque(py::module & m) {
+ampcor::py::opaque(py::module & m)
+{
     // all done
     return;
 }

@@ -21,74 +21,72 @@ namespace ampcor::py {
 // helpers
 namespace ampcor::py {
     // the constructor
-    inline auto
-    offsets_const_raster_constructor(py::tuple, py::object)
-         -> unique_pointer<offsets_const_raster_t>;
+    inline auto offsets_const_raster_constructor(py::tuple, py::object)
+        -> unique_pointer<offsets_const_raster_t>;
 }
 
 
 // add bindings to offset maps
 void
-ampcor::py::
-offsets_const_raster(py::module &m) {
+ampcor::py::offsets_const_raster(py::module & m)
+{
     // the Offsets interface
     py::class_<offsets_const_raster_t>(m, "OffsetsConstRaster")
         // constructor
         .def(
-             // the constructor wrapper
-             py::init([](py::tuple shape, py::object uri) {
-                          return offsets_const_raster_constructor(shape, uri);
-                      }),
+            // the constructor wrapper
+            py::init([](py::tuple shape, py::object uri) {
+                return offsets_const_raster_constructor(shape, uri);
+            }),
             // the signature
-            "shape"_a, "uri"_a
-            )
+            "shape"_a, "uri"_a)
 
         // accessors
         // sizes of things: number of pixels
-        .def_property_readonly("cells",
-                      // the getter
-                      &offsets_const_raster_t::cells,
-                      // the docstring
-                      "the number of pixels in the offset map"
-                      )
+        .def_property_readonly(
+            "cells",
+            // the getter
+            &offsets_const_raster_t::cells,
+            // the docstring
+            "the number of pixels in the offset map")
         // sizes of things: memory footprint
-        .def_property_readonly("bytes",
-                      // the getter
-                      &offsets_const_raster_t::bytes,
-                      // the docstring
-                      "the amount of memory occupied by this map, in bytes"
-                      )
+        .def_property_readonly(
+            "bytes",
+            // the getter
+            &offsets_const_raster_t::bytes,
+            // the docstring
+            "the amount of memory occupied by this map, in bytes")
 
         // metamethods
         // data read access given an index
-        .def("__getitem__",
-             // convert the incoming tuple into an index and fetch the data
-             [](const offsets_const_raster_t & map, py::tuple pyIdx) {
-                 // type aliases
-                 using index_t = offsets_const_raster_t::index_type;
-                 using rank_t = offsets_const_raster_t::index_type::rank_type;
-                 // make an index out of the python tuple
-                 index_t idx {pyIdx[0].cast<rank_t>(), pyIdx[1].cast<rank_t>()};
-                 // get the data and return it
-                 return map[idx];
-             },
-             // the signature
-             "index"_a,
-             // the docstring
-             "access the data at the given index"
-             )
+        .def(
+            "__getitem__",
+            // convert the incoming tuple into an index and fetch the data
+            [](const offsets_const_raster_t & map, py::tuple pyIdx) {
+                // type aliases
+                using index_t = offsets_const_raster_t::index_type;
+                using rank_t = offsets_const_raster_t::index_type::rank_type;
+                // make an index out of the python tuple
+                index_t idx { pyIdx[0].cast<rank_t>(), pyIdx[1].cast<rank_t>() };
+                // get the data and return it
+                return map[idx];
+            },
+            // the signature
+            "index"_a,
+            // the docstring
+            "access the data at the given index")
         // data read access given an offset
-        .def("__getitem__",
-             // delegate directly to the {offsets_const_raster_t}
-             [](const offsets_const_raster_t & map, size_t offset) {
-                 // easy enough
-                 return map[offset];
-             },
-             // the signature
-             "offset"_a,
-             // the docstring
-             "access the data at the given offset"
-             )
+        .def(
+            "__getitem__",
+            // delegate directly to the {offsets_const_raster_t}
+            [](const offsets_const_raster_t & map, size_t offset) {
+                // easy enough
+                return map[offset];
+            },
+            // the signature
+            "offset"_a,
+            // the docstring
+            "access the data at the given offset")
         // done
         ;
 
@@ -99,8 +97,7 @@ offsets_const_raster(py::module &m) {
 
 // helper definitions
 auto
-ampcor::py::
-offsets_const_raster_constructor(py::tuple pyShape, py::object pyURI)
+ampcor::py::offsets_const_raster_constructor(py::tuple pyShape, py::object pyURI)
     -> unique_pointer<offsets_const_raster_t>
 {
     // extract the shape

@@ -12,8 +12,8 @@
 
 // add bindings to the inventory
 void
-ampcor::py::
-exceptions(py::module & m) {
+ampcor::py::exceptions(py::module & m)
+{
     // all done
     return;
 }
