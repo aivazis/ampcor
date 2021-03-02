@@ -32,7 +32,7 @@ public:
     inline BMP(int height, int width);
     // move semantics
     inline BMP(BMP &&);
-    BMP & operator=(BMP &&);
+    inline BMP & operator=(BMP &&);
 
     // accessors
 public:
