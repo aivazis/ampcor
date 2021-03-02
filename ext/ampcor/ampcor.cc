@@ -33,11 +33,6 @@ PYBIND11_MODULE(ampcor, m)
     ampcor::py::shape3d(m);
     ampcor::py::layout3d(m);
 
-    // rasters
-    ampcor::py::raster_layout(m);
-    // arenas
-    ampcor::py::arena_layout(m);
-
     // slc
     ampcor::py::slc(m);
     ampcor::py::slc_raster(m);
@@ -52,7 +47,9 @@ PYBIND11_MODULE(ampcor, m)
     ampcor::py::arena(m);
     ampcor::py::arena_const_raster(m);
 
-    // correlators
+    // plans
+    // ampcor::py::plan(m);
+    // and correlators
     ampcor::py::sequential(m);
 
     // viz

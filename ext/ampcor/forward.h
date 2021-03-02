@@ -58,11 +58,11 @@ namespace ampcor::py {
     // arenas
     void arena(py::module &);
     void arena_const_raster(py::module &);
-    // the arena layout
-    void arena_layout(py::module &);
 
     // access to the correlators
     void sequential(py::module &);
+    // and plans
+    // void plan(py::module &);
 
     // viz
     void viz(py::module &);
