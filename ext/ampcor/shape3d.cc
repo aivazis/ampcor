@@ -21,11 +21,11 @@ ampcor::py::shape3d(py::module & m)
     // constructor
     shapeCls.def(
         // convert python tuples into shapes
-        py::init([](std::tuple<int, int> pyShape) {
+        py::init([](std::tuple<int, int, int> pyShape) {
             // unpack
-            auto [s0, s1] = pyShape;
+            auto [s0, s1, s2] = pyShape;
             // build a shape and return it
-            return new layout3d_t::shape_type(s0, s1);
+            return new layout3d_t::shape_type(s0, s1, s2);
         }),
         // the signature
         "shape"_a);

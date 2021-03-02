@@ -23,11 +23,11 @@ ampcor::py::index3d(py::module & m)
     // constructor
     indexCls.def(
         // convert python tuples into indices
-        py::init([](std::tuple<int, int> pyIndex) {
+        py::init([](std::tuple<int, int, int> pyIndex) {
             // unpack
-            auto [s0, s1] = pyIndex;
+            auto [s0, s1, s2] = pyIndex;
             // build an index and return it
-            return new layout3d_t::index_type(s0, s1);
+            return new layout3d_t::index_type(s0, s1, s2);
         }),
         // the signature
         "index"_a);
