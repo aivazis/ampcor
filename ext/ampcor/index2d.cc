@@ -41,6 +41,7 @@ ampcor::py::index2d(py::module & m)
         // the docstring
         "the number of entries this index");
 
+    // metamethods
     // access to individual ranks
     indexCls.def(
         // the name of the method
@@ -48,7 +49,7 @@ ampcor::py::index2d(py::module & m)
         // the getter
         [](const index2d_t & index, int idx) { return index[idx]; },
         // the signature
-        "index"_a,
+        "rank"_a,
         // the docstring
         "get the value of a given rank");
 
@@ -78,6 +79,43 @@ ampcor::py::index2d(py::module & m)
         },
         // the docstring
         "generate a string representation");
+
+    // arithmetic
+    // left scalar multiplication
+    indexCls.def(
+        // the name of the method
+        "__mul__",
+        // the implementation
+        [](const index2d_t & index, int scale) {
+            // scale up and return the result
+            return scale * index;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // right scalar multiplication
+    indexCls.def(
+        // the name of the method
+        "__rmul__",
+        // the implementation
+        [](const index2d_t & index, int scale) -> index2d_t {
+            // scale up and return the result
+            return scale * index;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // addition
+    indexCls.def(
+        // the name of the method
+        "__add__",
+        // the implementation
+        [](const index2d_t & idx1, const index2d_t & idx2) -> index2d_t {
+            // add the two indices and return the result
+            return idx1 + idx2;
+        },
+        // the docstring
+        "scalar multiplication");
 
     // all done
     return;

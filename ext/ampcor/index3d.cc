@@ -48,7 +48,7 @@ ampcor::py::index3d(py::module & m)
         // the getter
         [](const index3d_t & index, int idx) { return index[idx]; },
         // the signature
-        "index"_a,
+        "rank"_a,
         // the docstring
         "get the value of a given rank");
 
@@ -78,6 +78,43 @@ ampcor::py::index3d(py::module & m)
         },
         // the docstring
         "generate a string representation");
+
+    // arithmetic
+    // left scalar multiplication
+    indexCls.def(
+        // the name of the method
+        "__mul__",
+        // the implementation
+        [](const index3d_t & index, int scale) {
+            // scale up and return the result
+            return scale * index;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // right scalar multiplication
+    indexCls.def(
+        // the name of the method
+        "__rmul__",
+        // the implementation
+        [](const index3d_t & index, int scale) -> index3d_t {
+            // scale up and return the result
+            return scale * index;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // addition
+    indexCls.def(
+        // the name of the method
+        "__add__",
+        // the implementation
+        [](const index3d_t & idx1, const index3d_t & idx2) -> index3d_t {
+            // add the two indices and return the result
+            return idx1 + idx2;
+        },
+        // the docstring
+        "scalar multiplication");
 
     // all done
     return;

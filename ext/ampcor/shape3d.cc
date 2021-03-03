@@ -86,6 +86,43 @@ ampcor::py::shape3d(py::module & m)
         // the docstring
         "generate a string representation");
 
+    // arithmetic
+    // left scalar multiplication
+    shapeCls.def(
+        // the name of the method
+        "__mul__",
+        // the implementation
+        [](const shape3d_t & shape, int scale) {
+            // scale up and return the result
+            return scale * shape;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // right scalar multiplication
+    shapeCls.def(
+        // the name of the method
+        "__rmul__",
+        // the implementation
+        [](const shape3d_t & shape, int scale) -> shape3d_t {
+            // scale up and return the result
+            return scale * shape;
+        },
+        // the docstring
+        "scalar multiplication");
+
+    // addition
+    shapeCls.def(
+        // the name of the method
+        "__add__",
+        // the implementation
+        [](const shape3d_t & shp1, const shape3d_t & shp2) -> shape3d_t {
+            // add the two shapes and return the result
+            return shp1 + shp2;
+        },
+        // the docstring
+        "scalar multiplication");
+
     // all done
     return;
 }
