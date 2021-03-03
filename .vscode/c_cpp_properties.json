@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "lambda",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${env:USER_TOOLS_DIR}/mm/${env:mm_bld_abi}/**",
+                "/usr/include/python3.8/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
