@@ -26,9 +26,9 @@
         "graphql": "latest",
         "lazysizes": "latest",
         "path-browserify": "latest",
-        "react": "experimental",
-        "react-dom": "experimental",
-        "react-relay": "experimental",
+        "react": "latest",
+        "react-dom": "latest",
+        "react-relay": "latest",
         "react-router": "latest",
         "react-router-dom": "latest",
         "regenerator-runtime": "latest"
