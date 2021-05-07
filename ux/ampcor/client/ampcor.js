@@ -77,7 +77,6 @@ const Root = () => (
 
 
 // render
-ReactDOM.unstable_createRoot(document.getElementById('ampcor')).render(<Root />)
-
+ReactDOM.render(<Root />, document.getElementById('ampcor'))
 
 // end of file
