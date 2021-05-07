@@ -61,4 +61,45 @@ def constant():
     return Constant
 
 
+# programmatic access to the entities in this package
+def newMGA(**kwds):
+    """
+    Create a new {mga} correlator
+    """
+    # get the correlator
+    from .MGA import MGA
+    # instantiate one and return it
+    return MGA(**kwds)
+
+
+def newGrid(**kwds):
+    """
+    Create a new grid based point generator
+    """
+    # get the generator
+    from .Grid import Grid
+    # instantiate one and return it
+    return Grid(**kwds)
+
+
+def newUniformGrid(**kwds):
+    """
+    A point generator that constructs a uniformly spaced grid
+    """
+    # get the generator
+    from .UniformGrid import UniformGrid
+    # instantiate one and return it
+    return UniformGrid(**kwds)
+
+
+def newConstant(**kwds):
+    """
+    A functor that applies a fixed offset
+    """
+    # get the functor
+    from .Constant import Constant
+    # instantiate one and return it
+    return Constant(**kwds)
+
+
 # end of file
