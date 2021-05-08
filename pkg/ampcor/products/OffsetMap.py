@@ -78,18 +78,29 @@ class OffsetMap(ampcor.flow.product,
         """
         Map me over the contents of {filename}
         """
+        # unpack the shape
+        shape = self.shape
+        # attempt to
+        try:
+            # resolve the filename using the {vfs}
+            uri = self.pyre_fileserver[self.data].uri
+        # if that fails
+        except Exception:
+            # use the raw name
+            uri = self.data
+
         # if we are opening in read-only mode
         if mode == "r":
             # make a const raster
-            raster = ampcor.libampcor.OffsetsConstRaster(shape=self.shape, uri=self.data)
+            raster = ampcor.libampcor.OffsetsConstRaster(shape=shape, uri=uri)
         # if we are opening an existing one in read/write mode
         elif mode == "w":
             # make a modifiable raster
-            raster = ampcor.libampcor.OffsetsRaster(shape=self.shape, uri=self.data, new=False)
+            raster = ampcor.libampcor.OffsetsRaster(shape=shape, uri=uri, new=False)
         # if we are creating one
         elif mode == "n":
             # make a new raster; careful: this deletes existing products
-            raster = ampcor.libampcor.OffsetsRaster(shape=self.shape, uri=self.data, new=True)
+            raster = ampcor.libampcor.OffsetsRaster(shape=shape, uri=uri, new=True)
         # otherwise
         else:
             # grab the journal
@@ -98,7 +109,7 @@ class OffsetMap(ampcor.flow.product,
             channel = journal.error("ampcor.products.slc")
             # and complain
             channel.line(f"unknown mode '{mode}'")
-            channel.line(f"  while opening '{self.data}'")
+            channel.line(f"  while opening '{uri}'")
             channel.line(f"  in ampcor.products.OffsetMap.open();")
             channel.line(f"  valid modes are: 'r', 'w', 'n'")
             channel.log()
@@ -140,6 +151,19 @@ class OffsetMap(ampcor.flow.product,
         self.raster[idx] = points
         # all done
         return
+
+
+    # framework hooks
+    def pyre_traitModified(self, trait, new, old):
+        """
+        Handle post construction configuration changes
+        """
+        # when my shape changes
+        if trait.name == "shape":
+            # recompute my spec
+            self.spec = ampcor.libampcor.Offsets(shape=self.shape)
+        # all done
+        return self
 
 
     # implementation details
