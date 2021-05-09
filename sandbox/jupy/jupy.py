@@ -64,9 +64,9 @@ constant.shift = 0,0
 # to points in the secondary image to form tiles
 grid = ampcor.correlators.newGrid(name="")
 # the strategy for generating points in the reference image
-domain = uniform
+grid.domain = uniform
 # and mapping these onto points in the secondary image
-functor = constant
+grid.functor = constant
 
 # the correlator
 mga = ampcor.correlators.newMGA(name="large")
