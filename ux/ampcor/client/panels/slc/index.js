@@ -128,7 +128,7 @@ const Panel = React.forwardRef(({uri, tileShape, style}, mosaicRef) => {
 })
 
 
-// turn the panel into a mosaci context provider and publish
+// turn the panel into a mosaic context provider and publish
 // props:
 //           uri: the seed of the tile URI, up to selecting which input data product to show
 //     tileShape: the dimensions of each tile
