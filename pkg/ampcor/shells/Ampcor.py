@@ -29,7 +29,7 @@ class Ampcor(pyre.plexus, family='ampcor.shells.plexus'):
         Generate the help banner
         """
         # show the license header
-        return ampcor.meta.license
+        return ampcor.meta.license.splitlines()
 
 
     # interactive session management
