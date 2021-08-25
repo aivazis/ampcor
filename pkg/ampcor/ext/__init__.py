@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
-# parasim
 # (c) 1998-2021 all rights reserved
-#
+
 
 """
 Standardized access to CPU and GPU acceleration
@@ -15,6 +14,7 @@ The following conditions must be true before we can provide CUDA support:
  - ampcor must have been built with CUDA support
  - the current host must have at least one compatible device
 """
+
 
 # attempt to
 try:
