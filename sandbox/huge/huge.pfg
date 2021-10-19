@@ -1,0 +1,59 @@
+;
+; michael a.g. aïvázis <michael.aivazis@para-sim.com>
+; parasim
+; (c) 1998-2020 all rights reserved
+;
+
+
+; workflow configuration
+huge:
+    ; reference raster
+    reference = slc#ref
+    ; secondary raster
+    secondary = slc#sec
+    ; the output of this process
+    offsetMap = offsets#dense
+    ; the factory
+    correlator = mga#tiles.large
+
+
+; inputs
+; the reference raster
+ref:
+    ; shape
+    shape = 36864,10344
+    ; pfs path to the data file
+    data = ../../../data/alos/20061231.slc
+
+; the secondary raster
+sec:
+    ; shape
+    shape = 36864,10344
+    ; pfs path to the data file
+    data = ../../../data/alos/20061231.slc
+
+; output
+; a dense tiling
+dense:
+    ; shape
+    shape = 13700, 1300
+    ; pfs path to the file; currently left in the working directory
+    data = offsets_dense.dat
+
+
+; correlator that uses large chips
+tiles.large:
+    ; reference chip size
+    chip = 128, 128
+    ; padding used to form the search window in the secondary raster
+    padding = 32, 32
+    ; the refinement factor
+    refineFactor = 2
+    ; the refinement margin
+    refineMargin = 8
+    ; the zoom factor
+    zoomFactor = 32
+    ; configure the cover generator; values taken from the inputs to insarflow.offsetprf
+    cover.functor.shift = -111, 256
+
+; end of file
