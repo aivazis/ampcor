@@ -137,9 +137,12 @@ class Plan:
         refCells, secCells = self.cells
         refBytes = refCells * 8
         secBytes = secCells * 8
-        yield f"{margin}{indent}footprint:"
+        yield f"{margin}{indent}arena footprint:"
         yield f"{margin}{indent*2}reference: {refCells} cells in {refBytes} bytes"
         yield f"{margin}{indent*2}secondary: {secCells} cells in {secBytes} bytes"
+        yield f"{margin}{indent*2}    total: {refBytes + secBytes} bytes"
+
+        return
 
         # go through the pairs
         for offset, ref,sec in self.tiles:
