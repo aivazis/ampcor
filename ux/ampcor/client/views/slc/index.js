@@ -28,7 +28,7 @@ const slc = (props) => {
     // extract its shape
     const rasterShape = rasterShapes[slc]
 
-    // specify the shape of idividual tiles
+    // specify the shape of individual tiles
     const tileShape = [512, 512]
 
     // build the tile uri stem
@@ -41,8 +41,8 @@ const slc = (props) => {
             <NamedTools choices={rasters} select={setSLC} style={styles.sourceToolbox} />
             {/* the panel */}
             <SLC uri={uri}
-                 rasterShape={rasterShape} tileShape={tileShape}
-                 style={styles?.slcPanel} />
+                rasterShape={rasterShape} tileShape={tileShape}
+                style={styles?.slcPanel} />
         </section>
     )
 }
