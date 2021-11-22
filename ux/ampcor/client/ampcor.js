@@ -15,7 +15,7 @@ import 'lazysizes/plugins/native-loading/ls.native-loading'
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom'
 import { RelayEnvironmentProvider } from 'react-relay/hooks'
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 
 // locals
@@ -25,8 +25,9 @@ import styles from './styles'
 import { environment, FlowContext, useFlowConfigQuery } from '~/context'
 // views
 import {
-    Header, Footer,
-    Flow, EXP, SLC, Gamma, Offsets, Plan, Loading, Stop
+    Main,
+    Flow, EXP, SLC, Gamma, Offsets, Plan,
+    Loading, Stop
 } from '~/views'
 
 
@@ -38,29 +39,25 @@ const App = () => {
     // render
     return (
         <FlowContext.Provider value={data.flow}>
-            <Router>
-                <div style={styles.layout}>
-                    <Header />
-                    <Switch>
-                        {/* the top level views */}
-                        <Route path="/flow" component={Flow} />
-                        <Route path="/exp" component={EXP} />
-                        <Route path="/slc" component={SLC} />
-                        <Route path="/gamma" component={Gamma} />
-                        <Route path="/offsets" component={Offsets} />
-                        <Route path="/plan" component={Plan} />
+            <Routes>
+                <Route path="/" element={<Main />} >
+                    {/* the top level views */}
+                    <Route path="flow" element={<Flow />} />
+                    <Route path="exp" element={<EXP />} />
+                    <Route path="slc*" element={<SLC />} />
+                    <Route path="gamma" element={<Gamma />} />
+                    <Route path="offsets" element={<Offsets />} />
+                    <Route path="plan" element={<Plan />} />
 
-                        {/* the closing page */}
-                        <Route path="/stop" component={Stop} />
-                        {/* the page to render while waiting for data to arrive */}
-                        <Route path="/loading" component={Loading} />
+                    {/* the closing page */}
+                    <Route path="stop" element={<Stop />} />
+                    {/* the page to render while waiting for data to arrive */}
+                    <Route path="loading" element={<Loading />} />
 
-                        {/* default landing spot */}
-                        <Route path="/" component={Flow} />
-                    </Switch>
-                    <Footer />
-                </div>
-            </Router>
+                    {/* default landing spot */}
+                    <Route index element={<Flow />} />
+                </Route>
+            </Routes>
         </FlowContext.Provider>
     )
 }
@@ -70,7 +67,9 @@ const App = () => {
 const Root = () => (
     <RelayEnvironmentProvider environment={environment}>
         <Suspense fallback={<Loading />}>
-            <App />
+            <Router>
+                <App />
+            </Router>
         </Suspense>
     </RelayEnvironmentProvider>
 )
