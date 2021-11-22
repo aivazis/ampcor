@@ -9,6 +9,7 @@
 // app layout
 export Header from './header'
 export Footer from './footer'
+export { Main } from './main'
 
 // the landing pages
 export Flow from './flow'
