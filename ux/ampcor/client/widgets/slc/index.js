@@ -15,12 +15,12 @@ import Phase from './phase'
 
 
 // the slc signal toolbox
-//   - contains three buttons that toglle between shown amplitude, phase, or the complex signal
-//   - assumes the client understand the words "amplitude", "phase", and "complex"
+//   - contains three buttons that toggle between amplitude, phase, or the complex signal
+//   - assumes the client understands the words "amplitude", "phase", and "complex"
 //   - defaults to "amplitude"
 //
 //   selector: inform the client about the user's choice
-const slc = ({select, style}) => {
+const slc = ({ select, style }) => {
     // state management
     // the default selection
     const [selection, setSelection] = useState("amplitude")
