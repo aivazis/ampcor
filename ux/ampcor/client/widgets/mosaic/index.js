@@ -15,7 +15,7 @@ import { Tile } from 'widgets'
 
 
 // currently, a tile is an {img} that's lazy loaded from a {uri}
-const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
+const widget = React.forwardRef(({ uri, origins, style }, mosaicRef) => {
     // get access to the current pan shift
     const [pan, setPan] = MosaicContext.usePan()
 
@@ -46,7 +46,7 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
     }
     // mix the mosaic style
     const mosaicStyle = {
-        // using the suppplied and local styles
+        // using the supplied and local styles
         ...styles.mosaic, ...style?.mosaic,
     }
     // finally, the tile style is a mix of
@@ -61,17 +61,17 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
         (partial, index) => `${partial}x${index}`,
         // which is primed by converting the first index into a string
         first.toString()
-        )
+    )
     // given the origin of a tile, build its uri
     const tileURI = (origin) => path.join(uri, foldRanks(...origin))
 
     // on double click, center to the mouse coordinates
-    const center = ({clientX, clientY}) => {
+    const center = ({ clientX, clientY }) => {
         // get the viewport
         const viewport = mosaicRef?.current
         // if it has been rendered
         if (viewport) {
-            // get the viewport boundinbox
+            // get the viewport bounding box
             const box = viewport.getBoundingClientRect()
 
             // compute the location of the click relative to the viewport
@@ -85,8 +85,8 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
             const top = viewport.scrollTop
             // and scroll to the new location
             viewport.scroll({
-                top: top + y - height/2,
-                left: left + x - width/2,
+                top: top + y - height / 2,
+                left: left + x - width / 2,
                 behavior: "auto",
             })
         }
@@ -97,13 +97,13 @@ const widget = React.forwardRef(({uri, origins, style}, mosaicRef) => {
         <div ref={mosaicRef} style={viewportStyle} onDoubleClick={center} >
             <div style={mosaicStyle} >
                 {origins.map(origin => {
-                     // form the tile uri
-                     const uri = tileURI(origin)
-                     // render
-                     return (
-                         <Tile key={uri} uri={uri} style={tileStyle} />
-                     )
-                 })}
+                    // form the tile uri
+                    const uri = tileURI(origin)
+                    // render
+                    return (
+                        <Tile key={uri} uri={uri} style={tileStyle} />
+                    )
+                })}
             </div>
         </div>
     )
