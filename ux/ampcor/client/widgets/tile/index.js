@@ -6,19 +6,19 @@
 
 
 // externals
-import React, { useState } from 'react'
+import React from 'react'
 // locals
 import styles from './style'
 
 
 // currently, a tile is an {img} that's lazy loaded from a {uri}
-const widget = ({uri, style}) => {
+const widget = ({ uri, style }) => {
     // mix the styling
     const tileStyle = { ...styles, ...style }
     // render
     return (
         <img loading="lazy" className="lazyload" data-src={uri}
-             style={tileStyle}
+            style={tileStyle}
         />
     )
 }
