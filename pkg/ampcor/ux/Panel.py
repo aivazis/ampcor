@@ -142,7 +142,7 @@ class Panel(ampcor.shells.command, family="ampcor.cli.ux"):
         channel.log(f"while scanning {request.url}")
         channel.log(f"couldn't understand the signal type")
         # if firewalls aren't fatal
-        return server.documents.NorFound(server=server)
+        return server.documents.NotFound(server=server)
 
 
     # implementation details
