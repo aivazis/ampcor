@@ -21,18 +21,6 @@ PYBIND11_MODULE(ampcor, m)
     // register the exception types
     ampcor::py::exceptions(m);
 
-    // layouts
-    // 2d
-    ampcor::py::order2d(m);
-    ampcor::py::index2d(m);
-    ampcor::py::shape2d(m);
-    ampcor::py::layout2d(m);
-    // 3d
-    ampcor::py::order3d(m);
-    ampcor::py::index3d(m);
-    ampcor::py::shape3d(m);
-    ampcor::py::layout3d(m);
-
     // slc
     ampcor::py::slc(m);
     ampcor::py::slc_raster(m);

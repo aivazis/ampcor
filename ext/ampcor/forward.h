@@ -30,18 +30,6 @@ namespace ampcor::py {
     // exceptions
     void exceptions(py::module &);
 
-    // layouts
-    // 2d
-    void order2d(py::module &);
-    void index2d(py::module &);
-    void shape2d(py::module &);
-    void layout2d(py::module &);
-    // 3d
-    void order3d(py::module &);
-    void index3d(py::module &);
-    void shape3d(py::module &);
-    void layout3d(py::module &);
-
     // SLC
     void slc(py::module &);
     void slc_raster(py::module &);
