@@ -14,13 +14,13 @@ const Context = React.createContext({
     // the reference to the mosaic
     mosaicRef: null,
     // the raster shape
-    rasterShape: [0,0],
+    rasterShape: [0, 0],
     // the shape of the tile grid
-    gridShape: [0,0],
+    gridShape: [0, 0],
     // the shape of the mosaic at the current zoomlevel
-    mosaicShape: [0,0],
+    mosaicShape: [0, 0],
     // the shape of the mosaic tiles
-    tileShape: [0,0],
+    tileShape: [0, 0],
 
     // the current zoom level
     zoom: 0,
@@ -53,7 +53,7 @@ const Provider = ({
     // the raster and tile shapes
     rasterShape, tileShape,
     // the zoom range and initial value
-    minZoom=0, initZoom=Infinity, maxZoom=Infinity,
+    minZoom = 0, initZoom = Infinity, maxZoom = Infinity,
     // my children
     children
 }) => {
@@ -115,7 +115,7 @@ const usePan = () => {
     // pull  the values from the context
     const { pan, setPan } = React.useContext(Context)
     // and make them available
-    return [ pan, setPan ]
+    return [pan, setPan]
 }
 
 
@@ -133,19 +133,19 @@ const useZoom = () => {
         setZoom,
         // the pan mutator
         setPan,
-    // from the context
+        // from the context
     } = React.useContext(Context)
 
     // build the callbacks that tie the zoom controls to my state
     // zoom in is clipped at {minZoom}
     const zoomIn = () => {
-        // zoom in is clipped at {minZoom}, so if we are arleady there
-        if (zoom <= minZoom ) {
+        // zoom in is clipped at {minZoom}, so if we are already there
+        if (zoom <= minZoom) {
             // bail
             return
         }
         // adjust the zoom level
-        setZoom(zoom-1)
+        setZoom(zoom - 1)
 
         // get the {mosaic} viewport
         const view = mosaicRef.current
@@ -159,8 +159,8 @@ const useZoom = () => {
         // unpack the shape of the displayed raster
         const [gheight, gwidth] = mosaicShape
         // compute the new scroll position
-        const top = 2 * scrollTop + Math.min(height, gheight) - Math.min(height/2, gheight)
-        const left = 2 * scrollLeft + Math.min(width, gwidth) - Math.min(width/2, gwidth)
+        const top = 2 * scrollTop + Math.min(height, gheight) - Math.min(height / 2, gheight)
+        const left = 2 * scrollLeft + Math.min(width, gwidth) - Math.min(width / 2, gwidth)
         // record it
         setPan({ top, left })
 
@@ -175,7 +175,7 @@ const useZoom = () => {
             return
         }
         // adjust the level
-        setZoom(zoom+1)
+        setZoom(zoom + 1)
 
         // get the {mosaic}
         const view = mosaicRef.current
@@ -189,12 +189,12 @@ const useZoom = () => {
         // unpack the shape of the displayed raster
         const [gheight, gwidth] = mosaicShape
         // target pixel
-        const cx = scrollLeft + Math.min(width,gwidth)/2
-        const cy = scrollTop + Math.min(height,gheight)/2
+        const cx = scrollLeft + Math.min(width, gwidth) / 2
+        const cy = scrollTop + Math.min(height, gheight) / 2
 
         // compute the new scroll position
-        const top = scrollTop/2 + Math.min(height, gheight)/4 - Math.min(height, gheight/2)/2
-        const left = scrollLeft/2 + Math.min(width, gwidth)/4 - Math.min(width, gwidth/2)/2
+        const top = scrollTop / 2 + Math.min(height, gheight) / 4 - Math.min(height, gheight / 2) / 2
+        const left = scrollLeft / 2 + Math.min(width, gwidth) / 4 - Math.min(width, gwidth / 2) / 2
         // record it
         setPan({ top, left })
 
