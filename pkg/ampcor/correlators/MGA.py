@@ -217,11 +217,6 @@ class MGA(ampcor.flow.factory,
         # describe my coarse map strategy
         yield from self.cover.show(indent, margin=margin+indent)
 
-        # unpack the rasters
-        reference = self.reference
-        secondary = self.secondary
-        # grab the output
-        offsets = self.offsets
         # make a plan
         map, plan = self.plan()
         # and show me the plan details
