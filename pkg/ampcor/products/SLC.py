@@ -28,7 +28,7 @@ class SLC(ampcor.flow.product,
 
 
     # public data
-    # the memory footprint of an individual pixel; the {SLC} extesion knows...
+    # the memory footprint of an individual pixel; the {SLC} extension knows...
     bytesPerPixel = ampcor.libampcor.SLC.bytesPerPixel
 
     @property
