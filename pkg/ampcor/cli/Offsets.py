@@ -39,14 +39,15 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         Display the action configuration
         """
+        # get the report
+        report = self.show(plexus=plexus)
+
         # grab a channel
         channel = journal.info("ampcor.info")
-        # get things going
-        channel.line()
-        # get the report
-        doc = "\n".join(self.show(plexus=plexus))
-        # and print it
-        channel.log(doc)
+        # print the report
+        channel.report(report=report)
+        # and flush
+        channel.log()
         # all done; indicate success
         return 0
 
@@ -89,16 +90,15 @@ class Offsets(ampcor.shells.command, family="ampcor.cli.offsets"):
         """
         # get shell
         shell = plexus.shell
+        # show the shell configuration
+        yield f"{margin}shell: {shell}"
+        yield f"{margin}{indent}hosts: {shell.hosts}"
+        yield f"{margin}{indent}tasks: {shell.tasks} per host"
+        yield f"{margin}{indent}gpus:  {shell.gpus} per task"
+
         # get my flow
         flow = self.flow
-
-        # show the shell configuration
-        yield f"{margin}shell: {plexus.shell}"
-        yield f"{margin}{indent}hosts: {plexus.shell.hosts}"
-        yield f"{margin}{indent}tasks: {plexus.shell.tasks} per host"
-        yield f"{margin}{indent}gpus:  {plexus.shell.gpus} per task"
-
-        # flow
+        # show me
         yield f"{margin}flow:"
         yield from flow.show(margin=margin+indent, indent=indent)
 
