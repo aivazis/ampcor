@@ -25,6 +25,16 @@ def offsets():
     return Offsets
 
 
+@foundry(implements=action, tip="examine the proposed correlation plan")
+def plan():
+    # get the action
+    from .Plan import Plan
+    # borrow its doctsring
+    __doc__ = Plan.__doc__
+    # and publish it
+    return Plan
+
+
 # temporary vis
 @foundry(implements=action, tip="visualize the correlation surface")
 def mdy():
