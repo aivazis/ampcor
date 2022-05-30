@@ -35,11 +35,11 @@ class Grid(ampcor.component,
         Build an offset map between {reference} and {secondary}
         """
         # generate the set of points in the domain
-        p = tuple(self.domain.points(bounds=bounds, shape=shape))
+        p = self.domain.points(bounds=bounds, shape=shape)
         # map them
-        q = tuple(self.functor.eval(points=p))
+        pairings = self.functor.eval(points=p)
         # pack and ship
-        return p, q
+        return pairings
 
 
     # interface
