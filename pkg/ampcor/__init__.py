@@ -8,6 +8,8 @@
 
 # import and publish pyre symbols
 from pyre import (
+    # bindings for {libpyre}
+    libpyre,
     # protocols, components, traits, and their infrastructure
     schemata, constraints, properties, protocol, component, foundry,
     # decorators
