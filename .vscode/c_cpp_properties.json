@@ -4,13 +4,13 @@
             "name": "lambda",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${env:USER_TOOLS_DIR}/mm/${env:mm_bld_abi}/**",
-                "/usr/include/python3.8/**"
+                "${env:USER_TOOLS_DIR}/mm/${env:mm_abi}/**",
+                "/usr/include/python3.9/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/clang",
             "cStandard": "gnu17",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x64"
         }
     ],
