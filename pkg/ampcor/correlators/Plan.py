@@ -34,35 +34,37 @@ class Plan:
         """
         Compute the total number of cells required to store the reference and secondary tiles
         """
-        # initialize the footprints
-        ref = 0
-        sec = 0
-        # go through the tiles
-        for _, refTile, secTile in self.tiles:
-            # compute their footprints and update the counters
-            ref += refTile.cells
-            sec += secTile.cells
+        # get the number of pairings
+        pairs = len(self.map)
+
+        # the total number of cells needed to store the reference tiles
+        ref = pairs * self.chip.cells
+        # and the total number of cells needed to store the secondary tiles
+        sec = pairs * self.window.cells
+
         # all done
         return ref, sec
 
 
     # meta-methods
-    def __init__(self, correlator, regmap, rasters, **kwds):
+    def __init__(self, correlator, map, **kwds):
         # chain up
         super().__init__(**kwds)
 
-        # get the reference tile size
-        self.chip = correlator.chip
-        # and the search window padding
-        self.padding = correlator.padding
+        # save the pairings
+        self.map = map
         # make me a tile so i can behave like a grid
         self.tile = ampcor.grid.tile(shape=correlator.offsets.shape)
 
-        # compute the secondary window shape
-        self.window = tuple(c+2*p for c,p in zip(self.chip, self.padding))
+        # get the grid bindings
+        libgrid = ampcor.libpyre.grid
 
-        # initialize my container
-        self.tiles = tuple(self.assemble(regmap=regmap, rasters=rasters))
+        # get the reference tile size
+        self.chip = libgrid.Shape2D(shape=correlator.chip)
+        # and the search window padding
+        self.padding = libgrid.Shape2D(shape=correlator.padding)
+        # compute the secondary window shape
+        self.window = self.chip + 2 * self.padding
 
         # all done
         return
@@ -70,60 +72,17 @@ class Plan:
 
     def __len__(self):
         """
-        By definition, my length is the number of valid tile pairs
+        By definition, my length is the number of tile pairs
         """
-        # invariant: either both tiles are good, or both are bad
-        return len(self.tiles)
+        # easy enough
+        return len(self.map)
 
 
-    # implementation details
-    def assemble(self, rasters, regmap):
-        """
-        Form the set of pairs of tiles to correlate in order to refine {regmap}, a coarse offset
-        map from a reference image to a secondary image
-        """
-        # unpack the rasters
-        reference, secondary = rasters
-        # get the reference tile size
-        chip = self.chip
-        # and the search window padding
-        padding = self.padding
-
-        # go through matching pairs of points in the initial guess
-        for pid, (ref, sec) in enumerate(zip(*regmap)):
-            # form the upper left hand corner of the reference tile
-            origin = tuple(r - c//2 for r,c in zip(ref, chip))
-            # attempt to make a slice; invalid specs get rejected by the slice factory
-            refSlice = reference.slice(origin=origin, shape=chip)
-            # if the slice is not a good one
-            if not refSlice:
-                # move on
-                continue
-
-            # the upper left hand corner of the secondary tile
-            origin = tuple(s - c//2 - p for s,c,p in zip(sec, chip, padding))
-            # and its shape
-            shape = tuple(c + 2*p for c,p in zip(chip, padding))
-            # try to turn this into a slice
-            secSlice = secondary.slice(origin=origin, shape=shape)
-            # if either slice is invalid
-            if not secSlice:
-                # move on
-                continue
-
-            # if both are good, mark them and publish them
-            yield pid, refSlice, secSlice
-
-        # all done
-        return
-
-
-    # interface
+    # debugging
     def show(self, indent, margin):
         """
         Display details about this plan
         """
-        # get the slc product spec
         slc = ampcor.products.slc()
         # so we can ask it for its size
         slcPixel = slc.bytesPerPixel
@@ -131,41 +90,18 @@ class Plan:
         # sign on
         yield f"{margin}plan:"
         # tile info
+        yield f"{margin}{indent}pairs: {len(self)}"
         yield f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}"
-        yield f"{margin}{indent}pairs: {len(self)} out of {self.tile.size}"
         # memory footprint
         refCells, secCells = self.cells
-        refBytes = refCells * 8
-        secBytes = secCells * 8
+        refBytes = refCells * slcPixel / 1024**3
+        secBytes = secCells * slcPixel / 1024**3
         yield f"{margin}{indent}arena footprint:"
-        yield f"{margin}{indent*2}reference: {refCells} cells in {refBytes} bytes"
-        yield f"{margin}{indent*2}secondary: {secCells} cells in {secBytes} bytes"
-        yield f"{margin}{indent*2}    total: {refBytes + secBytes} bytes"
+        yield f"{margin}{indent*2}reference: {refCells} cells in {refBytes:.3f} Gb"
+        yield f"{margin}{indent*2}secondary: {secCells} cells in {secBytes:.3f} Gb"
+        yield f"{margin}{indent*2}    total: {refBytes + secBytes:.3f} Gb"
 
-        return
-
-        # go through the pairs
-        for offset, ref,sec in self.tiles:
-            # compute the index of this pair
-            index = self.tile.index(offset)
-            # if this is a valid pair
-            if ref and sec:
-                # identify the pair
-                yield f"{margin}{indent}pair: {index}"
-                # show me the reference slice
-                yield f"{margin}{indent*2}ref:"
-                yield f"{margin}{indent*3}origin: {tuple(ref.origin)}"
-                yield f"{margin}{indent*3}shape: {tuple(ref.shape)}"
-                # and the secondary slice
-                yield f"{margin}{indent*2}sec:"
-                yield f"{margin}{indent*3}origin: {tuple(sec.origin)}"
-                yield f"{margin}{indent*3}shape: {tuple(sec.shape)}"
-            # otherwise
-            else:
-                # identify the pair as invalid
-                yield f"{margin}{indent}pair: {index} INVALID"
-
-        # all done
+        # don't show the actual points; there may be too many of them
         return
 
 
