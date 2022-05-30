@@ -137,13 +137,12 @@ class MGA(ampcor.flow.factory,
         # outputs
         offsets = self.offsets
 
-        # get the coarse map
+        # get the coarse pairings
         map = self.cover.map(bounds=ref.shape, shape=offsets.shape)
         # make a plan
-        plan = self.Plan(correlator=self, regmap=map, rasters=(ref,sec))
-
+        plan = self.Plan(correlator=self, map=map)
         # all done
-        return map, plan
+        return plan
 
 
     def primeOffsets(self, map):
@@ -218,7 +217,7 @@ class MGA(ampcor.flow.factory,
         yield from self.cover.show(indent, margin=margin+indent)
 
         # make a plan
-        map, plan = self.plan()
+        plan = self.plan()
         # and show me the plan details
         yield from plan.show(indent=indent, margin=margin+indent)
 
