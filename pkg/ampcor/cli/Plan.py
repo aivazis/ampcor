@@ -8,6 +8,7 @@
 
 # externals
 import ampcor
+import journal
 
 
 # declaration
@@ -17,11 +18,37 @@ class Plan(ampcor.shells.command, family='ampcor.cli.plan'):
     """
 
 
+    # my workflow
+    flow = ampcor.specs.ampcor()
+    flow.doc = "the ampcor workflow"
+
+
+    # commands
     @ampcor.export(tip="describe the plan")
     def info(self, plexus, **kwds):
         """
         Describe the proposed correlation plan
         """
+        # make a channel
+        channel = journal.info("ampcor.plan.map")
+
+        # show everything
+        correlator = self.flow.correlator
+        # generate a report
+        report = correlator.show(margin="", indent="  ")
+        # show me
+        channel.report(report)
+
+        # get the offset map
+        offsets = self.flow.offsetMap
+        # generate a report
+        report = offsets.show(margin="", indent="  ")
+        # show me
+        channel.report(report)
+
+        # and flush
+        channel.log()
+
         # all done
         return 0
 
