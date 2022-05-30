@@ -18,19 +18,21 @@ huge:
 
 
 ; inputs
+alos = ../../../data/alos
+
 ; the reference raster
 ref:
     ; shape
     shape = 36864,10344
     ; pfs path to the data file
-    data = ../../../data/alos/20061231.slc
+    data = {alos}/20061231.slc
 
 ; the secondary raster
 sec:
     ; shape
     shape = 36864,10344
     ; pfs path to the data file
-    data = ../../../data/alos/20061231.slc
+    data = {alos}/20061231.slc
 
 ; output
 ; a dense tiling
