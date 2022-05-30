@@ -15,6 +15,8 @@
 
 // journal
 #include <pyre/journal.h>
+// timers
+#include <pyre/timers.h>
 
 // pybind support
 #include <pybind11/pybind11.h>
@@ -43,6 +45,8 @@ namespace ampcor::py {
     // pointer wrappers
     template <class T>
     using unique_pointer = std::unique_ptr<T>;
+
+    using proctimer_t = pyre::timers::process_timer_t;
 }
 
 
