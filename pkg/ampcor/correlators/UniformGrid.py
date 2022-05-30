@@ -28,21 +28,14 @@ class UniformGrid(ampcor.component,
         """
         Cover {bounds} with a grid of uniformly spaced points of the given {shape}
         """
-        # split {bounds} into evenly spaced tiles
-        tile = (b//(s+1) for b,s in zip(bounds, shape))
-        # compute the unallocated border around the raster
-        margin = (b%(s+1) for b,s in zip(bounds, shape))
-        # build the sequences of coordinates for tile centers along each axis
-        ticks = (
-            # by generating the locations
-            tuple(m//2 + (n+1)*t for n in range(g))
-            # given the layout of each axis
-            for g, m, t in zip(shape, margin, tile)
-        )
-        # their cartesian product generates the centers of all the tiles in the grid
-        yield from itertools.product(*ticks)
+        # convert the shape into a grid shape
+        shape = ampcor.libpyre.grid.Shape2D(shape=shape)
+        # repeat for the raster bounds
+        bounds = ampcor.libpyre.grid.Shape2D(shape=bounds)
+        # compute the pairings
+        domain = ampcor.libampcor.uniformGrid(bounds=bounds, shape=shape)
         # all done
-        return
+        return domain
 
 
     # interface
