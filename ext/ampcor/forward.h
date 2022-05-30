@@ -20,7 +20,20 @@ namespace ampcor::py {
     using order3d_t = layout3d_t::order_type;
     using shape3d_t = layout3d_t::shape_type;
     using index3d_t = layout3d_t::index_type;
+
+    // for the maps
+    using point_t = index2d_t;
+    using points_t = std::vector<point_t>;
+
+    // plan
+    using pairing_t = std::tuple<int, index2d_t, index2d_t>;
+    using plan_t = std::vector<pairing_t>;
 }
+
+
+// make the potentially large containers opaque
+PYBIND11_MAKE_OPAQUE(ampcor::py::plan_t);
+PYBIND11_MAKE_OPAQUE(ampcor::py::points_t);
 
 
 // assemble the {ampcor} package namespace
@@ -47,7 +60,7 @@ namespace ampcor::py {
     // access to the correlators
     void sequential(py::module &);
     // and plans
-    // void plan(py::module &);
+    void plan(py::module &);
 
     // viz
     void viz(py::module &);

@@ -36,7 +36,7 @@ PYBIND11_MODULE(ampcor, m)
     ampcor::py::arena_const_raster(m);
 
     // plans
-    // ampcor::py::plan(m);
+    ampcor::py::plan(m);
     // and correlators
     ampcor::py::sequential(m);
 

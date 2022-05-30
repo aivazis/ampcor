@@ -14,6 +14,11 @@
 void
 ampcor::py::opaque(py::module & m)
 {
+    // the correlation plan
+    py::bind_vector<plan_t>(m, "Plan");
+    // collections of indices
+    py::bind_vector<points_t>(m, "Points");
+
     // all done
     return;
 }
