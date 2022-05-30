@@ -178,7 +178,7 @@ class OffsetMap(ampcor.flow.product,
         yield f"{margin}{indent}data: {self.data}"
         yield f"{margin}{indent}shape: {self.shape}"
         yield f"{margin}{indent}points: {self.cells()}"
-        yield f"{margin}{indent}footprint: {self.bytes()} bytes"
+        yield f"{margin}{indent}footprint: {self.bytes()/1024**2:.3f} Mb"
         # all done
         return
 
