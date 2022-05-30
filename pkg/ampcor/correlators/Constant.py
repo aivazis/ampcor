@@ -32,14 +32,12 @@ class Constant(ampcor.component,
         """
         Map the given set of {points} to their images under my transformation
         """
-        # grab my {shift}
-        shift = self.shift
-        # go through the points
-        for point in points:
-            # apply the shift and yield the point
-            yield tuple(p+s for p,s in zip(point, shift))
-        # all done
-        return
+        # grab my {shift} and convert to an index
+        shift = ampcor.libpyre.grid.Index2D(index=self.shift)
+        # invoke my implementation to compute the pairings
+        pairings = ampcor.libampcor.constantShift(points=points, shift=shift)
+        # and return the shifted points
+        return pairings
 
 
     # interface
