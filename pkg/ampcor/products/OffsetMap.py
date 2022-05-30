@@ -172,12 +172,13 @@ class OffsetMap(ampcor.flow.product,
         Generate a report of my configuration
         """
         # my info
-        yield f"{margin}name: {self.pyre_name}"
-        yield f"{margin}family: {self.pyre_family()}"
-        yield f"{margin}data: {self.data}"
-        yield f"{margin}shape: {self.shape}"
-        yield f"{margin}points: {self.cells()}"
-        yield f"{margin}footprint: {self.bytes()} bytes"
+        yield f"offset map:"
+        yield f"{margin}{indent}name: {self.pyre_name}"
+        yield f"{margin}{indent}family: {self.pyre_family()}"
+        yield f"{margin}{indent}data: {self.data}"
+        yield f"{margin}{indent}shape: {self.shape}"
+        yield f"{margin}{indent}points: {self.cells()}"
+        yield f"{margin}{indent}footprint: {self.bytes()} bytes"
         # all done
         return
 
