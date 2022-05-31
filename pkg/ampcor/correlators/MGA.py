@@ -128,7 +128,7 @@ class MGA(ampcor.flow.factory,
     # interface
     def plan(self):
         """
-        Get and validate the plan implied by the initial cover of the rasters
+        Construct the plan implied by the initial cover of the rasters
         """
         # unpack my products
         ref = self.reference
