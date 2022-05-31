@@ -83,8 +83,8 @@ class MGA(ampcor.flow.factory,
 
         # start the timer
         timer.reset().start()
-        # get and validate the plan
-        map, plan = self.plan()
+        # get validate the plan
+        plan = self.plan()
         # stop the timer
         timer.stop()
         # show me
@@ -93,7 +93,7 @@ class MGA(ampcor.flow.factory,
         # start the timer
         timer.reset().start()
         # initialize the output product
-        self.primeOffsets(map=map)
+        self.primeOffsets(plan=plan)
         # stop the timer
         timer.stop()
         # show me
@@ -143,7 +143,7 @@ class MGA(ampcor.flow.factory,
         return plan
 
 
-    def primeOffsets(self, map):
+    def primeOffsets(self, plan):
         """
         Initialize the offset map by recording the initial guesses
         """
@@ -151,15 +151,15 @@ class MGA(ampcor.flow.factory,
         offsets = self.offsets.open(mode="n")
 
         # go through the pairs of corresponding points in tandem
-        for pair, (p, q) in enumerate(zip(*map)):
+        for pair, p, q in plan.map:
             # form the shift that takes {p} into {q}
-            delta = q[0]-p[0], q[1]-p[1]
+            delta = q - p
             # get the entry
             rec = offsets[pair]
             # store the original point
-            rec.ref = p
+            rec.ref = tuple(map(float, p))
             # store the shift
-            rec.delta = delta
+            rec.delta = tuple(map(float, delta))
             # zero out the other fields
             rec.confidence = 0
             rec.snr = 0
