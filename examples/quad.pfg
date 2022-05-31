@@ -30,10 +30,10 @@ quad:
     ; pfs path to the data file
     data = ../../data/alos/20070215.slc
 
-; 4 tiles
+; 16 tiles
 map:
     ; shape
-    shape = 2,2
+    shape = 4,4
     ; pfs path to the file; currently left in the working directory
     data = offsets.dat
 
