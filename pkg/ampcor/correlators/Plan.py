@@ -46,6 +46,17 @@ class Plan:
         return ref, sec
 
 
+    @property
+    def arena(self):
+        """
+        Compute the amount of memory required for an arena based on the proposed plan
+        """
+        # compute the total number of cells
+        cells = sum(self.cells)
+        # scale by the number of bytes per cell and return
+        return cells * ampcor.products.slc().bytesPerPixel
+
+
     # meta-methods
     def __init__(self, correlator, map, **kwds):
         # chain up
