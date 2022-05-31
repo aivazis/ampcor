@@ -20,7 +20,7 @@ class OffsetMap(ampcor.flow.product,
     """
 
 
-    # public data
+    # configurable state
     shape = ampcor.properties.tuple(schema=ampcor.properties.int())
     shape.default = (0,0)
     shape.doc = "the shape of the map"
