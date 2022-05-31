@@ -131,16 +131,14 @@ class MGA(ampcor.flow.factory,
         Get and validate the plan implied by the initial cover of the rasters
         """
         # unpack my products
-        # inputs
         ref = self.reference
-        sec = self.secondary
-        # outputs
         offsets = self.offsets
 
-        # get the coarse pairings
+        # form the coarse pairings
         map = self.cover.map(bounds=ref.shape, shape=offsets.shape)
         # make a plan
         plan = self.Plan(correlator=self, map=map)
+
         # all done
         return plan
 
