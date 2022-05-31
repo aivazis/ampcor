@@ -55,8 +55,7 @@ ampcor::cuda::py::sequential(py::module & m)
                 // build a worker
                 auto worker = new sequential_t(
                     rank, ref, sec, map, chip, window, refineFactor, refineMargin, zoomFactor);
-
-                // build the worker and return it
+                // wrap it and return it
                 return std::unique_ptr<sequential_t>(worker);
             }),
             // the signature
