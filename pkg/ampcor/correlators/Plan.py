@@ -62,13 +62,13 @@ class Plan:
         # chain up
         super().__init__(**kwds)
 
+        # get the grid bindings
+        libgrid = ampcor.libpyre.grid
+
         # save the pairings
         self.map = map
         # make me a tile so i can behave like a grid
-        self.tile = ampcor.grid.tile(shape=correlator.offsets.shape)
-
-        # get the grid bindings
-        libgrid = ampcor.libpyre.grid
+        self.shape = libgrid.Shape2D(shape=correlator.offsets.shape)
 
         # get the reference tile size
         self.chip = libgrid.Shape2D(shape=correlator.chip)
@@ -102,7 +102,7 @@ class Plan:
         yield f"{margin}plan:"
         # tile info
         yield f"{margin}{indent}pairs: {len(self)}"
-        yield f"{margin}{indent}shape: {self.tile.shape}, layout: {self.tile.layout}"
+        yield f"{margin}{indent}shape: {self.shape}"
         # memory footprint
         refCells, secCells = self.cells
         refBytes = refCells * slcPixel / 1024**3
