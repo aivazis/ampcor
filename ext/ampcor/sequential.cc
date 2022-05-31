@@ -29,15 +29,6 @@ namespace ampcor::py {
 }
 
 
-// helpers
-namespace ampcor::py {
-    // the constructor
-    static inline auto constructor(
-        int rank, slc_const_reference, slc_const_reference, offsets_reference, py::tuple, py::tuple,
-        size_t, size_t, size_t) -> unique_pointer<sequential_t>;
-}
-
-
 // add bindings to the sequential correlator
 void
 ampcor::py::sequential(py::module & m)
@@ -46,11 +37,22 @@ ampcor::py::sequential(py::module & m)
     py::class_<sequential_t>(m, "Sequential")
         // constructor
         .def(    // the wrapper
-            py::init([](int rank, slc_const_reference ref, slc_const_reference sec,
-                        offsets_reference map, py::tuple chip, py::tuple window,
-                        size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
-                return constructor(
+            py::init([](
+                         // the worker rank
+                         int rank,
+                         // the input rasters
+                         slc_const_reference ref, slc_const_reference sec,
+                         // the output map
+                         offsets_reference map,
+                         // the reference and secondary tile shapes
+                         slc_raster_t::shape_type chip, slc_raster_t::shape_type window,
+                         // refinement and zoom control
+                         size_t refineFactor, size_t refineMargin, size_t zoomFactor) {
+                // build a worker
+                auto worker = new sequential_t(
                     rank, ref, sec, map, chip, window, refineFactor, refineMargin, zoomFactor);
+                // wrap it and return it
+                return std::unique_ptr<sequential_t>(worker);
             }),
             // the signature
             "rank"_a, "reference"_a, "secondary"_a, "map"_a, "chip"_a, "window"_a, "refineFactor"_a,
@@ -70,35 +72,6 @@ ampcor::py::sequential(py::module & m)
 
     // all done
     return;
-}
-
-
-// helpers
-// worker constructor
-auto
-ampcor::py::constructor(
-    int rank, slc_const_reference ref, slc_const_reference sec, offsets_reference map,
-    py::tuple chip, py::tuple window, size_t refineFactor, size_t refineMargin, size_t zoomFactor)
-    -> unique_pointer<sequential_t>
-{
-    // unpack the chip
-    size_t chip_0 = py::int_(chip[0]);
-    size_t chip_1 = py::int_(chip[1]);
-    // unpack the padding
-    size_t win_0 = py::int_(window[0]);
-    size_t win_1 = py::int_(window[1]);
-
-    // build the shape of the reference tiles
-    sequential_t::slc_shape_type refShape { chip_0, chip_1 };
-    // build the shape of the secondary tiles
-    sequential_t::slc_shape_type secShape { win_0, win_1 };
-
-    // build a worker
-    auto worker = new sequential_t(
-        rank, ref, sec, map, refShape, secShape, refineFactor, refineMargin, zoomFactor);
-
-    // build the worker and return it
-    return std::unique_ptr<sequential_t>(worker);
 }
 
 
