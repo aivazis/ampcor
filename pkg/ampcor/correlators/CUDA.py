@@ -7,7 +7,9 @@
 
 
 # externals
+import cuda
 import journal
+import math
 # framework
 import ampcor
 
@@ -22,17 +24,54 @@ class CUDA:
     # interface
     def adjust(self, box, **kwds):
         """
-        Compute the offset map between a pair of rasters given a correlation {plan}
+        Compute the portion of the offset map between a pair of rasters given by {box}
         """
+        # get the {grid} bindings
+        libgrid = ampcor.libpyre.grid
+        # so we can grab the constructors for {layout}
+        packing2d = libgrid.Canonical2D
+        # {index}
+        index2d = libgrid.Index2D
+        # and {shape}
+        shape2d = libgrid.Shape2D
+
         # make a timer
         timer = ampcor.executive.newTimer(name="ampcor.cuda.sequential")
         # and a journal channel
         channel = journal.info("ampcor.cuda.timings.sequential")
 
-        # start the timer
-        timer.reset().start()
-        # compute the adjustments to the offset field
-        self.worker.adjust(box=box)
+        # grab a device
+        device = cuda.manager.devices[-1]
+        # make it the active one
+        cuda.manager.device(did=device.id)
+
+        # compute the memory requirements
+        required = 4*self.plan.arena(box=box)
+        # figure out how much memory we have
+        available = 0.9 * device.globalMemory
+        # compute the number of batches, assuming memory is the limiting resource
+        batches = math.ceil(required/available)
+
+        # get the starting row of the plan
+        rowOrigin = box.origin[0]
+        # get the shape of the rows
+        rowShape = box.shape[0]
+        # get the row index of one passed the last one
+        rowEnd = rowOrigin + rowShape
+        # compute the row step
+        rowStep = rowShape // batches
+
+        # go through the {box} in batches
+        for row in range(rowOrigin, rowEnd, rowStep):
+            # form an index that points to the beginning of this batch
+            origin = index2d(index=(row, 0))
+            # and a shape that covers this batch
+            shape = shape2d(shape=(min(rowStep, rowEnd-row), box.shape[1]))
+            # use them to specify the workload
+            workload = packing2d(origin=origin, shape=shape)
+            # do the work
+            self.worker.adjust(box=workload)
+
         # stop the timer
         timer.stop()
         # show me
@@ -47,13 +86,10 @@ class CUDA:
         # chain up
         super().__init__(**kwds)
 
-        # get the cuda support
-        import cuda
-        # grab a device
-        cuda.manager.device(did=0)
-
         # save my rank
         self.rank = rank
+        # and the plan
+        self.plan = plan
 
         # unpack the rasters
         ref, sec = rasters
