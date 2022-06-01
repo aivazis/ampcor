@@ -19,6 +19,9 @@ class Plan:
 
 
     # public data
+    # constants
+    bytesPerPixel = ampcor.products.slc().bytesPerPixel
+
     # known at construction
     tile = None      # my shape as a grid of correlation pairs
     chip = None      # the shape of the reference chip
@@ -29,6 +32,7 @@ class Plan:
     secondary = None # the sequence of secondary search windows
 
 
+    # computed data
     @property
     def cells(self):
         """
@@ -46,15 +50,18 @@ class Plan:
         return ref, sec
 
 
-    @property
-    def arena(self):
+    # interface
+    def arena(self, box):
         """
-        Compute the amount of memory required for an arena based on the proposed plan
+        Compute the amount of memory in bytes that is required to build an arena to
+        hold the number of cells in {box}
         """
-        # compute the total number of cells
-        cells = sum(self.cells)
-        # scale by the number of bytes per cell and return
-        return cells * ampcor.products.slc().bytesPerPixel
+        # compute the number of pairs in box
+        pairs = box.shape.cells
+        # compute the number of cells in a pair
+        cells = self.chip.cells + self.window.cells
+        # and put it all together
+        return pairs * cells * self.bytesPerPixel
 
 
     # meta-methods
@@ -101,16 +108,16 @@ class Plan:
         # sign on
         yield f"{margin}plan:"
         # tile info
-        yield f"{margin}{indent}pairs: {len(self)}"
         yield f"{margin}{indent}shape: {self.shape}"
+        yield f"{margin}{indent}pairs: {len(self):,}"
         # memory footprint
         refCells, secCells = self.cells
         refBytes = refCells * slcPixel / 1024**3
         secBytes = secCells * slcPixel / 1024**3
         yield f"{margin}{indent}arena footprint:"
-        yield f"{margin}{indent*2}reference: {refCells} cells in {refBytes:.3f} Gb"
-        yield f"{margin}{indent*2}secondary: {secCells} cells in {secBytes:.3f} Gb"
-        yield f"{margin}{indent*2}    total: {refBytes + secBytes:.3f} Gb"
+        yield f"{margin}{indent*2}reference: {refCells:,} cells in {refBytes:.3f} Gb"
+        yield f"{margin}{indent*2}secondary: {secCells:,} cells in {secBytes:.3f} Gb"
+        yield f"{margin}{indent*2}    total: {refBytes + secBytes:,.3f} Gb"
 
         # don't show the actual points; there may be too many of them
         return
