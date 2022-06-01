@@ -1,0 +1,29 @@
+;
+; michael a.g. aïvázis <michael.aivazis@para-sim.com>
+; parasim
+; (c) 1998-2022 all rights reserved
+;
+
+
+; overall application configuration
+ampcor.plexus:
+    ; machine layout
+    shell:
+        hosts = 1 ; number of hosts
+        tasks = 1 ; number of tasks per host
+        gpus = 1  ; number of gpus per task
+
+    ; control whether the {web} shell spawns a browser automatically every time the server starts
+    pyre.shells.web # shell:
+        auto = on
+
+    ; parallel machine configuration
+    mpi.shells.mpirun # shell:
+        hostfile = localhost
+
+    ; pin the port for serving web content
+    nexus.services.web:
+        address=ip4:0.0.0.0:8001
+
+
+; end of file
