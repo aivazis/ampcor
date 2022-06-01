@@ -148,23 +148,9 @@ class MGA(ampcor.flow.factory,
         Initialize the offset map by recording the initial guesses
         """
         # get the output product and create its raster
-        offsets = self.offsets.open(mode="n")
-
-        # go through the pairs of corresponding points in tandem
-        for pair, p, q in plan.map:
-            # form the shift that takes {p} into {q}
-            delta = q - p
-            # get the entry
-            rec = offsets[pair]
-            # store the original point
-            rec.ref = tuple(map(float, p))
-            # store the shift
-            rec.delta = tuple(map(float, delta))
-            # zero out the other fields
-            rec.confidence = 0
-            rec.snr = 0
-            rec.covariance = 0
-
+        offsets = self.offsets.open(mode="n").raster
+        # prime its contents with the given plan
+        offsets.prime(plan=plan.map)
         # all done
         return
 
@@ -211,6 +197,12 @@ class MGA(ampcor.flow.factory,
         # the zoom factor
         yield f"{margin}{indent}zoom factor: {self.zoomFactor}"
 
+        # describe my inputs
+        yield from self.reference.show(indent, margin=margin+indent)
+        yield from self.secondary.show(indent, margin=margin+indent)
+        # describe my output
+        yield from self.offsets.show(indent, margin=margin+indent)
+
         # describe my coarse map strategy
         yield from self.cover.show(indent, margin=margin+indent)
 
@@ -218,6 +210,11 @@ class MGA(ampcor.flow.factory,
         plan = self.plan()
         # and show me the plan details
         yield from plan.show(indent=indent, margin=margin+indent)
+
+        # compute the arena memory footprint for the whole calculation
+        arena = plan.arena(box=self.offsets.layout)
+        # and report it
+        yield f"{margin}{indent}arena: {arena/1024**2:,.3f} Mb"
 
         # all done
         return
