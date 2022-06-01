@@ -59,6 +59,43 @@ ampcor::py::offsets_raster(py::module & m)
             // the docstring
             "the amount of memory occupied by this map, in bytes")
 
+        // interface
+        .def(
+            // the name
+            "prime",
+            // the implementation
+            [](offsets_raster_t & map, const plan_t & plan) -> void {
+                auto channel = pyre::journal::info_t("ampcor.offsets.prime");
+                channel << "priming the offsets map" << pyre::journal::endl(__HERE__);
+
+                // go through the {plan} entries
+                for (auto [pid, ref, sec] : plan) {
+                    // compute the shift
+                    auto delta = sec - ref;
+
+                    // build an entry
+                    offsets_raster_t::pixel_type pixel;
+                    // initialize the reference point
+                    pixel.ref = std::pair<float, float>(ref[0], ref[1]);
+                    // initialize the shift
+                    pixel.shift = std::pair<float, float>(delta[0], delta[1]);
+                    // initialize the metrics
+                    pixel.gamma = 0;
+                    pixel.confidence = 0;
+                    pixel.snr = 0;
+                    pixel.covariance = 0;
+                    // store it
+                    map[pid] = pixel;
+                }
+
+                // all done
+                return;
+            },
+            // the signature
+            "plan"_a,
+            // the docstring
+            "initialize the contents of the raster from the given {plan}")
+
         // metamethods
         // data read access given an index
         .def(
