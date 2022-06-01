@@ -39,13 +39,6 @@ class Plan(ampcor.shells.command, family='ampcor.cli.plan'):
         # show me
         channel.report(report)
 
-        # get the offset map
-        offsets = self.flow.offsetMap
-        # generate a report
-        report = offsets.show(margin="", indent="  ")
-        # show me
-        channel.report(report)
-
         # and flush
         channel.log()
 
