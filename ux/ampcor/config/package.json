@@ -1,6 +1,6 @@
 {
     "name": "ampcor",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "description": "ampcor embedded ux",
     "license": "BSD-3-Clause",
     "repository": "https://github.com/aivazis/ampcor",
@@ -8,7 +8,12 @@
     "scripts": {
         "build": "webpack --mode development",
         "dev": "webpack --mode development",
-        "relay": "relay-compiler --src ./client --schema ./schema/ampcor.gql"
+        "relay": "relay-compiler"
+    },
+    "relay": {
+        "src": "./client",
+        "schema": "./schema/ampcor.gql",
+        "language": "javascript"
     },
     "devDependencies": {
         "@babel/core": "latest",
