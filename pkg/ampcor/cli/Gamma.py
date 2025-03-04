@@ -2,7 +2,7 @@
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # parasim
-# (c) 1998-2023 all rights reserved
+# (c) 1998-2025 all rights reserved
 #
 
 
@@ -642,7 +642,7 @@ class Gamma(ampcor.shells.command, family="ampcor.cli.gamma"):
         yield '<!-- colophon -->'
         yield '<footer>'
         yield '  <span class="copyright">'
-        yield '    copyright &copy; 1998-2023'
+        yield '    copyright &copy; 1998-2025'
         yield '    <a href="http://www.orthologue.com/michael.aivazis">michael aïvázis</a>'
         yield '    -- all rights reserved'
         yield '  </span>'
